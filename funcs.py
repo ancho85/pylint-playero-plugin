@@ -13,7 +13,7 @@ def getScriptDirs(level=255):
     return res
 
 @cache.store
-def getRecordsInfo():
+def getRecordsInfo(modulename=""):
     fields = {}
     for sd in getScriptDirs(255):
         interfacePath = os.path.join(__playeroPath__, sd, "interface")
@@ -21,6 +21,7 @@ def getRecordsInfo():
             for filename in os.listdir(interfacePath):
                 if filename.lower().endswith(".record.xml"):
                     recordname = filename.split('.')[0]
+                    if modulename and recordname != modulename: continue
                     fields[recordname] = {}
                     filefullpath = os.path.join(__playeroPath__, sd, "interface", filename)
                     dh = parseRecordXML(filefullpath)
@@ -29,7 +30,7 @@ def getRecordsInfo():
                     inheritance = dh.inheritance
 
                     while inheritance:
-                        filefullpaths = findInheritancePath(inheritance)
+                        filefullpaths = findPaths(inheritance)
                         inheritance = ""
                         for paths in filefullpaths:
                             dh = parseRecordXML(paths)
@@ -38,7 +39,7 @@ def getRecordsInfo():
                             inheritance = dh.inheritance
     return fields
 
-def findInheritancePath(name):
+def findPaths(name, instant=False):
     filefullpaths = []
     for sd in getScriptDirs(255):
         interfacePath = os.path.join(__playeroPath__, sd, "interface")
@@ -46,12 +47,16 @@ def findInheritancePath(name):
             for filename in os.listdir(interfacePath):
                 if filename.lower() == name.lower() + ".record.xml":
                     filefullpaths.append(os.path.join(__playeroPath__, sd, "interface", filename))
+                    if instant: break
     return filefullpaths
 
-def getFullPaths():
+def getFullPaths(extraDir=""):
     paths = []
     res = getScriptDirs(255)
     for x in res:
-        newpath = __playeroPath__+x
+        newpath = os.path.join(__playeroPath__, x, extraDir)
         paths.append(newpath)
     return paths
+
+if __name__ == "__main__":
+    print findPaths("PayRollSettings")
