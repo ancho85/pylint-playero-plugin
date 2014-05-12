@@ -22,20 +22,22 @@ def getRecordsInfo(modulename=""):
                 if filename.lower().endswith(".record.xml"):
                     recordname = filename.split('.')[0]
                     if modulename and recordname != modulename: continue
-                    fields[recordname] = {}
+                    if recordname not in fields:
+                        fields[recordname] = {}
                     filefullpath = os.path.join(__playeroPath__, sd, "interface", filename)
                     dh = parseRecordXML(filefullpath)
                     for fi in dh.fields:
-                        fields[recordname][fi] = dh.fields[fi]
+                        if fi not in fields[recordname]:
+                            fields[recordname][fi] = dh.fields[fi]
                     inheritance = dh.inheritance
-
                     while inheritance:
                         filefullpaths = findPaths(inheritance)
                         inheritance = ""
                         for paths in filefullpaths:
                             dh = parseRecordXML(paths)
                             for fi in dh.fields:
-                                fields[recordname][fi] = dh.fields[fi]
+                                if fi not in fields[recordname]:
+                                    fields[recordname][fi] = dh.fields[fi]
                             inheritance = dh.inheritance
     return fields
 
