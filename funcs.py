@@ -57,6 +57,3 @@ def getFullPaths(extraDir=""):
         newpath = os.path.join(__playeroPath__, x, extraDir)
         paths.append(newpath)
     return paths
-
-if __name__ == "__main__":
-    print findPaths("PayRollSettings")
