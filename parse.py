@@ -1,60 +1,69 @@
 from xml.sax import handler
-from tools import latinToAscii
+from xml.sax import make_parser
+from xml.sax.handler import feature_namespaces
 
 ###RECORD###
 
 def parseRecordXML(filename):
-    from xml.sax import make_parser
-    from xml.sax.handler import feature_namespaces
     parser = make_parser()
     parser.setFeature(feature_namespaces, 0)
     dh = XMLRecordHandler()
     parser.setContentHandler(dh)
-    parser.parse(open(filename))
+    parser.parse(open(filename, "r"))
     return dh
 
 class XMLRecordHandler(handler.ContentHandler):
 
     def __init__(self):
         self.fields = {}
-        self.periods = {}
-        self.periodsSubFields = []
-        self.comboradioFieldName = ""
-        self.comboradioLabel = ""
-        self.comboradio = {}
+        self.isPersistent = True
+        self.inheritance = ""
 
     def startElement(self, name, attrs):
-        hasFieldName = False
-        if attrs.has_key("fieldname"):
-            fieldname = str(attrs.get("fieldname",""))
-            label = tr(latinToAscii(attrs.get("label")))
-            hasFieldName = True
-        if name in ("radiobutton","combobox"):
-            self.comboradio[fieldname] = {}
-            self.comboradioFieldName = fieldname
-            self.comboradioLabel = tr(latinToAscii(attrs.get("label")))
-        elif name == "radiooption":
-            value = str(attrs.get("value"))
-            self.comboradio[self.comboradioFieldName][value] = tr(latinToAscii(attrs.get("label")))
-            self.comboradio[self.comboradioFieldName]["label"] = self.comboradioLabel
-        elif name == "combooption":
-            value = str(attrs.get("value"))
-            self.comboradio[self.comboradioFieldName][value] = tr(latinToAscii(attrs.get("label")))
-            self.comboradio[self.comboradioFieldName]["label"] = self.comboradioLabel
-        elif name == "checkbox":
-            self.fields[fieldname] = {'label': label, 'value':fieldname}
+        if name != "record":
+            if attrs.has_key("name"):
+                fieldname = str(attrs.get("name",""))
+                fieldtype = str(attrs.get("type"))
+                self.fields[fieldname] = fieldtype
         else:
-            if hasFieldName:
-                self.fields[fieldname] = {'label': label, 'value':None}
-        if name == "period":
-            fromfieldname = str(attrs.get("fromfieldname",""))
-            tofieldname = str(attrs.get("tofieldname",""))
-            self.periods[fromfieldname] = {}
-            self.periods[fromfieldname][tofieldname] = tr(latinToAscii(attrs.get("label")))
-            self.periodsSubFields.append(tofieldname)
-
+            if attrs.has_key("inherits"):
+                self.inheritance = str(attrs.get("inherits"))
+            elif attrs.has_key("persistent"):
+                self.isPersistent = bool(attrs.get("persistent"))
 
     def endElement(self, name):
-        if name in ("radiobutton", "combobox"):
-            self.comboradioFieldName = ""
-            self.comboradioLabel = ""
+        pass
+
+###SETTINGS###
+def parseSettingsXML(filename):
+    parser = make_parser()
+    parser.setFeature(feature_namespaces, 0)
+    dh = XMLSettingsHandler()
+    parser.setContentHandler(dh)
+    parser.parse(open(filename, "r"))
+    return dh
+
+class XMLSettingsHandler(handler.ContentHandler):
+
+    def __init__(self):
+        self.scriptdirs = []
+        self.sd = []
+        for i in range(255):
+            self.sd.append(None)
+
+    def startElement(self, name, attrs):
+        if name == "scriptdir":
+            self.sd[int(attrs.get('level', 0))] = self.unicodeToStr(attrs.get('path', None))
+
+    def endDocument(self):
+        for i in self.sd:
+            if i:
+                self.scriptdirs.append(i)
+
+    def unicodeToStr(self, value):
+        res = ""
+        try:
+            res = str(value)
+        except:
+            res = repr(value)
+        return res

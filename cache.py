@@ -2,7 +2,7 @@ class cache:
     storage = {}
 
     debug = False
-    skipDebug = ["getScriptDirs","getLanguage"]
+    skipDebug = []
 
     @classmethod
     def store(cls, f):
