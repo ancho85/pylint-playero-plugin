@@ -1,0 +1,17 @@
+<record name="User" tablename="User" inherits="Master" >
+    <field name="Code" type="string" length="10" />
+    <field name="Name" type="string" length="100" />
+    <field name="AccessGroup" type="string" length="10" />
+    <field name="SalesGroup" type="string" length="10" />
+    <field name="Department" type="string" length="20" />
+    <field name="Person" type="string" linkto="Person"/>
+    <field name="Office" type="string" length="20" />
+    <field name="Label" type="set" length="20" />
+    <field name="StockDepo" type="string" length="10" />
+    <field name="DisableBuffers" type="boolean"/>
+    <field name="Closed" type="boolean"/>
+    <field name="Shift" type="string" length="5" />
+    <field name="DefaultReportFontSize" type="integer"/>
+    <field name="TaskCheckingInterval" type="integer"/>
+    <field name="Password" type="string" length="130" />
+</record>

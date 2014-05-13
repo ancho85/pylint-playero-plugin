@@ -28,7 +28,8 @@ def buildBring(name, fields):
 class %sBring(object):
     def __init__(self, *args):
         self.__fail__ = None
-%s''' % (name, "\n".join(fieldTxt)))
+%s
+''' % (name, "\n".join(fieldTxt)))
     return fake.locals[name+"Bring"]
 
 def register(linter):

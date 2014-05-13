@@ -1,0 +1,4 @@
+<record name="LoginDialog" tablename="LoginDialog" persistent="False" >
+    <field name="User" type="string" length="10" />
+    <field name="Password" type="string" length="255" />
+</record>

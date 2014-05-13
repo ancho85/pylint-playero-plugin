@@ -15,42 +15,49 @@ def getScriptDirs(level=255):
 @cache.store
 def getRecordsInfo(modulename=""):
     fields = {}
-    for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
-        if os.path.exists(interfacePath):
-            for filename in os.listdir(interfacePath):
-                if filename.lower().endswith(".record.xml"):
-                    recordname = filename.split('.')[0]
-                    if modulename and recordname != modulename: continue
-                    if recordname not in fields:
-                        fields[recordname] = {}
-                    filefullpath = os.path.join(__playeroPath__, sd, "interface", filename)
-                    dh = parseRecordXML(filefullpath)
-                    for fi in dh.fields:
-                        if fi not in fields[recordname]:
-                            fields[recordname][fi] = dh.fields[fi]
-                    inheritance = dh.inheritance
-                    while inheritance:
-                        filefullpaths = findPaths(inheritance)
-                        inheritance = ""
-                        for paths in filefullpaths:
-                            dh = parseRecordXML(paths)
-                            for fi in dh.fields:
-                                if fi not in fields[recordname]:
-                                    fields[recordname][fi] = dh.fields[fi]
-                            inheritance = dh.inheritance
+    paths = findPaths(modulename)
+    for level in paths:
+        filename = paths[level]['file']
+        fullpath = paths[level]['fullpath']
+        recordname = filename.split('.')[0]
+        if modulename and recordname != modulename: continue
+        if recordname not in fields:
+            fields[recordname] = {}
+        dh = parseRecordXML(fullpath)
+        for fi in dh.fields:
+            if fi not in fields[recordname]:
+                fields[recordname][fi] = dh.fields[fi]
+        inheritance = dh.inheritance
+        while inheritance:
+            paths2 = findPaths(inheritance)
+            inheritance = ""
+            for level2 in paths2:
+                fullpath2 = paths2[level2]['fullpath']
+                dh = parseRecordXML(fullpath2)
+                for fi in dh.fields:
+                    if fi not in fields[recordname]:
+                        fields[recordname][fi] = dh.fields[fi]
+                inheritance = dh.inheritance
     return fields
 
 def findPaths(name, instant=False):
-    filefullpaths = []
+    paths = {}
+    level = 0 #to keep order
     for sd in getScriptDirs(255):
         interfacePath = os.path.join(__playeroPath__, sd, "interface")
         if os.path.exists(interfacePath):
             for filename in os.listdir(interfacePath):
                 if filename.lower() == name.lower() + ".record.xml":
-                    filefullpaths.append(os.path.join(__playeroPath__, sd, "interface", filename))
+                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                    paths[level] = {"fullpath":uniquePath,"file":filename}
+                    level += 1
                     if instant: break
-    return filefullpaths
+    if not paths:
+        for coremodule in (x for x in ("User","LoginDialog") if x == name):
+            filename = "%s.record.xml" % coremodule
+            userpath = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", filename))
+            paths = {0:{"fullpath":userpath, "file":filename}}
+    return paths
 
 def getFullPaths(extraDir=""):
     paths = []
