@@ -6,21 +6,28 @@ from funcs import getRecordsInfo, findPaths
 def hashlib_transform(module):
     modname = module.name
     if findPaths(modname, instant=True):
-        records = getRecordsInfo(modname)
+        records, details = getRecordsInfo(modname)
         for fields in records[modname]:
             if records[modname][fields] == "detail":
-                module.locals[fields] = buildIterator(fields)
+                detailname = details[modname][fields]
+                detrecords, detdetails = getRecordsInfo(detailname)
+                module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
             else:
                 module.locals[fields] = records[modname][fields]
         module.locals["bring"] = buildBring(modname, records[modname])
 
-def buildIterator(name):
+def buildIterator(name, detailfield, fields):
+    fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     fake = AstroidBuilder(MANAGER).string_build('''
-class Class_%s(object):
+class %s_%s(object):
     def __iter__(self):
         return self
-''' % name)
-    return fake.locals["Class_"+name]
+
+    def __init__(self, *args):
+        self.__fail__ = None
+%s
+''' % (name, detailfield, "\n".join(fieldTxt)))
+    return fake.locals["%s_%s" % (name, detailfield)]
 
 def buildBring(name, fields):
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]

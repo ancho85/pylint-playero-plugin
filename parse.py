@@ -16,15 +16,18 @@ class XMLRecordHandler(handler.ContentHandler):
 
     def __init__(self):
         self.fields = {}
+        self.details = {}
         self.isPersistent = True
         self.inheritance = ""
 
     def startElement(self, name, attrs):
-        if name != "record":
+        if name not in ("record","detailrecord"):
             if attrs.has_key("name"):
                 fieldname = str(attrs.get("name",""))
                 fieldtype = str(attrs.get("type"))
                 self.fields[fieldname] = fieldtype
+                if fieldtype == "detail":
+                    self.details[fieldname] = str(attrs.get("recordname"))
         else:
             if attrs.has_key("inherits"):
                 self.inheritance = str(attrs.get("inherits"))

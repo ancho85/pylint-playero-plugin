@@ -13,20 +13,24 @@ def getScriptDirs(level=255):
     return res
 
 @cache.store
-def getRecordsInfo(modulename=""):
+def getRecordsInfo(modulename):
     fields = {}
+    details = {}
     paths = findPaths(modulename)
     for level in paths:
         filename = paths[level]['file']
         fullpath = paths[level]['fullpath']
         recordname = filename.split('.')[0]
-        if modulename and recordname != modulename: continue
         if recordname not in fields:
             fields[recordname] = {}
+            details[recordname] = {}
         dh = parseRecordXML(fullpath)
         for fi in dh.fields:
             if fi not in fields[recordname]:
                 fields[recordname][fi] = dh.fields[fi]
+        for de in dh.details:
+            if de not in details[recordname]:
+                details[recordname][de] = dh.details[de]
         inheritance = dh.inheritance
         while inheritance:
             paths2 = findPaths(inheritance)
@@ -38,7 +42,7 @@ def getRecordsInfo(modulename=""):
                     if fi not in fields[recordname]:
                         fields[recordname][fi] = dh.fields[fi]
                 inheritance = dh.inheritance
-    return fields
+    return (fields, details)
 
 def findPaths(name, instant=False):
     paths = {}
