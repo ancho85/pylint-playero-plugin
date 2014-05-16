@@ -1,4 +1,5 @@
 import os
+import difflib
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML
 
@@ -44,18 +45,35 @@ def getRecordsInfo(modulename):
                 inheritance = dh.inheritance
     return (fields, details)
 
+@cache.store
 def findPaths(name, instant=False):
     paths = {}
     level = 0 #to keep order
-    for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
-        if os.path.exists(interfacePath):
-            for filename in os.listdir(interfacePath):
-                if filename.lower() == name.lower() + ".record.xml":
-                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                    paths[level] = {"fullpath":uniquePath,"file":filename}
-                    level += 1
-                    if instant: break
+    nalo = "%s%s" % (name.lower(), ".record.xml")
+    searchType = ["exact","percent"]
+    for passType in searchType:
+        if paths and passType == "percent": continue #if I have paths there is no need to do a percent match
+        for sd in getScriptDirs(255):
+            interfacePath = os.path.join(__playeroPath__, sd, "interface")
+            if os.path.exists(interfacePath):
+                for filename in [f for f in os.listdir(interfacePath) if f.endswith(".record.xml")]:
+                    filo = filename.lower()
+                    if passType == "exact":
+                        if filo == nalo:
+                            uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                            paths[level] = {"fullpath":uniquePath, "file":filename}
+                            level += 1
+                            if instant: break
+                    elif passType == "percent":
+                        idx = 0
+                        if len(name)>5: idx=5 #files starting with the same 5 letter
+                        if filo[:idx] != nalo[:idx]: continue
+                        matchpercent = difflib.SequenceMatcher(None, filo, nalo).ratio()
+                        if matchpercent > 0.91:
+                            uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                            paths[level] = {"fullpath":uniquePath, "file": name + ".record.xml"}
+                            level += 1
+                            if instant: break
     if not paths:
         for coremodule in (x for x in ("User","LoginDialog") if x == name):
             filename = "%s.record.xml" % coremodule
