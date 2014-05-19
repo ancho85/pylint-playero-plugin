@@ -28,6 +28,9 @@ class PyParse(ast.NodeVisitor):
     def visit_FunctionDef(self, node):
         print "function level", node.name
 
+    def visit_Assign(self, node):
+        print "assign level", node.targets[0].id
+
 if __name__ == "__main__":
-    filepath = "e:/Develop/desarrollo/python/ancho/workspace/Playero/standard/records/Invoice.py"
+    filepath = "/home/ancho/Develop/Playero/standard/records/Invoice.py"
     parseScript(filepath)

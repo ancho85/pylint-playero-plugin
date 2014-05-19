@@ -4,6 +4,8 @@ from cache import cache
 from parse import parseSettingsXML, parseRecordXML
 
 __playeroPath__ = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
+if (os.name == "posix"):
+    __playeroPath__ = "/home/ancho/Develop/Playero/"
 
 @cache.store
 def getScriptDirs(level=255):
