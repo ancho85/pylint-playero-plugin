@@ -2,6 +2,7 @@ import os
 import difflib
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML
+from pyparse import parseScript
 
 __playeroPath__ = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
 if (os.name == "posix"):
@@ -83,10 +84,33 @@ def findPaths(name, instant=False):
             paths = {0:{"fullpath":userpath, "file":filename}}
     return paths
 
-def getFullPaths(extraDir=""):
-    paths = []
-    res = getScriptDirs(255)
-    for x in res:
-        newpath = os.path.join(__playeroPath__, x, extraDir)
-        paths.append(newpath)
-    return paths
+def getFullPaths(extraDirs):
+    return [os.path.join(__playeroPath__, x, y) for x in getScriptDirs(255) for y in extraDirs]
+
+@cache.store
+def getClassInfo(modulename):
+    attributes, methods = set(), set()
+    try:
+        paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
+        for path in paths:
+            if os.path.exists(path):
+                for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] == modulename]:
+                    fullfilepath = os.path.join(path, filename)
+                    parse = parseScript(fullfilepath)
+                    for attrs in parse.attributes:
+                        attributes.add(attrs)
+                    for mets in parse.methods:
+                        methods.add(mets)
+    except:
+        pass
+    return (attributes, methods)
+
+if __name__ == "__main__":
+    ok = ["PayMode","CredCardType"] #lineending failure
+    ok += ["Invoice", "PySettings","AccountSettings","Cheque"]
+    ok += ["CreditCard","Bank","GasStationSettings","SerNrControl","User","Coupon","SLRetencionDoc","SLRetencionDocWindow","Retencion"]
+    for b in ok:
+        print "                     ", b
+        attr, meth = getClassInfo(b)
+        for at in attr:
+            print at
