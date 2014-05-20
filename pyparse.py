@@ -19,6 +19,7 @@ class PyParse(ast.NodeVisitor):
         self.methods = set()
         self.classes = set()
         self.names = set()
+        self.inheritance = {}
 
     def generic_visit(self, node):
         #print type(node).__name__
@@ -30,8 +31,6 @@ class PyParse(ast.NodeVisitor):
     def visit_Name(self, node):
         self.names.add(node.id)
         #print "name level", node.id
-        if node.id == "SuperClass":
-            self.generic_visit(node)
 
     def visit_ClassDef(self, node):
         #print "class level", node.name
@@ -43,30 +42,31 @@ class PyParse(ast.NodeVisitor):
         #print "function level", node.name
 
     def visit_Assign(self, node):
-        self.attributes.add(node.targets[0].id)
+        if isinstance(node.targets[0], ast.Name):
+            self.attributes.add(node.targets[0].id)
         self.generic_visit(node)
         #print "assign level", node.targets[0].id
-
-    """def visit_Str(self, node):
-        print "str", node.s
 
     def visit_Call(self, node):
         for key, value in ast.iter_fields(node):
             if key == 'func':
-                print "call FUNCTION", key, "b",    value
-                self.visit(value)
+                #print "call FUNCTION", key, "value id:", value.id
+                #self.visit(value)
+                pass
             elif value:
-                print "call value subnodevisit", value
-                self.subnodeVisit(value)
+                if isinstance(value[0],ast.Str):
+                    currentClass = value[0].s
+                    self.inheritance[currentClass] = ""
+                    self.subnodeVisit(value, currentClass)
 
-    def subnodeVisit(self, node):
+    def subnodeVisit(self, node, current):
         if isinstance(node, list):
-            print "list"
             for item in node:
-                print item, "subnodeVisit"
-                self.subnodeVisit(item)
-        elif isinstance(node, ast.AST):
-            self.visit(node)"""
+                if isinstance(item, ast.Str):
+                    if item.s != current:
+                        self.inheritance[current] = item.s
+                else:
+                    pass # probably ast.Name instance. __file__
 
 
 if __name__ == "__main__":
@@ -80,3 +80,6 @@ if __name__ == "__main__":
     print "---methods---"
     for b in par.methods:
         print b
+    print "---inheritance---"
+    for k in par.inheritance:
+        print k, par.inheritance[k]

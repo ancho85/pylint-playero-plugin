@@ -89,28 +89,33 @@ def getFullPaths(extraDirs):
 
 @cache.store
 def getClassInfo(modulename):
-    attributes, methods = set(), set()
-    try:
-        paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
-        for path in paths:
-            if os.path.exists(path):
-                for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] == modulename]:
-                    fullfilepath = os.path.join(path, filename)
-                    parse = parseScript(fullfilepath)
-                    for attrs in parse.attributes:
-                        attributes.add(attrs)
-                    for mets in parse.methods:
-                        methods.add(mets)
-    except:
-        pass
+    attributes, methods, inheritance = set(), set(), {}
+    paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
+    paths.append(os.path.join(__playeroPath__,"core"))
+    for path in paths:
+        if os.path.exists(path):
+            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] == modulename]:
+                fullfilepath = os.path.join(path, filename)
+                parse = parseScript(fullfilepath)
+                [attributes.add(x) for x in parse.attributes]
+                [methods.add(x) for x in parse.methods]
+                inheritance = parse.inheritance
+    if modulename in inheritance:
+        heirattr, heirmeths = getClassInfo(inheritance[modulename])
+        [attributes.add(x) for x in heirattr]
+        [methods.add(x) for x in heirmeths]
     return (attributes, methods)
 
 if __name__ == "__main__":
-    ok = ["PayMode","CredCardType"] #lineending failure
+    ok =  ["PayMode","CredCardType"] #lineending failure
     ok += ["Invoice", "PySettings","AccountSettings","Cheque"]
     ok += ["CreditCard","Bank","GasStationSettings","SerNrControl","User","Coupon","SLRetencionDoc","SLRetencionDocWindow","Retencion"]
+    ok += ["Transaction","ContactWay"]
+    ok = ["ValuesIncome"]
     for b in ok:
-        print "                     ", b
-        attr, meth = getClassInfo(b)
+        print "     processing", b
+        attr, meth= getClassInfo(b)
         for at in attr:
             print at
+        for mt in meth:
+            print mt
