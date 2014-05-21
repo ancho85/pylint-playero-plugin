@@ -20,10 +20,10 @@ def hashlib_transform(module):
                 module.locals[fields] = records[modname][fields]
         attributes, methods = getClassInfo(modname)
         instanceFields = list(records[modname]) + list(attributes)
-        module.locals["bring"] = buildBring(modname, instanceFields)
+        module.locals["bring"] = buildBring(modname, instanceFields, methods)
 
         module.locals.update([(attr, {0:None}) for attr in attributes])
-        module.locals.update([("_"+meth, buildMethod(modname, meth)) for meth in methods])
+        #module.locals.update([("_"+meth, buildMethod(modname, meth)) for meth in methods])
 
 
 def buildIterator(name, detailfield, fields):
@@ -44,22 +44,24 @@ class %s(object):
     return fake.locals[itername]
 
 
-def buildBring(name, fields):
+def buildBring(name, fields, methods):
     bringname = "%s_%s" % (name, "bring")
     built.append(bringname)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
+    methsTxt = ["%s%s%s" % ("    def ", x, "(self, **kwargs): pass") for x in methods]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
     def __init__(self, *args):
         self.__fail__ = None
 %s
-''' % (bringname, "\n".join(fieldTxt)))
+%s
+''' % (bringname, "\n".join(fieldTxt), "\n".join(methsTxt)))
     return fake.locals[bringname]
 
 
 def buildMethod(name, method):
     methodname = "%s_%s" % (name, method)
-    fake = AstroidBuilder(MANAGER).string_build("def %s(): pass" % methodname)
+    fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % methodname)
     return  {0:fake[methodname]}
 
 def register(linter):
