@@ -104,6 +104,7 @@ def getClassInfo(modulename):
         heirattr, heirmeths = getClassInfo(inheritance[modulename])
         [attributes.add(x) for x in heirattr]
         [methods.add(x) for x in heirmeths]
+    methods.add("forceDelete")
     return (attributes, methods)
 
 def logHere(value, filename="log.log"):
