@@ -1,12 +1,12 @@
-from astroid import MANAGER
+from astroid import MANAGER, node_classes, nodes
 from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
-from funcs import getRecordsInfo, findPaths, getClassInfo
+from funcs import getRecordsInfo, findPaths, getClassInfo, logHere
 
 built = ["Record","RawRecord"]
 
 
-def hashlib_transform(module):
+def classes_transform(module):
     modname = module.name
     if modname in built: return
     if findPaths(modname, instant=True):
@@ -23,9 +23,14 @@ def hashlib_transform(module):
         module.locals["bring"] = buildBring(modname, instanceFields, methods)
 
         module.locals.update([(attr, {0:None}) for attr in attributes])
-        #module.locals.update([("_"+meth, buildMethod(modname, meth)) for meth in methods])
+        module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
 
 
+def modules_transform(module):
+    if module.name == "test":
+        module.locals['SuperClass'] = buildSuperClass()
+
+###classes_transform_methods###
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
     built.append(itername)
@@ -64,10 +69,23 @@ def buildMethod(name, method):
     fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % methodname)
     return  {0:fake[methodname]}
 
+
+###modules_transforms_methods###
+def buildSuperClass():
+    fake = AstroidBuilder(MANAGER).string_build('''
+def SuperClass(classname, superclassname, filename):
+  return None
+''')
+    return fake.locals['SuperClass']
+
+
 def register(linter):
     pass
 
-MANAGER.register_transform(scoped_nodes.Class, hashlib_transform)
+
+
+MANAGER.register_transform(scoped_nodes.Module, modules_transform)
+MANAGER.register_transform(scoped_nodes.Class, classes_transform)
 
 if __name__ == "__main__":
     class Test(object):
@@ -77,5 +95,4 @@ if __name__ == "__main__":
 
     test = Test()
     test.name = "Invoice"
-    hashlib_transform(test)
-
+    function_transform(test)

@@ -106,6 +106,12 @@ def getClassInfo(modulename):
         [methods.add(x) for x in heirmeths]
     return (attributes, methods)
 
+def logHere(value, filename="log.log"):
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    logfile = os.path.join(HERE, 'logs',filename)
+    f = file(logfile,"a")
+    f.write(str(value)+"\n")
+
 if __name__ == "__main__":
     ok =  ["PayMode","CredCardType"] #lineending failure
     ok += ["Invoice", "PySettings","AccountSettings","Cheque"]
