@@ -1,7 +1,7 @@
 from astroid import MANAGER, node_classes
 from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
-from funcs import getRecordsInfo, findPaths, getClassInfo, logHere
+from funcs import getRecordsInfo, findPaths, getClassInfo, getModName, logHere
 
 built = ["Record","RawRecord"]
 
@@ -18,10 +18,11 @@ def classes_transform(module):
                 module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
             else:
                 module.locals[fields] = records[modname][fields]
-        modparent = module.parent.name
+        modparent = getModName(module.parent.name)
         attributes, methods = getClassInfo(modname, modparent)
         instanceFields = list(records[modname]) + list(attributes)
         module.locals["bring"] = buildBring(modname, instanceFields, methods)
+        module.locals["getMasterRecord"] = buildBring(modparent, instanceFields, methods)
 
         module.locals.update([(attr, {0:None}) for attr in attributes])
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
@@ -29,6 +30,8 @@ def classes_transform(module):
 
 def modules_transform(module):
     modname = module.name
+    if not modname: return
+    modname = getModName(modname)
     if findPaths(modname, instant=True):
         parents = {}
         for assnodes in module.locals:
@@ -70,6 +73,7 @@ class %s(object):
     def count(): pass
     def remove(int): pass
     def insert(int, *args): pass
+    def append(*args): pass
 
     def __init__(self, *args):
         self.__fail__ = None
@@ -82,7 +86,7 @@ def buildBring(name, fields, methods):
     bringname = "%s_%s" % (name, "bring")
     built.append(bringname)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
-    methsTxt = ["%s%s%s" % ("    def ", x, "(self, **kwargs): pass") for x in methods]
+    methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
     def __init__(self, *args):

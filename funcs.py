@@ -106,6 +106,9 @@ def getClassInfo(modulename, parent=""):
         [attributes.add(x) for x in heirattr]
         [methods.add(x) for x in heirmeths]
     methods.add("forceDelete")
+    methods.add("rowNr")
+    methods.add("afterCopy")
+    methods.add("printDocument")
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)
@@ -115,6 +118,11 @@ def logHere(value, filename="log.log"):
     logfile = os.path.join(HERE, 'logs',filename)
     f = file(logfile,"a")
     f.write(str(value)+"\n")
+
+def getModName(modname):
+    if modname.find(".")>-1:
+        modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
+    return modname
 
 if __name__ == "__main__":
     ok =  ["PayMode","CredCardType"] #lineending failure
