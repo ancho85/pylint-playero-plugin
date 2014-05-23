@@ -51,6 +51,7 @@ def getRecordsInfo(modulename):
 @cache.store
 def findPaths(name, instant=False):
     paths = {}
+    if not name: return paths
     level = 0 #to keep order
     nalo = "%s%s" % (name.lower(), ".record.xml")
     searchType = ["exact","percent"]
@@ -88,13 +89,13 @@ def getFullPaths(extraDirs):
     return [os.path.join(__playeroPath__, x, y) for x in getScriptDirs(255) for y in extraDirs]
 
 @cache.store
-def getClassInfo(modulename):
+def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = set(), set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(__playeroPath__,"core"))
     for path in paths:
         if os.path.exists(path):
-            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] == modulename]:
+            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in (modulename, parent)]:
                 fullfilepath = os.path.join(path, filename)
                 parse = parseScript(fullfilepath)
                 [attributes.add(x) for x in parse.attributes]
@@ -105,6 +106,8 @@ def getClassInfo(modulename):
         [attributes.add(x) for x in heirattr]
         [methods.add(x) for x in heirmeths]
     methods.add("forceDelete")
+    methods = sorted(methods)
+    attributes = sorted(attributes)
     return (attributes, methods)
 
 def logHere(value, filename="log.log"):

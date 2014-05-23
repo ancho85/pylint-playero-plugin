@@ -18,7 +18,8 @@ def classes_transform(module):
                 module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
             else:
                 module.locals[fields] = records[modname][fields]
-        attributes, methods = getClassInfo(modname)
+        modparent = module.parent.name
+        attributes, methods = getClassInfo(modname, modparent)
         instanceFields = list(records[modname]) + list(attributes)
         module.locals["bring"] = buildBring(modname, instanceFields, methods)
 
@@ -27,28 +28,33 @@ def classes_transform(module):
 
 
 def modules_transform(module):
-    parents = []
-    for assnodes in module.locals:
-        ass = module.locals[assnodes][0]
-        if not (
-                isinstance(ass, node_classes.AssName) and
-                isinstance(ass.statement(), node_classes.Assign)
-                ): continue
-        else:
-            for supers in [ #list comprehention of SuperClass' calls
-                            superCall for superCall in ass.assigned_stmts()
-                            if isinstance(superCall, node_classes.CallFunc) and
-                            superCall.as_string().startswith("SuperClass")
-            ]:
-                for arg in [classString for classString in supers.args if isinstance(classString, node_classes.Const)]:
-                    parents.append(arg.value)
-    if parents:
-        #XXX SuperClass built is not a independent instance
-        #XXX InvoiceTaxRow at Copeg's Invoice.py broke the system.
-        a = parents[0]
-        if a == "InvoiceTaxRow": a = parents[1]
-        module.locals['SuperClass'] = buildSuperClass(a)
-        module.locals["WTF"] = buildSuperClass(parents[0])
+    modname = module.name
+    if findPaths(modname, instant=True):
+        parents = {}
+        for assnodes in module.locals:
+            ass = module.locals[assnodes][0]
+            if not (
+                    isinstance(ass, node_classes.AssName) and
+                    isinstance(ass.statement(), node_classes.Assign)
+                    ): continue
+            else:
+                for supers in [ #list comprehention of SuperClass' calls
+                                superCall for superCall in ass.assigned_stmts()
+                                if isinstance(superCall, node_classes.CallFunc)
+                                and superCall.as_string().startswith("SuperClass")
+                ]:
+                    parents[ass.name] = []
+                    for arg in [
+                                classString for classString in supers.args
+                                if isinstance(classString, node_classes.Const)
+                                #and classString.value.startswith(modname)
+                    ]:
+                        parents[ass.name].append(arg.value)
+        if len(parents) > 1:
+            for supers in parents:
+                heir, dad = parents[supers][0], parents[supers][1]
+                module.locals['SuperClass'] = buildSuperClass(heir, dad)
+
 
 
 ###classes_transform_methods###
@@ -94,19 +100,19 @@ def buildMethod(name, method):
 
 
 ###modules_transforms_methods###
-def buildSuperClass(classname):
-    superclassname = "%s_%s" % ("SuperClass",classname)
-    attributes, methods = getClassInfo(classname)
+def buildSuperClass(classname, parent=""):
+    supername = "%s_%s" % ("SuperClass",classname)
+    built.append(supername)
+    attributes, methods = getClassInfo(classname, parent)
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
     txt = '''
 def %s(classname, superclassname, filename):
     class %s(object):
 %s
-
-        return %s
-''' % (superclassname, classname, "\n".join(methsTxt), classname)
+    return %s()
+''' % ("SuperClass", classname, "\n".join(methsTxt), classname)
     fake = AstroidBuilder(MANAGER).string_build(txt)
-    return fake.locals[superclassname]
+    return fake.locals["SuperClass"]
 
 
 def register(linter):
