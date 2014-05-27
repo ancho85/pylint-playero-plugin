@@ -26,7 +26,7 @@ def classes_transform(module):
         module.locals["bring"] = buildBring(modname, instanceFields, methods)
         module.locals["getMasterRecord"] = buildBring(modparent, instanceFields, methods)
 
-        module.locals.update([(attr, {0:None}) for attr in attributes])
+        module.locals.update([(attr, {0:None}) for attr in attributes if not attr.startswith("_")])
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
 
         if module.name.endswith("Window"): #Window Class
