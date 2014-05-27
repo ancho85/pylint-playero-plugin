@@ -9,9 +9,9 @@ built.add("RawRecord")
 
 
 def classes_transform(module):
-    modname = module.name
+    modname = getModName(module.name)
     if modname in built: return
-    if findPaths(modname, instant=True):
+    if findPaths(modname, instant=True): #Record Class
         records, details = getRecordsInfo(modname)
         for fields in records[modname]:
             if records[modname][fields] == "detail":
@@ -28,6 +28,9 @@ def classes_transform(module):
 
         module.locals.update([(attr, {0:None}) for attr in attributes])
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
+
+        if module.name.endswith("Window"): #Window Class
+            module.locals["getRecord"] = buildBring(modname, instanceFields, methods)
 
 
 def modules_transform(module):
@@ -52,14 +55,14 @@ def modules_transform(module):
                     for arg in [
                                 classString for classString in supers.args
                                 if isinstance(classString, node_classes.Const)
-                                #and classString.value.startswith(modname)
+                                and not classString.value.endswith("Row")
                     ]:
                         parents[ass.name].append(arg.value)
-        if len(parents) > 1:
-            for supers in [supers for supers in parents if not supers.endswith("Row")]:
-                heir, dad = parents[supers][0], parents[supers][1]
-                module.locals['SuperClass'] = buildSuperClass(heir, dad)
-
+        if parents:
+            for supers in parents:
+                if len(parents[supers]) > 1:
+                    heir, dad = parents[supers][0], parents[supers][1]
+                    module.locals['SuperClass'] = buildSuperClass(heir, dad)
 
 
 ###classes_transform_methods###

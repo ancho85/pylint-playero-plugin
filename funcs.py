@@ -122,6 +122,8 @@ def logHere(value, filename="log.log"):
 def getModName(modname):
     if modname.find(".")>-1:
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
+    if modname.endswith("Window"):
+        modname = modname.split("Window")[0]
     return modname
 
 if __name__ == "__main__":
