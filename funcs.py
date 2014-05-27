@@ -105,8 +105,8 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(inheritance[modulename])
         [attributes.add(x) for x in heirattr]
         [methods.add(x) for x in heirmeths]
+    attributes.add("rowNr")
     methods.add("forceDelete")
-    methods.add("rowNr")
     methods.add("afterCopy")
     methods.add("printDocument")
     methods = sorted(methods)

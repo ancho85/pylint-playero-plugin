@@ -3,7 +3,9 @@ from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
 from funcs import getRecordsInfo, findPaths, getClassInfo, getModName, logHere
 
-built = ["Record","RawRecord"]
+built = set()
+built.add("Record")
+built.add("RawRecord")
 
 
 def classes_transform(module):
@@ -54,7 +56,7 @@ def modules_transform(module):
                     ]:
                         parents[ass.name].append(arg.value)
         if len(parents) > 1:
-            for supers in parents:
+            for supers in [supers for supers in parents if not supers.endswith("Row")]:
                 heir, dad = parents[supers][0], parents[supers][1]
                 module.locals['SuperClass'] = buildSuperClass(heir, dad)
 
@@ -63,7 +65,7 @@ def modules_transform(module):
 ###classes_transform_methods###
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
-    built.append(itername)
+    built.add(itername)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
@@ -84,7 +86,7 @@ class %s(object):
 
 def buildBring(name, fields, methods):
     bringname = "%s_%s" % (name, "bring")
-    built.append(bringname)
+    built.add(bringname)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods]
     fake = AstroidBuilder(MANAGER).string_build('''
@@ -105,8 +107,7 @@ def buildMethod(name, method):
 
 ###modules_transforms_methods###
 def buildSuperClass(classname, parent=""):
-    supername = "%s_%s" % ("SuperClass",classname)
-    built.append(supername)
+    built.add("SuperClass")
     attributes, methods = getClassInfo(classname, parent)
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
     txt = '''
