@@ -1,6 +1,8 @@
 import ast
 import os
+from cache import cache
 
+@cache.store
 def parseScript(filefullpath):
     f = open(filefullpath, "r")
     lines = f.read().splitlines() #best handling for CR LF and LF

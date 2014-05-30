@@ -230,7 +230,7 @@ dummy-variables-rgx=_$|dummy
 # List of additional names supposed to be defined in builtins. Remember that
 
 # you should avoid to define new builtins when possible.
-additional-builtins=Query,getSettingsFileName,commit,rollback,getApplicationType,embedded_getSaveFileName,hasConsole,curUser,messagesEnabled,displaymessage,logstring,getSelection,askYesNo,Embedded_Record,getModulesInfo,getRecordsInfo,NewRecord,sysprint,Embedded_Report,Embedded_Document,processEvents,getImagePath,currentCompany,genPassword,today,now,tr,postMessage,decode,currentWindow
+additional-builtins=Query,getSettingsFileName,commit,rollback,getApplicationType,embedded_getSaveFileName,hasConsole,curUser,messagesEnabled,displaymessage,logstring,getSelection,askYesNo,Embedded_Record,getModulesInfo,getRecordsInfo,NewRecord,sysprint,Embedded_Report,Embedded_Document,processEvents,getImagePath,currentCompany,genPassword,postMessage,decode,currentWindow,beep
 
 
 [CLASSES]
@@ -244,7 +244,7 @@ ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions
 defining-attr-methods=__init__,__new__,setUp
 
 # List of valid names for the first argument in a class method.
-valid-classmethod-first-arg=cls
+valid-classmethod-first-arg=cls,classobj
 
 # List of valid names for the first argument in a metaclass class method.
 valid-metaclass-classmethod-first-arg=mcs
