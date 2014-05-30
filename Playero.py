@@ -31,7 +31,19 @@ def classes_transform(module):
 
         if module.name.endswith("Window"): #Window Class
             module.locals["getRecord"] = buildBring(modname, instanceFields, methods)
-
+    else: #Check for Reports and Routines
+        searchExtensions = ".reportwindow.xml,.routinewindow.xml"
+        if findPaths(modname, extensions=searchExtensions, instant=True):
+            classtype = module.basenames[0]
+            if classtype not in ("Report","Routine"):
+                rootname =  module.bases[0].root().name
+                if rootname.find(".reports.")>-1: classtype = "Report"
+                elif rootname.find(".routines.")>-1: classtype = "Routine"
+            if classtype in ("Report","Routine"):
+                records, details = getRecordsInfo(modname, extensions=searchExtensions)
+                attributes, methods = getClassInfo(modname, parent=classtype)
+                instanceFields = list(records[modname]) + list(attributes)
+                module.locals["getRecord"] = buildBring(modname, instanceFields, methods)
 
 def modules_transform(module):
     modname = module.name

@@ -17,10 +17,10 @@ def getScriptDirs(level=255):
     return res
 
 @cache.store
-def getRecordsInfo(modulename):
+def getRecordsInfo(modulename, extensions=".record.xml"):
     fields = {}
     details = {}
-    paths = findPaths(modulename)
+    paths = findPaths(modulename, extensions)
     for level in paths:
         filename = paths[level]['file']
         fullpath = paths[level]['fullpath']
@@ -49,35 +49,38 @@ def getRecordsInfo(modulename):
     return (fields, details)
 
 @cache.store
-def findPaths(name, instant=False):
+def findPaths(name, extensions=".record.xml", instant=False):
     paths = {}
     if not name: return paths
     level = 0 #to keep order
-    nalo = "%s%s" % (name.lower(), ".record.xml")
+    tupledExtensions = tuple(extensions.split(","))
+    nalo = ["%s%s" % (name.lower(), ext) for ext in tupledExtensions]
     searchType = ["exact","percent"]
     for passType in searchType:
         if paths and passType == "percent": continue #if I have paths there is no need to do a percent match
         for sd in getScriptDirs(255):
             interfacePath = os.path.join(__playeroPath__, sd, "interface")
             if os.path.exists(interfacePath):
-                for filename in [f for f in os.listdir(interfacePath) if f.endswith(".record.xml")]:
+                for filename in [f for f in os.listdir(interfacePath) if f.endswith(tupledExtensions)]:
                     filo = filename.lower()
                     if passType == "exact":
-                        if filo == nalo:
+                        if filo in nalo:
                             uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
                             paths[level] = {"fullpath":uniquePath, "file":filename}
                             level += 1
                             if instant: break
-                    elif passType == "percent":
+                    elif passType == "percent" and name not in ("Routine","Report"):
                         idx = 0
                         if len(name)>5: idx=5 #files starting with the same 5 letter
-                        if filo[:idx] != nalo[:idx]: continue
-                        matchpercent = difflib.SequenceMatcher(None, filo, nalo).ratio()
-                        if matchpercent > 0.91:
-                            uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                            paths[level] = {"fullpath":uniquePath, "file": name + ".record.xml"}
-                            level += 1
-                            if instant: break
+                        for namelower in nalo:
+                            if filo[:idx] != namelower[:idx]: continue
+                            if len(namelower) > len(filo): continue
+                            matchpercent = difflib.SequenceMatcher(None, filo, namelower).ratio()
+                            if matchpercent > 0.91:
+                                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                                paths[level] = {"fullpath":uniquePath, "file": filename}
+                                level += 1
+                                if instant: break
     if not paths:
         for coremodule in (x for x in ("User","LoginDialog") if x == name):
             filename = "%s.record.xml" % coremodule
@@ -105,10 +108,11 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(inheritance[modulename])
         [attributes.add(x) for x in heirattr]
         [methods.add(x) for x in heirmeths]
-    attributes.add("rowNr")
-    methods.add("forceDelete")
-    methods.add("afterCopy")
-    methods.add("printDocument")
+    if parent not in ("Report","Routine"):
+        attributes.add("rowNr")
+        methods.add("forceDelete")
+        methods.add("afterCopy")
+        methods.add("printDocument")
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)

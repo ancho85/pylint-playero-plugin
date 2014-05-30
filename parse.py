@@ -21,7 +21,7 @@ class XMLRecordHandler(handler.ContentHandler):
         self.inheritance = ""
 
     def startElement(self, name, attrs):
-        if name not in ("record","detailrecord"):
+        if name not in ("record","detailrecord","reportwindow","routinewindow"):
             if attrs.has_key("name"):
                 fieldname = str(attrs.get("name",""))
                 fieldtype = str(attrs.get("type"))
