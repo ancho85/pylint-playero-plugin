@@ -23,14 +23,14 @@ def classes_transform(module):
         modparent = getModName(module.parent.name)
         attributes, methods = getClassInfo(modname, modparent)
         instanceFields = list(records[modname]) + list(attributes)
-        module.locals["bring"] = buildBring(modname, instanceFields, methods)
-        module.locals["getMasterRecord"] = buildBring(modparent, instanceFields, methods)
+        module.locals["bring"] = buildInstantiator(modname, "bring", instanceFields, methods)
+        module.locals["getMasterRecord"] = buildInstantiator(modparent, "getMasterRecord", instanceFields, methods)
 
         module.locals.update([(attr, {0:None}) for attr in attributes if not attr.startswith("_")])
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
 
         if module.name.endswith("Window"): #Window Class
-            module.locals["getRecord"] = buildBring(modname, instanceFields, methods)
+            module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
     else: #Check for Reports and Routines
         searchExtensions = ".reportwindow.xml,.routinewindow.xml"
         if findPaths(modname, extensions=searchExtensions, instant=True):
@@ -43,7 +43,7 @@ def classes_transform(module):
                 records, details = getRecordsInfo(modname, extensions=searchExtensions)
                 attributes, methods = getClassInfo(modname, parent=classtype)
                 instanceFields = list(records[modname]) + list(attributes)
-                module.locals["getRecord"] = buildBring(modname, instanceFields, methods)
+                module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
 
 def modules_transform(module):
     modname = module.name
@@ -99,9 +99,9 @@ class %s(object):
     return fake.locals[itername]
 
 
-def buildBring(name, fields, methods):
-    bringname = "%s_%s" % (name, "bring")
-    built.add(bringname)
+def buildInstantiator(name, instancerName, fields, methods):
+    instantiatorname = "%s_%s" % (name, instancerName)
+    built.add(instantiatorname)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods]
     fake = AstroidBuilder(MANAGER).string_build('''
@@ -110,8 +110,8 @@ class %s(object):
         self.__fail__ = None
 %s
 %s
-''' % (bringname, "\n".join(fieldTxt), "\n".join(methsTxt)))
-    return fake.locals[bringname]
+''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(methsTxt)))
+    return fake.locals[instantiatorname]
 
 
 def buildMethod(name, method):
