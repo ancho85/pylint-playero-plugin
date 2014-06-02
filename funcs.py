@@ -29,24 +29,28 @@ def getRecordsInfo(modulename, extensions=".record.xml"):
             fields[recordname] = {}
             details[recordname] = {}
         dh = parseRecordXML(fullpath)
-        for fi in dh.fields:
-            if fi not in fields[recordname]:
-                fields[recordname][fi] = dh.fields[fi]
-        for de in dh.details:
-            if de not in details[recordname]:
-                details[recordname][de] = dh.details[de]
+        fields[recordname].update([(fi, dh.fields[fi]) for fi in dh.fields])
+        details[recordname].update([(de, dh.details[de]) for de in dh.details])
         inheritance = dh.inheritance
-        while inheritance:
-            paths2 = findPaths(inheritance)
-            inheritance = ""
-            for level2 in paths2:
-                fullpath2 = paths2[level2]['fullpath']
-                dh = parseRecordXML(fullpath2)
-                for fi in dh.fields:
-                    if fi not in fields[recordname]:
-                        fields[recordname][fi] = dh.fields[fi]
-                inheritance = dh.inheritance
+        if not inheritance: inheritance = "Record"
+        fields[recordname].update(getRecordInheritance(inheritance))
     return (fields, details)
+
+@cache.store
+def getRecordInheritance(inheritance):
+    """Recursive search of inheritance"""
+    fields = {}
+    paths = findPaths(inheritance)
+    if not paths: return fields
+    for level in paths:
+        fullpath = paths[level]["fullpath"]
+        dh = parseRecordXML(fullpath)
+        fields.update([(fi, dh.fields[fi]) for fi in dh.fields])
+        inheritance = dh.inheritance
+    if not inheritance: inheritance = "Record"
+    if inheritance != "RawRecord":
+        fields.update(getRecordInheritance(inheritance))
+    return fields
 
 @cache.store
 def findPaths(name, extensions=".record.xml", instant=False):
@@ -143,3 +147,4 @@ if __name__ == "__main__":
             print at
         for mt in meth:
             print mt
+

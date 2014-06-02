@@ -13,6 +13,7 @@ def classes_transform(module):
     if modname in built: return
     if findPaths(modname, instant=True): #Record Class
         records, details = getRecordsInfo(modname)
+        if modname not in records: return
         for fields in records[modname]:
             if records[modname][fields] == "detail":
                 detailname = details[modname][fields]
