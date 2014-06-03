@@ -1,7 +1,7 @@
 import os
 import difflib
 from cache import cache
-from parse import parseSettingsXML, parseRecordXML
+from parse import parseSettingsXML, parseRecordXML, parseRecordRowName
 from pyparse import parseScript
 
 __playeroPath__ = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
@@ -24,7 +24,7 @@ def getRecordsInfo(modulename, extensions=".record.xml"):
     for level in paths:
         filename = paths[level]['file']
         fullpath = paths[level]['fullpath']
-        recordname = filename.split('.')[0]
+        recordname = paths[level]['realname']
         if recordname not in fields:
             fields[recordname] = {}
             details[recordname] = {}
@@ -70,26 +70,32 @@ def findPaths(name, extensions=".record.xml", instant=False):
                     if passType == "exact":
                         if filo in nalo:
                             uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                            paths[level] = {"fullpath":uniquePath, "file":filename}
+                            paths[level] = {"fullpath":uniquePath, "file":filename, "realname":filename.split('.')[0]}
                             level += 1
                             if instant: break
                     elif passType == "percent" and name not in ("Routine","Report"):
-                        idx = 0
-                        if len(name)>5: idx=5 #files starting with the same 5 letter
                         for namelower in nalo:
-                            if filo[:idx] != namelower[:idx]: continue
-                            if len(namelower) > len(filo): continue
-                            matchpercent = difflib.SequenceMatcher(None, filo, namelower).ratio()
+                            matchpercent = difflib.SequenceMatcher(isjunk=lambda x: x in tupledExtensions,
+                                                                    a=filo,
+                                                                    b=namelower
+                                                                ).ratio()
                             if matchpercent > 0.91:
                                 uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                                paths[level] = {"fullpath":uniquePath, "file": filename}
-                                level += 1
-                                if instant: break
+                                if name.endswith("Row"):
+                                    dh = parseRecordRowName(uniquePath)
+                                    if name == dh.name:
+                                        paths[level] = {"fullpath":uniquePath, "file": filename, "realname": dh.name}
+                                        level += 1
+                                else:
+                                    paths[level] = {"fullpath":uniquePath, "file": filename, "realname": filename.split('.')[0]}
+                                    level += 1
+                                    if instant: break
+
     if not paths:
         for coremodule in (x for x in ("User","LoginDialog") if x == name):
             filename = "%s.record.xml" % coremodule
             userpath = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", filename))
-            paths = {0:{"fullpath":userpath, "file":filename}}
+            paths = {0:{"fullpath":userpath, "file":filename, "realname":filename.split('.')[0]}}
     return paths
 
 def getFullPaths(extraDirs):
@@ -105,13 +111,13 @@ def getClassInfo(modulename, parent=""):
             for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in (modulename, parent)]:
                 fullfilepath = os.path.join(path, filename)
                 parse = parseScript(fullfilepath)
-                [attributes.add(x) for x in parse.attributes]
-                [methods.add(x) for x in parse.methods]
+                attributes.update(x for x in parse.attributes)
+                methods.update(x for x in parse.methods)
                 inheritance = parse.inheritance
     if modulename in inheritance:
         heirattr, heirmeths = getClassInfo(inheritance[modulename])
-        [attributes.add(x) for x in heirattr]
-        [methods.add(x) for x in heirmeths]
+        attributes.update(x for x in heirattr)
+        methods.update(x for x in heirmeths)
     if parent not in ("Report","Routine"):
         attributes.add("rowNr")
         methods.add("forceDelete")
@@ -123,9 +129,9 @@ def getClassInfo(modulename, parent=""):
 
 def logHere(value, filename="log.log"):
     HERE = os.path.dirname(os.path.abspath(__file__))
-    logfile = os.path.join(HERE, 'logs',filename)
-    f = file(logfile,"a")
-    f.write(str(value)+"\n")
+    logfile = os.path.join(HERE, 'logs', filename)
+    f = file(logfile, "a")
+    f.write("%s\n" % str(value))
 
 def getModName(modname):
     if modname.find(".")>-1:

@@ -76,6 +76,7 @@ def modules_transform(module):
                 if len(parents[supers]) > 1:
                     heir, dad = parents[supers][0], parents[supers][1]
                     module.locals['SuperClass'] = buildSuperClass(heir, dad)
+    module.locals['CThread'] = buildCThread()
 
 
 ###classes_transform_methods###
@@ -124,7 +125,7 @@ def buildMethod(name, method):
 ###modules_transforms_methods###
 def buildSuperClass(classname, parent=""):
     built.add("SuperClass")
-    attributes, methods = getClassInfo(classname, parent)
+    methods = getClassInfo(classname, parent)[1]
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
     txt = '''
 def %s(classname, superclassname, filename):
@@ -134,6 +135,17 @@ def %s(classname, superclassname, filename):
 ''' % ("SuperClass", classname, "\n".join(methsTxt), classname)
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals["SuperClass"]
+
+def buildCThread():
+    txt = """
+class CThread:
+    def __init__(*args): pass
+    def setName(*args): pass
+    def start(*args): pass
+"""
+    fake = AstroidBuilder(MANAGER).string_build(txt)
+    return fake.locals["CThread"]
+
 
 
 def register(linter):

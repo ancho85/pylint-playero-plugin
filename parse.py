@@ -21,7 +21,7 @@ class XMLRecordHandler(handler.ContentHandler):
         self.inheritance = ""
 
     def startElement(self, name, attrs):
-        if name not in ("record","detailrecord","reportwindow","routinewindow"):
+        if name.lower() not in ("record", "detailrecord", "reportwindow", "routinewindow"):
             if attrs.has_key("name"):
                 fieldname = str(attrs.get("name",""))
                 fieldtype = str(attrs.get("type"))
@@ -36,6 +36,21 @@ class XMLRecordHandler(handler.ContentHandler):
 
     def endElement(self, name):
         pass
+
+def parseRecordRowName(filename):
+    parser = make_parser()
+    parser.setFeature(feature_namespaces, 0)
+    dh = XMLRecordRowHandler()
+    parser.setContentHandler(dh)
+    parser.parse(open(filename, "r"))
+    return dh
+
+class XMLRecordRowHandler(handler.ContentHandler):
+    def __init__(self):
+        self.name = ""
+    def startElement(self, name, attrs):
+        if name.lower() == "detailrecord":
+            self.name = str(attrs.get("name"))
 
 ###SETTINGS###
 def parseSettingsXML(filename):
