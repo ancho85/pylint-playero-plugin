@@ -3,7 +3,7 @@ from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
 from funcs import getRecordsInfo, findPaths, getClassInfo, getModName, logHere
 
-built = set()
+built, notFound = set(), set()
 built.add("Record")
 built.add("RawRecord")
 
@@ -11,6 +11,7 @@ built.add("RawRecord")
 def classes_transform(module):
     modname = getModName(module.name)
     if modname in built: return
+    if modname in notFound: return
     if findPaths(modname, instant=True): #Record Class
         records, details = getRecordsInfo(modname)
         if modname not in records: return
@@ -45,11 +46,14 @@ def classes_transform(module):
                 attributes, methods = getClassInfo(modname, parent=classtype)
                 instanceFields = list(records[modname]) + list(attributes)
                 module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        else:
+            notFound.add(modname)
 
 def modules_transform(module):
     modname = module.name
     if not modname: return
     modname = getModName(modname)
+    if modname in notFound: return
     if findPaths(modname, instant=True):
         parents = {}
         for assnodes in module.locals:

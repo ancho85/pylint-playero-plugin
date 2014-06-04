@@ -33,7 +33,6 @@ def getRecordsInfo(modulename, extensions=".record.xml"):
     details = {}
     paths = findPaths(modulename, extensions)
     for level in paths:
-        filename = paths[level]['file']
         fullpath = paths[level]['fullpath']
         recordname = paths[level]['realname']
         if recordname not in fields:
@@ -84,7 +83,7 @@ def findPaths(name, extensions=".record.xml", instant=False):
                             paths[level] = {"fullpath":uniquePath, "file":filename, "realname":filename.split('.')[0]}
                             level += 1
                             if instant: break
-                    elif passType == "percent" and name not in ("Routine","Report"):
+                    elif passType == "percent" and name not in ("Routine","Report") and name.lower().endswith("row"):
                         for namelower in nalo:
                             matchpercent = difflib.SequenceMatcher(isjunk=lambda x: x in tupledExtensions,
                                                                     a=filo,
@@ -92,15 +91,10 @@ def findPaths(name, extensions=".record.xml", instant=False):
                                                                 ).ratio()
                             if matchpercent > 0.91:
                                 uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                                if name.endswith("Row"):
-                                    dh = parseRecordRowName(uniquePath)
-                                    if name == dh.name:
-                                        paths[level] = {"fullpath":uniquePath, "file": filename, "realname": dh.name}
-                                        level += 1
-                                else:
-                                    paths[level] = {"fullpath":uniquePath, "file": filename, "realname": filename.split('.')[0]}
+                                dh = parseRecordRowName(uniquePath)
+                                if name == dh.name:
+                                    paths[level] = {"fullpath":uniquePath, "file": filename, "realname": dh.name}
                                     level += 1
-                                    if instant: break
 
     if not paths:
         for coremodule in (x for x in ("User","LoginDialog") if x == name):
