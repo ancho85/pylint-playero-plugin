@@ -4,9 +4,20 @@ from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseRecordRowName
 from pyparse import parseScript
 
-__playeroPath__ = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
-if (os.name == "posix"):
-    __playeroPath__ = "/home/ancho/Develop/Playero/"
+@cache.store
+def getPlayeroPath():
+    import ConfigParser
+    try:
+        config = ConfigParser.SafeConfigParser()
+        config.read("config/playero.cfg")
+        res = config.get('paths', os.name)
+    except ConfigParser.NoSectionError:
+        res = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
+        if (os.name == "posix"):
+            res = "/home/ancho/Develop/Playero/"
+    return res
+
+__playeroPath__ = getPlayeroPath()
 
 @cache.store
 def getScriptDirs(level=255):
