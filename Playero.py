@@ -1,7 +1,7 @@
 from astroid import MANAGER, node_classes
 from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
-from funcs import getRecordsInfo, findPaths, getClassInfo, getModName, logHere
+from funcs import *
 
 built, notFound = set(), set()
 built.add("Record")
@@ -12,8 +12,10 @@ def classes_transform(module):
     modname = getModName(module.name)
     if modname in built: return
     if modname in notFound: return
-    if findPaths(modname, instant=True): #Record Class
-        records, details = getRecordsInfo(modname)
+    found = False
+    searchExtensions = ".record.xml,.window.xml"
+    if findPaths(modname, extensions=searchExtensions, instant=True): #Record Class
+        records, details = getRecordsInfo(modname, extensions=searchExtensions)
         if modname not in records: return
         for fields in records[modname]:
             if records[modname][fields] == "detail":
@@ -32,7 +34,12 @@ def classes_transform(module):
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
 
         if module.name.endswith("Window"): #Window Class
+            if len(methods) == len(defaultMethods):
+                realpath = findPaths(modname, searchExtensions, instant=True)[0]["fullpath"]
+                dh = parseRecordXML(realpath)
+                methods += list(getClassInfo(dh.name, dh.inheritance)[1])
             module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        found = True
     else: #Check for Reports and Routines
         searchExtensions = ".reportwindow.xml,.routinewindow.xml"
         if findPaths(modname, extensions=searchExtensions, instant=True):
@@ -46,15 +53,18 @@ def classes_transform(module):
                 attributes, methods = getClassInfo(modname, parent=classtype)
                 instanceFields = list(records[modname]) + list(attributes)
                 module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
-        else:
-            notFound.add(modname)
+                found = True
+    if found: built.add(modname)
+    else: notFound.add(modname)
+
 
 def modules_transform(module):
     modname = module.name
     if not modname: return
     modname = getModName(modname)
-    if modname in notFound: return
-    if findPaths(modname, instant=True):
+    if modname == "OpenOrange":
+        module.locals.update(buildCore())
+    else:
         parents = {}
         for assnodes in module.locals:
             ass = module.locals[assnodes][0]
@@ -149,6 +159,12 @@ class CThread:
 """
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals["CThread"]
+
+def buildCore():
+    import os
+    coreTxt = open(os.path.join(os.path.dirname(__file__), "corepy","coreRedef.py"), "r").read()
+    fake = AstroidBuilder(MANAGER).string_build(coreTxt)
+    return fake.locals
 
 
 

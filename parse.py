@@ -19,6 +19,7 @@ class XMLRecordHandler(handler.ContentHandler):
         self.details = {}
         self.isPersistent = True
         self.inheritance = ""
+        self.name = ""
 
     def startElement(self, name, attrs):
         if name.lower() not in ("record", "detailrecord", "reportwindow", "routinewindow"):
@@ -31,8 +32,10 @@ class XMLRecordHandler(handler.ContentHandler):
         else:
             if attrs.has_key("inherits"):
                 self.inheritance = str(attrs.get("inherits"))
-            elif attrs.has_key("persistent"):
+            if attrs.has_key("persistent"):
                 self.isPersistent = bool(attrs.get("persistent"))
+            if attrs.has_key("name"):
+                self.name = str(attrs.get("name"))
 
     def endElement(self, name):
         pass
@@ -51,6 +54,22 @@ class XMLRecordRowHandler(handler.ContentHandler):
     def startElement(self, name, attrs):
         if name.lower() == "detailrecord":
             self.name = str(attrs.get("name"))
+
+###WINDOW###
+def parseWindowRecordName(filename):
+    parser = make_parser()
+    parser.setFeature(feature_namespaces, 0)
+    dh = XMLWindowRecordNameHandler()
+    parser.setContentHandler(dh)
+    parser.parse(open(filename, "r"))
+    return dh
+
+class XMLWindowRecordNameHandler(handler.ContentHandler):
+    def __init__(self):
+        self.name = ""
+    def startElement(self, name, attrs):
+        if name.lower() == "window":
+            self.name = str(attrs.get("recordname"))
 
 ###SETTINGS###
 def parseSettingsXML(filename):

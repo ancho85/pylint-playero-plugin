@@ -1,8 +1,11 @@
 import os
 import difflib
 from cache import cache
-from parse import parseSettingsXML, parseRecordXML, parseRecordRowName
+from parse import parseSettingsXML, parseRecordXML, parseRecordRowName, parseWindowRecordName
 from pyparse import parseScript
+
+defaultAttributes = ["rowNr"]
+defaultMethods = ["forceDelete", "afterCopy", "printDocument"]
 
 @cache.store
 def getPlayeroPath():
@@ -80,7 +83,13 @@ def findPaths(name, extensions=".record.xml", instant=False):
                     if passType == "exact":
                         if filo in nalo:
                             uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                            paths[level] = {"fullpath":uniquePath, "file":filename, "realname":filename.split('.')[0]}
+                            if filename.endswith(".window.xml"):
+                                dh = parseWindowRecordName(uniquePath)
+                                uniquePath = os.path.join(__playeroPath__, sd, "interface", "%s.record.xml" % dh.name)
+                                if not os.path.exists(uniquePath): #a window redef but no record
+                                    path = findPaths(dh.name, extensions=".record.xml", instant=True)
+                                    uniquePath = path[0]["fullpath"]
+                            paths[level] = {"fullpath":uniquePath, "realname":filename.split('.')[0]}
                             level += 1
                             if instant: break
                     elif passType == "percent" and name not in ("Routine","Report") and name.lower().endswith("row"):
@@ -93,14 +102,14 @@ def findPaths(name, extensions=".record.xml", instant=False):
                                 uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
                                 dh = parseRecordRowName(uniquePath)
                                 if name == dh.name:
-                                    paths[level] = {"fullpath":uniquePath, "file": filename, "realname": dh.name}
+                                    paths[level] = {"fullpath":uniquePath, "realname": dh.name}
                                     level += 1
 
     if not paths:
         for coremodule in (x for x in ("User","LoginDialog") if x == name):
             filename = "%s.record.xml" % coremodule
             userpath = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", filename))
-            paths = {0:{"fullpath":userpath, "file":filename, "realname":filename.split('.')[0]}}
+            paths = {0:{"fullpath":userpath, "realname":filename.split('.')[0]}}
     return paths
 
 def getFullPaths(extraDirs):
@@ -124,10 +133,8 @@ def getClassInfo(modulename, parent=""):
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
     if parent not in ("Report","Routine"):
-        attributes.add("rowNr")
-        methods.add("forceDelete")
-        methods.add("afterCopy")
-        methods.add("printDocument")
+        attributes.update(x for x in defaultAttributes)
+        methods.update(x for x in defaultMethods)
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)

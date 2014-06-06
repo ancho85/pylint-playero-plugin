@@ -214,7 +214,7 @@ zope=no
 # system, and so shouldn't trigger E0201 when accessed. Python regular
 
 # expressions are accepted.
-generated-members=REQUEST,acl_users,aq_parent,load,isLocal,isNew,name,fields,setFocusOnField,details,calculateDetailNames,calculateFieldNames,calculateIndexes,isModified,getFieldLabel,hasField,oldFields,setModified,setNew,isDetail,setFieldDecimals,setRowFieldDecimals,getListWindowFilter,getListWindowSortFields,setRecord,getMatrixColumns,close,run,getFileOutput,clear,render,session,addImageLink,getAbsolutePos,getRelativePos,getListView,getColumnText,confirming,unconfirming,open,refresh,getView,currentPageNr,shouldFinish,tableName,getTitle,getReportView,setFocus,currentField,currentMatrixName,currentRow,setTabPageVisibility,getImageView,getParameter,setDefaultFontSize
+generated-members=REQUEST,acl_users,aq_parent,load,isLocal,isNew,name,fields,setFocusOnField,details,calculateDetailNames,calculateFieldNames,calculateIndexes,isModified,getFieldLabel,hasField,oldFields,setModified,setNew,isDetail,setFieldDecimals,setRowFieldDecimals,getListWindowFilter,getListWindowSortFields,setRecord,getMatrixColumns,close,getFileOutput,clear,render,session,addImageLink,getAbsolutePos,getRelativePos,getListView,getColumnText,confirming,unconfirming,open,refresh,getView,currentPageNr,shouldFinish,tableName,getTitle,getReportView,setFocus,currentField,currentMatrixName,currentRow,setTabPageVisibility,getImageView,getParameter,setDefaultFontSize,__field_decimals__
 
 
 [VARIABLES]
@@ -230,7 +230,7 @@ dummy-variables-rgx=_$|dummy
 # List of additional names supposed to be defined in builtins. Remember that
 
 # you should avoid to define new builtins when possible.
-additional-builtins=Query,getSettingsFileName,commit,rollback,getApplicationType,embedded_getSaveFileName,hasConsole,curUser,messagesEnabled,displaymessage,logstring,getSelection,askYesNo,Embedded_Record,getModulesInfo,getRecordsInfo,NewRecord,sysprint,Embedded_Report,Embedded_Document,processEvents,getImagePath,currentCompany,genPassword,postMessage,decode,currentWindow,beep,printRecord,disableMessages,getWebDir,getDirectoryName,getOpenFileName,currentCompanyHost,getWindowsInfo,exitProgram,md5
+additional-builtins=Query,getSettingsFileName,commit,rollback,getApplicationType,embedded_getSaveFileName,hasConsole,curUser,messagesEnabled,displaymessage,logstring,getSelection,askYesNo,Embedded_Record,getRecordsInfo,NewRecord,sysprint,Embedded_Report,Embedded_Document,processEvents,getImagePath,currentCompany,genPassword,postMessage,decode,currentWindow,beep,printRecord,disableMessages,getWebDir,getDirectoryName,getOpenFileName,currentCompanyHost,exitProgram,md5
 
 
 [CLASSES]
