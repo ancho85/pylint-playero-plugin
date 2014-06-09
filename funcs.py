@@ -46,24 +46,30 @@ def getRecordsInfo(modulename, extensions=".record.xml"):
         details[recordname].update([(de, dh.details[de]) for de in dh.details])
         inheritance = dh.inheritance
         if not inheritance: inheritance = "Record"
-        fields[recordname].update(getRecordInheritance(inheritance))
+        heirFields, heirDetails = getRecordInheritance(inheritance)
+        fields[recordname].update(heirFields)
+        details[recordname].update(heirDetails)
     return (fields, details)
 
 @cache.store
 def getRecordInheritance(inheritance):
     """Recursive search of inheritance"""
     fields = {}
+    details = {}
     paths = findPaths(inheritance)
     if not paths: return fields
     for level in paths:
         fullpath = paths[level]["fullpath"]
         dh = parseRecordXML(fullpath)
         fields.update([(fi, dh.fields[fi]) for fi in dh.fields])
+        details.update([(de, dh.details[de]) for de in dh.details])
         inheritance = dh.inheritance
     if not inheritance: inheritance = "Record"
     if inheritance != "RawRecord":
-        fields.update(getRecordInheritance(inheritance))
-    return fields
+        heirFields, heirDetails = getRecordInheritance(inheritance)
+        fields.update(heirFields)
+        details.update(heirDetails)
+    return (fields, details)
 
 @cache.store
 def findPaths(name, extensions=".record.xml", instant=False):
