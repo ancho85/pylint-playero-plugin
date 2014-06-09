@@ -126,16 +126,21 @@ def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = set(), set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(__playeroPath__,"core"))
+    searchInList = [modulename]
+    if parent and parent != modulename:
+        searchInList.append(parent)
     for path in paths:
         if os.path.exists(path):
-            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in (modulename, parent)]:
+            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in searchInList]:
                 fullfilepath = os.path.join(path, filename)
                 parse = parseScript(fullfilepath)
                 attributes.update(x for x in parse.attributes)
                 methods.update(x for x in parse.methods)
                 inheritance = parse.inheritance
     if modulename in inheritance:
-        heirattr, heirmeths = getClassInfo(inheritance[modulename])
+        heir = inheritance[modulename]
+        if not heir: heir = "Master"
+        heirattr, heirmeths = getClassInfo(heir)
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
     if parent not in ("Report","Routine"):
