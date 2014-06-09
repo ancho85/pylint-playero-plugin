@@ -1,6 +1,7 @@
 from xml.sax import handler
 from xml.sax import make_parser
 from xml.sax.handler import feature_namespaces
+from xml.sax._exceptions import SAXParseException
 
 ###RECORD###
 
@@ -61,7 +62,14 @@ def parseWindowRecordName(filename):
     parser.setFeature(feature_namespaces, 0)
     dh = XMLWindowRecordNameHandler()
     parser.setContentHandler(dh)
-    parser.parse(open(filename, "r"))
+    openedfile = open(filename, "r")
+    try:
+        parser.parse(openedfile)
+    except SAXParseException:
+        if not dh.name:
+            fixedfile = reformatXml(openedfile)
+            parser.parse(fixedfile)
+    openedfile.close()
     return dh
 
 class XMLWindowRecordNameHandler(handler.ContentHandler):
@@ -104,3 +112,15 @@ class XMLSettingsHandler(handler.ContentHandler):
         except:
             res = repr(value)
         return res
+
+def reformatXml(openedfile):
+    import re
+    readedfile = openedfile.read()
+    joinnodes = re.compile(r"\s=\s\"")
+    separatenodes = re.compile(r'([a-z]+="[a-z]*")', re.IGNORECASE)
+    newread = joinnodes.sub("=\"", readedfile)
+    res = re.sub(separatenodes, r' \1', newread)
+    import cStringIO
+    fileobj = cStringIO.StringIO()
+    fileobj.write(res)
+    return fileobj
