@@ -3,14 +3,10 @@ from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
 from funcs import *
 
-built, notFound = set(), set()
-built.add("Record")
-built.add("RawRecord")
-
+notFound = set()
 
 def classes_transform(module):
     modname = getModName(module.name)
-    if modname in built: return
     if modname in notFound: return
     found = False
     searchExtensions = ".record.xml,.window.xml"
@@ -54,8 +50,8 @@ def classes_transform(module):
                 instanceFields = list(records[modname]) + list(attributes)
                 module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
                 found = True
-    if found: built.add(modname)
-    else: notFound.add(modname)
+    if not found:
+        notFound.add(modname)
 
 
 def modules_transform(module):
@@ -96,7 +92,6 @@ def modules_transform(module):
 ###classes_transform_methods###
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
-    built.add(itername)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
@@ -117,7 +112,6 @@ class %s(object):
 
 def buildInstantiator(name, instancerName, fields, methods):
     instantiatorname = "%s_%s" % (name, instancerName)
-    built.add(instantiatorname)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods]
     fake = AstroidBuilder(MANAGER).string_build('''
@@ -138,7 +132,6 @@ def buildMethod(name, method):
 
 ###modules_transforms_methods###
 def buildSuperClass(classname, parent=""):
-    built.add("SuperClass")
     methods = getClassInfo(classname, parent)[1]
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
     txt = '''

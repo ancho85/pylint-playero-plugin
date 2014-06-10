@@ -5,7 +5,7 @@ from parse import parseSettingsXML, parseRecordXML, parseRecordRowName, parseWin
 from pyparse import parseScript
 
 defaultAttributes = ["rowNr"]
-defaultMethods = ["forceDelete", "afterCopy", "printDocument"]
+defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete"]
 
 @cache.store
 def getPlayeroPath():
