@@ -26,32 +26,10 @@ def modules_transform(module):
     if modname == "OpenOrange":
         module.locals.update(buildCore())
     else:
-        parents = {}
-        for assnodes in module.locals:
-            ass = module.locals[assnodes][0]
-            if not (
-                    isinstance(ass, node_classes.AssName) and
-                    isinstance(ass.statement(), node_classes.Assign)
-                    ): continue
-            else:
-                for supers in [ #list comprehention of SuperClass' calls
-                                superCall for superCall in ass.assigned_stmts()
-                                if isinstance(superCall, node_classes.CallFunc)
-                                and superCall.as_string().startswith("SuperClass")
-                ]:
-                    parents[ass.name] = []
-                    for arg in [
-                                classString for classString in supers.args
-                                if isinstance(classString, node_classes.Const)
-                                and not classString.value.endswith("Row")
-                    ]:
-                        parents[ass.name].append(arg.value)
-        if parents:
-            for supers in parents:
-                if len(parents[supers]) > 1:
-                    heir, dad = parents[supers][0], parents[supers][1]
-                    module.locals['SuperClass'] = buildSuperClass(heir, dad)
+        buildSuperClassModule(module)
     module.locals['CThread'] = buildCThread()
+
+
 
 
 ###classes_transform_methods###
@@ -152,6 +130,33 @@ def buildMethod(name, method):
 
 
 ###modules_transforms_methods###
+def buildSuperClassModule(module):
+    parents = {}
+    for assnodes in module.locals:
+        ass = module.locals[assnodes][0]
+        if not (
+                isinstance(ass, node_classes.AssName) and
+                isinstance(ass.statement(), node_classes.Assign)
+                ): continue
+        else:
+            for supers in [ #list comprehention of SuperClass' calls
+                            superCall for superCall in ass.assigned_stmts()
+                            if isinstance(superCall, node_classes.CallFunc)
+                            and superCall.as_string().startswith("SuperClass")
+            ]:
+                parents[ass.name] = []
+                for arg in [
+                            classString for classString in supers.args
+                            if isinstance(classString, node_classes.Const)
+                            and not classString.value.endswith("Row")
+                ]:
+                    parents[ass.name].append(arg.value)
+    if parents:
+        for supers in parents:
+            if len(parents[supers]) > 1:
+                heir, dad = parents[supers][0], parents[supers][1]
+                module.locals['SuperClass'] = buildSuperClass(heir, dad)
+
 def buildSuperClass(classname, parent=""):
     methods = getClassInfo(classname, parent)[1]
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
