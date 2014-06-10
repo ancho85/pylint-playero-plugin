@@ -13,49 +13,12 @@ def classes_transform(module):
     if not paths:
         paths = findPaths(modname, ".window.xml", True)
     if paths:
-        searchExtensions = ".record.xml,.window.xml"
-        records, details = getRecordsInfo(modname, searchExtensions)
-        if modname not in records: return
-        for fields in records[modname]:
-            if records[modname][fields] == "detail":
-                detailname = details[modname][fields]
-                detrecords = getRecordsInfo(detailname)[0]
-                module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
-            else:
-                module.locals[fields] = records[modname][fields]
-        attributes, methods = getClassInfo(modname, getModName(module.parent.name))
-        instanceFields = list(records[modname]) + list(attributes)
-
-        for insBuilder in ("bring", "getMasterRecord"):
-            module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
-
-        module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
-        module.locals.update([(meths, buildMethod(modname, meths)) for meths in methods if meths not in module.locals])
-
-        if module.name.endswith("Window"): #Window Class
-            if len(methods) == len(defaultMethods):
-                realpath = findPaths(modname, searchExtensions, instant=True)[0]["fullpath"]
-                dh = parseRecordXML(realpath)
-                methods += list(getClassInfo(dh.name, dh.inheritance)[1])
-            module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
-        found = True
+        found = buildRecordModule(module)
     else: #Check for Reports and Routines
-        paths = findPaths(modname, ".reportwindow.xml", True)
-        if not paths:
-            paths = findPaths(modname, ".routinewindow.xml", True)
-        if paths:
-            searchExtensions = ".reportwindow.xml,.routinewindow.xml"
-            classtype = module.basenames[0]
-            if classtype not in ("Report","Routine"):
-                rootname =  module.bases[0].root().name
-                if rootname.find(".reports.")>-1: classtype = "Report"
-                elif rootname.find(".routines.")>-1: classtype = "Routine"
-            if classtype in ("Report","Routine"):
-                records, details = getRecordsInfo(modname, extensions=searchExtensions)
-                attributes, methods = getClassInfo(modname, parent=classtype)
-                instanceFields = list(records[modname]) + list(attributes)
-                module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
-                found = True
+        if findPaths(modname, ".reportwindow.xml", True):
+            found = buildReportModule(module)
+        elif findPaths(modname, ".routinewindow.xml", True):
+            found = buildRoutineModule(module)
     if not found:
         notFound.add(modname)
 
@@ -96,6 +59,65 @@ def modules_transform(module):
 
 
 ###classes_transform_methods###
+def buildRecordModule(module):
+    modname = getModName(module.name)
+    searchExtensions = ".record.xml,.window.xml"
+    records, details = getRecordsInfo(modname, searchExtensions)
+    if modname not in records: return
+    for fields in records[modname]:
+        if records[modname][fields] == "detail":
+            detailname = details[modname][fields]
+            detrecords = getRecordsInfo(detailname)[0]
+            module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
+        else:
+            module.locals[fields] = records[modname][fields]
+    attributes, methods = getClassInfo(modname, getModName(module.parent.name))
+    instanceFields = list(records[modname]) + list(attributes)
+
+    for insBuilder in ("bring", "getMasterRecord"):
+        module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
+
+    module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
+    module.locals.update([(meths, buildMethod(modname, meths)) for meths in methods if meths not in module.locals])
+
+    if module.name.endswith("Window"): #Window Class
+        if len(methods) == len(defaultMethods):
+            realpath = findPaths(modname, searchExtensions, instant=True)[0]["fullpath"]
+            dh = parseRecordXML(realpath)
+            methods += list(getClassInfo(dh.name, dh.inheritance)[1])
+        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+    return True
+
+def buildReportModule(module):
+    modname = getModName(module.name)
+    res = False
+    classtype = module.basenames[0]
+    if classtype != "Report":
+        rootname =  module.bases[0].root().name
+        if rootname.find(".reports.")>-1: classtype = "Report"
+    if classtype in ("Report","Routine"):
+        records, details = getRecordsInfo(modname, extensions=".reportwindow.xml")
+        attributes, methods = getClassInfo(modname, parent=classtype)
+        instanceFields = list(records[modname]) + list(attributes)
+        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        res = True
+    return res
+
+def buildRoutineModule(module):
+    modname = getModName(module.name)
+    res = False
+    classtype = module.basenames[0]
+    if classtype != "Routine":
+        rootname =  module.bases[0].root().name
+        if rootname.find(".routines.")>-1: classtype = "Routine"
+    if classtype == "Routine":
+        records, details = getRecordsInfo(modname, extensions=".routinewindow.xml")
+        attributes, methods = getClassInfo(modname, parent=classtype)
+        instanceFields = list(records[modname]) + list(attributes)
+        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        res = True
+    return res
+
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
