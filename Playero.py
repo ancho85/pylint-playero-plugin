@@ -9,16 +9,12 @@ def classes_transform(module):
     modname = getModName(module.name)
     if modname in notFound: return
     found = False
-    paths = findPaths(modname, ".record.xml", True)
-    if not paths:
-        paths = findPaths(modname, ".window.xml", True)
-    if paths:
+    if findPaths(modname, ".record.xml", True) or findPaths(modname, ".window.xml", True):
         found = buildRecordModule(module)
-    else: #Check for Reports and Routines
-        if findPaths(modname, ".reportwindow.xml", True):
-            found = buildReportModule(module)
-        elif findPaths(modname, ".routinewindow.xml", True):
-            found = buildRoutineModule(module)
+    elif findPaths(modname, ".reportwindow.xml", True):
+        found = buildReportModule(module)
+    elif findPaths(modname, ".routinewindow.xml", True):
+        found = buildRoutineModule(module)
     if not found:
         notFound.add(modname)
 
