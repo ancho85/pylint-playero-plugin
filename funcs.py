@@ -163,15 +163,21 @@ def getModName(modname):
         modname = modname.split("Window")[0]
     return modname
 
+def ifElse(condition, trueVal, falseVal):
+    res = falseVal
+    if isinstance(condition, str):
+        condition = ifElse(len(condition.strip()), condition, "")
+    if condition: res = trueVal
+    return res
+
 if __name__ == "__main__":
-    ok =  ["PayMode","CredCardType"] #lineending failure
-    ok += ["Invoice", "PySettings","AccountSettings","Cheque"]
-    ok += ["CreditCard","Bank","GasStationSettings","SerNrControl","User","Coupon","SLRetencionDoc","SLRetencionDocWindow","Retencion"]
-    ok += ["Transaction","ContactWay"]
-    ok = ["ValuesIncome"]
+    ok =  ["PayMode", "CredCardType"] #lineending failure
+    ok += ["Invoice", "PySettings", "AccountSettings", "Cheque"]
+    ok += ["CreditCard", "Bank", "GasStationSettings", "SerNrControl", "User", "Coupon", "SLRetencionDoc", "SLRetencionDocWindow", "Retencion"]
+    ok += ["Transaction", "ContactWay"]
     for b in ok:
         print "     processing", b
-        attr, meth= getClassInfo(b)
+        attr, meth = getClassInfo(b)
         for at in attr:
             print at
         for mt in meth:
