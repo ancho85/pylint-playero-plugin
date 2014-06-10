@@ -9,9 +9,12 @@ def classes_transform(module):
     modname = getModName(module.name)
     if modname in notFound: return
     found = False
-    searchExtensions = ".record.xml,.window.xml"
-    if findPaths(modname, extensions=searchExtensions, instant=True): #Record Class
-        records, details = getRecordsInfo(modname, extensions=searchExtensions)
+    paths = findPaths(modname, ".record.xml", True)
+    if not paths:
+        paths = findPaths(modname, ".window.xml", True)
+    if paths:
+        searchExtensions = ".record.xml,.window.xml"
+        records, details = getRecordsInfo(modname, searchExtensions)
         if modname not in records: return
         for fields in records[modname]:
             if records[modname][fields] == "detail":
@@ -20,11 +23,11 @@ def classes_transform(module):
                 module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
             else:
                 module.locals[fields] = records[modname][fields]
-        modparent = getModName(module.parent.name)
-        attributes, methods = getClassInfo(modname, modparent)
+        attributes, methods = getClassInfo(modname, getModName(module.parent.name))
         instanceFields = list(records[modname]) + list(attributes)
-        module.locals["bring"] = buildInstantiator(modname, "bring", instanceFields, methods)
-        module.locals["getMasterRecord"] = buildInstantiator(modparent, "getMasterRecord", instanceFields, methods)
+
+        for insBuilder in ("bring", "getMasterRecord"):
+            module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
 
         module.locals.update([(attr, {0:None}) for attr in attributes if not attr.startswith("_")])
         module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
