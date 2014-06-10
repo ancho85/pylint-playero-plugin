@@ -89,29 +89,26 @@ def buildRecordModule(module):
     return True
 
 def buildReportModule(module):
-    modname = getModName(module.name)
-    res = False
-    classtype = module.basenames[0]
-    if classtype != "Report":
-        rootname =  module.bases[0].root().name
-        if rootname.find(".reports.")>-1: classtype = "Report"
-    if classtype in ("Report","Routine"):
-        records, details = getRecordsInfo(modname, extensions=".reportwindow.xml")
-        attributes, methods = getClassInfo(modname, parent=classtype)
-        instanceFields = list(records[modname]) + list(attributes)
-        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
-        res = True
-    return res
+    return genericBuilder(module, "Report")
 
 def buildRoutineModule(module):
-    modname = getModName(module.name)
+    return genericBuilder(module, "Routine")
+
+def genericBuilder(module, buildIdx):
     res = False
+    buildType = {
+                "Report": [".reportwindow.xml", ".reports."],
+                "Routine": [".routinewindow.xml",".routines."]
+    }
+    ext = buildType[buildIdx][0]
+    cls = buildType[buildIdx][1]
+    modname = getModName(module.name)
     classtype = module.basenames[0]
-    if classtype != "Routine":
+    if classtype != buildIdx:
         rootname =  module.bases[0].root().name
-        if rootname.find(".routines.")>-1: classtype = "Routine"
-    if classtype == "Routine":
-        records, details = getRecordsInfo(modname, extensions=".routinewindow.xml")
+        if rootname.find(cls)>-1: classtype = buildIdx
+    if classtype == buildIdx:
+        records = getRecordsInfo(modname, extensions=ext)[0]
         attributes, methods = getClassInfo(modname, parent=classtype)
         instanceFields = list(records[modname]) + list(attributes)
         module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
