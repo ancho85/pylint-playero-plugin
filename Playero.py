@@ -29,8 +29,8 @@ def classes_transform(module):
         for insBuilder in ("bring", "getMasterRecord"):
             module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
 
-        module.locals.update([(attr, {0:None}) for attr in attributes if not attr.startswith("_")])
-        module.locals.update([(meth, buildMethod(modname, meth)) for meth in methods if meth not in module.locals])
+        module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
+        module.locals.update([(meths, buildMethod(modname, meths)) for meths in methods if meths not in module.locals])
 
         if module.name.endswith("Window"): #Window Class
             if len(methods) == len(defaultMethods):
@@ -40,8 +40,11 @@ def classes_transform(module):
             module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
         found = True
     else: #Check for Reports and Routines
-        searchExtensions = ".reportwindow.xml,.routinewindow.xml"
-        if findPaths(modname, extensions=searchExtensions, instant=True):
+        paths = findPaths(modname, ".reportwindow.xml", True)
+        if not paths:
+            paths = findPaths(modname, ".routinewindow.xml", True)
+        if paths:
+            searchExtensions = ".reportwindow.xml,.routinewindow.xml"
             classtype = module.basenames[0]
             if classtype not in ("Report","Routine"):
                 rootname =  module.bases[0].root().name
