@@ -175,22 +175,23 @@ def inspectModule(module, inspectName, inspectValue):
     modname = getModName(module.name)
     if modname == inspectName:
         logHere("Inspecting %s --> %s" % (modname, inspectValue))
-        exe =  "for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n" % inspectValue
-        exe += "    exec('xdir = dir(%s.%%s)' %% x) \n" % inspectValue
-        exe += "    logHere((x, '----->', xdir))\n"
-        exe += "    res = False\n"
-        exe += "    exec('res = callable(%s.%%s)' %% x) \n" % inspectValue
-        exe += "    if res:\n"
-        exe += "        try:\n"
-        exe += "            exec('funccall = %s.%%s()' %% x)\n" % inspectValue
-        exe += "            exec('funcname = \"----> function call %s\" % x')\n"
-        exe += "            logHere((funcname, 'VALUE:', funccall)) \n"
-        exe += "        except:\n"
-        exe += "            logHere('---->funcall %s missing parameters' % x)\n"
-        exe += "    else:\n"
-        exe += "        exec(\"logHere(('---->value %%s', %s.%%s))\" %% (x,x))\n" % inspectValue
-        exe += "    logHere('\\n\\n')"
+        exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
+        exe += """    exec("xdir = dir(%s.%%s)" %% x) \n""" % inspectValue
+        exe += """    logHere((x, '----->', xdir))\n"""
+        exe += """    res = False\n"""
+        exe += """    exec("res = callable(%s.%%s)" %% x) \n""" % inspectValue
+        exe += """    if res:\n"""
+        exe += """        try:\n"""
+        exe += """            exec("funccall = %s.%%s()" %% x)\n""" % inspectValue
+        exe += """            exec('funcname = \"----> function call %s\" % x')\n"""
+        exe += """            logHere((funcname, 'VALUE:', funccall)) \n"""
+        exe += """        except:\n"""
+        exe += """            logHere('---->funcall %s missing parameters' % x)\n"""
+        exe += """    else:\n"""
+        exe += """        exec("logHere(('---->value %%s', %s.%%s))" %% (x,x))\n""" % inspectValue
+        exe += """    logHere("\\n\\n")"""
         exec(exe)
+
 
 if __name__ == "__main__":
     ok =  ["PayMode", "CredCardType"] #lineending failure
