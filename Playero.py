@@ -27,7 +27,15 @@ def modules_transform(module):
         module.locals.update(buildCore())
     else:
         buildSuperClassModule(module)
-    module.locals['CThread'] = buildCThread()
+        def isRoutine():
+            return ifElse(module.body[0].parent.name.find(".routines.") > -1, True, False)
+        def isReport():
+            return ifElse(module.body[0].parent.name.find(".reports.") > -1, True, False)
+
+        if isRoutine():
+            module.locals['CThread'] = buildCThread()
+        if isReport():
+            pass
 
 
 
