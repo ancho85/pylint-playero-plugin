@@ -1,6 +1,7 @@
 from astroid import MANAGER, node_classes
 from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
+from astroid.exceptions import InferenceError
 from funcs import *
 
 notFound = set()
@@ -139,12 +140,24 @@ def buildMethod(name, method):
 
 ###modules_transforms_methods###
 def buildSuperClassModule(module):
+
+    def assHasAssignedStmts(theAss):
+        """ pylint's problem with lines like: "a = [x for x in tuple([1,2])]" """
+        res = True
+        try:
+            for x in theAss.assigned_stmts():
+                pass
+        except InferenceError:
+            res = False
+        return res
+
     parents = {}
     for assnodes in module.locals:
         ass = module.locals[assnodes][0]
         if not (
-                isinstance(ass, node_classes.AssName) and
-                isinstance(ass.statement(), node_classes.Assign)
+                isinstance(ass, node_classes.AssName)
+                and isinstance(ass.statement(), node_classes.Assign)
+                and assHasAssignedStmts(ass)
                 ): continue
         else:
             for supers in [ #list comprehention of SuperClass' calls
