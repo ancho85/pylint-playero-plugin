@@ -123,7 +123,7 @@ def findPaths(name, extensions=RECORD):
         foundPaths = __recordPaths__.get(name, {})
         if not foundPaths:
             foundPaths = __windowPaths__.get(name, {})
-    elif extensions == WINDOW:
+    elif extensions == REPORT:
         foundPaths = __reportPaths__.get(name, {})
     elif extensions == ROUTINE:
         foundPaths = __routinePaths__.get(name, {})
