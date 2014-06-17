@@ -1,11 +1,14 @@
 import os
-import difflib
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseRecordRowName, parseWindowRecordName
 from pyparse import parseScript
 
 defaultAttributes = ["rowNr"]
 defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete"]
+RECORD = ".record.xml"
+REPORT = ".reportwindow.xml"
+ROUTINE = ".routinewindow.xml"
+WINDOW = ".window.xml"
 
 @cache.store
 def getPlayeroPath():
@@ -30,14 +33,53 @@ def getScriptDirs(level=255):
     res.reverse()
     return res
 
+def buildPaths():
+    recPaths, repPaths, rouPaths = {}, {}, {}
+    for coremodule in ("User","LoginDialog"):
+        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
+
+    for sd in getScriptDirs(255):
+        interfacePath = os.path.join(__playeroPath__, sd, "interface")
+        if os.path.exists(interfacePath):
+            for filename in os.listdir(interfacePath):
+                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                realname = filename.split('.')[0]
+                if filename.endswith(RECORD):
+                    if realname in recPaths:
+                        recPaths[realname].update([(len(recPaths[realname]), uniquePath)])
+                    else:
+                        recPaths[realname] = {0: uniquePath}
+
+                    if realname.endswith("Row"):
+                        dh = parseRecordRowName(uniquePath)
+                        if dh.name not in recPaths:
+                            recPaths[dh.name] = {0: uniquePath}
+                elif filename.endswith(REPORT):
+                    repPaths[realname] = {0: uniquePath}
+                elif filename.endswith(ROUTINE):
+                    rouPaths[realname] = {0: uniquePath}
+    return (recPaths, repPaths, rouPaths)
+
+def buildWindowPaths(recPaths):
+    for sd in getScriptDirs(255):
+        interfacePath = os.path.join(__playeroPath__, sd, "interface")
+        if os.path.exists(interfacePath):
+            for filename in [f for f in os.listdir(interfacePath) if f.endswith(WINDOW)]:
+                realname = filename.split('.')[0]
+                if realname not in recPaths:
+                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                    dh = parseWindowRecordName(uniquePath)
+                    recPaths[realname] = recPaths.get(dh.name)
+    return recPaths
+
 @cache.store
-def getRecordsInfo(modulename, extensions=".record.xml"):
+def getRecordsInfo(modulename, extensions=RECORD):
     fields = {}
     details = {}
     paths = findPaths(modulename, extensions)
     for level in paths:
-        fullpath = paths[level]['fullpath']
-        recordname = paths[level]['realname']
+        fullpath = paths[level]
+        recordname = modulename
         if recordname not in fields:
             fields[recordname] = {}
             details[recordname] = {}
@@ -56,10 +98,10 @@ def getRecordInheritance(inheritance):
     """Recursive search of inheritance"""
     fields = {}
     details = {}
-    paths = findPaths(inheritance)
-    if not paths: return fields
+    paths = findPaths(inheritance, extensions=RECORD)
+    if not paths: return (fields, details)
     for level in paths:
-        fullpath = paths[level]["fullpath"]
+        fullpath = paths[level]
         dh = parseRecordXML(fullpath)
         fields.update([(fi, dh.fields[fi]) for fi in dh.fields])
         details.update([(de, dh.details[de]) for de in dh.details])
@@ -71,82 +113,21 @@ def getRecordInheritance(inheritance):
         details.update(heirDetails)
     return (fields, details)
 
+__recordPaths__, __reportPaths__, __routinePaths__ = buildPaths()
+__windowPaths__ = buildWindowPaths(__recordPaths__)
+
 @cache.store
-def findPaths(name, extensions=".record.xml", instant=False):
-    paths = {}
-    if not name: return paths
-    level = 0 #to keep order
-    tupledExtensions = tuple(extensions.split(","))
-    nalo = ["%s%s" % (name.lower(), ext) for ext in tupledExtensions]
-    searchType = ["exact","percent"]
-    for passType in searchType:
-        if paths and passType == "percent": continue #if I have paths there is no need to do a percent match
-        for sd in getScriptDirs(255):
-            interfacePath = os.path.join(__playeroPath__, sd, "interface")
-            if os.path.exists(interfacePath):
-                for filename in [f for f in os.listdir(interfacePath) if f.endswith(tupledExtensions)]:
-                    filo = filename.lower()
-                    if passType == "exact":
-                        if filo in nalo:
-                            uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                            if filename.endswith(".window.xml"):
-                                dh = parseWindowRecordName(uniquePath)
-                                uniquePath = os.path.join(__playeroPath__, sd, "interface", "%s.record.xml" % dh.name)
-                                if not os.path.exists(uniquePath): #a window redef but no record
-                                    path = findPaths(dh.name, extensions=".record.xml", instant=True)
-                                    uniquePath = path[0]["fullpath"]
-                            paths[level] = {"fullpath":uniquePath, "realname":filename.split('.')[0]}
-                            level += 1
-                            if instant: break
-                    elif passType == "percent" and name not in ("Routine","Report") and name.lower().endswith("row"):
-                        for namelower in nalo:
-                            matchpercent = difflib.SequenceMatcher(isjunk=lambda x: x in tupledExtensions,
-                                                                    a=filo,
-                                                                    b=namelower
-                                                                ).ratio()
-                            if matchpercent > 0.91:
-                                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                                dh = parseRecordRowName(uniquePath)
-                                if name == dh.name:
-                                    paths[level] = {"fullpath":uniquePath, "realname": dh.name}
-                                    level += 1
-
-    if not paths:
-        for coremodule in (x for x in ("User","LoginDialog") if x == name):
-            filename = "%s.record.xml" % coremodule
-            userpath = str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", filename))
-            paths = {0:{"fullpath":userpath, "realname":filename.split('.')[0]}}
-    return paths
-
-def buildRecordPaths():
-    recPaths = {}
-    for coremodule in ("User","LoginDialog"):
-        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
-
-    for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
-        if os.path.exists(interfacePath):
-            for filename in [f for f in os.listdir(interfacePath) if f.endswith(".record.xml")]:
-                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                realname = filename.split('.')[0]
-                if realname in recPaths:
-                    recPaths[realname].update([(len(recPaths[realname]), uniquePath)])
-                else:
-                    recPaths[realname] = {0: uniquePath}
-    return recPaths
-
-def buildWindowPaths():
-    recPaths = buildRecordPaths()
-    for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
-        if os.path.exists(interfacePath):
-            for filename in [f for f in os.listdir(interfacePath) if f.endswith(".window.xml")]:
-                realname = filename.split('.')[0]
-                if realname not in recPaths:
-                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                    dh = parseWindowRecordName(uniquePath)
-                    recPaths[realname] = recPaths.get(dh.name)
-    return recPaths
+def findPaths(name, extensions=RECORD):
+    foundPaths = {}
+    if extensions == RECORD:
+        foundPaths = __recordPaths__.get(name, {})
+        if not foundPaths:
+            foundPaths = __windowPaths__.get(name, {})
+    elif extensions == WINDOW:
+        foundPaths = __reportPaths__.get(name, {})
+    elif extensions == ROUTINE:
+        foundPaths = __routinePaths__.get(name, {})
+    return foundPaths
 
 def getFullPaths(extraDirs):
     return [os.path.join(__playeroPath__, x, y) for x in getScriptDirs(255) for y in extraDirs]
@@ -235,9 +216,9 @@ if __name__ == "__main__":
             print at
         for mt in meth:
             print mt"""
-    paths = buildWindowPaths()
-    for mod in sorted(paths):
+    recPaths, repPaths, rouPaths = buildPaths()
+    for mod in sorted(recPaths):
         print mod
-        for level in paths[mod]:
-            print "--->", level, paths[mod][level]
+        for level in recPaths[mod]:
+            print "--->", level, recPaths[mod][level]
 

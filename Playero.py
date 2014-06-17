@@ -10,11 +10,11 @@ def classes_transform(module):
     modname = getModName(module.name)
     if modname in notFound: return
     found = False
-    if findPaths(modname, ".record.xml", True) or findPaths(modname, ".window.xml", True):
+    if findPaths(modname, RECORD):
         found = buildRecordModule(module)
-    elif findPaths(modname, ".reportwindow.xml", True):
+    elif findPaths(modname, REPORT):
         found = buildReportModule(module)
-    elif findPaths(modname, ".routinewindow.xml", True):
+    elif findPaths(modname, ROUTINE):
         found = buildRoutineModule(module)
     if not found:
         notFound.add(modname)
@@ -44,8 +44,7 @@ def modules_transform(module):
 ###classes_transform_methods###
 def buildRecordModule(module):
     modname = getModName(module.name)
-    searchExtensions = ".record.xml,.window.xml"
-    records, details = getRecordsInfo(modname, searchExtensions)
+    records, details = getRecordsInfo(modname, RECORD)
     if modname not in records: return
     for fields in records[modname]:
         if records[modname][fields] == "detail":
@@ -65,7 +64,7 @@ def buildRecordModule(module):
 
     if module.name.endswith("Window"): #Window Class
         if len(methods) == len(defaultMethods):
-            realpath = findPaths(modname, searchExtensions, instant=True)[0]["fullpath"]
+            realpath = findPaths(modname, RECORD)[0]
             dh = parseRecordXML(realpath)
             methods += list(getClassInfo(dh.name, dh.inheritance)[1])
         module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
@@ -80,8 +79,8 @@ def buildRoutineModule(module):
 def genericBuilder(module, buildIdx):
     res = False
     buildType = {
-                "Report": [".reportwindow.xml", ".reports."],
-                "Routine": [".routinewindow.xml",".routines."]
+                "Report": [REPORT, ".reports."],
+                "Routine": [ROUTINE,".routines."]
     }
     ext = buildType[buildIdx][0]
     cls = buildType[buildIdx][1]
