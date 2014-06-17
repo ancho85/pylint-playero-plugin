@@ -118,6 +118,36 @@ def findPaths(name, extensions=".record.xml", instant=False):
             paths = {0:{"fullpath":userpath, "realname":filename.split('.')[0]}}
     return paths
 
+def buildRecordPaths():
+    recPaths = {}
+    for coremodule in ("User","LoginDialog"):
+        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
+
+    for sd in getScriptDirs(255):
+        interfacePath = os.path.join(__playeroPath__, sd, "interface")
+        if os.path.exists(interfacePath):
+            for filename in [f for f in os.listdir(interfacePath) if f.endswith(".record.xml")]:
+                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                realname = filename.split('.')[0]
+                if realname in recPaths:
+                    recPaths[realname].update([(len(recPaths[realname]), uniquePath)])
+                else:
+                    recPaths[realname] = {0: uniquePath}
+    return recPaths
+
+def buildWindowPaths():
+    recPaths = buildRecordPaths()
+    for sd in getScriptDirs(255):
+        interfacePath = os.path.join(__playeroPath__, sd, "interface")
+        if os.path.exists(interfacePath):
+            for filename in [f for f in os.listdir(interfacePath) if f.endswith(".window.xml")]:
+                realname = filename.split('.')[0]
+                if realname not in recPaths:
+                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                    dh = parseWindowRecordName(uniquePath)
+                    recPaths[realname] = recPaths.get(dh.name)
+    return recPaths
+
 def getFullPaths(extraDirs):
     return [os.path.join(__playeroPath__, x, y) for x in getScriptDirs(255) for y in extraDirs]
 
@@ -194,7 +224,7 @@ def inspectModule(module, inspectName, inspectValue):
 
 
 if __name__ == "__main__":
-    ok =  ["PayMode", "CredCardType"] #lineending failure
+    """ok =  ["PayMode", "CredCardType"] #lineending failure
     ok += ["Invoice", "PySettings", "AccountSettings", "Cheque"]
     ok += ["CreditCard", "Bank", "GasStationSettings", "SerNrControl", "User", "Coupon", "SLRetencionDoc", "SLRetencionDocWindow", "Retencion"]
     ok += ["Transaction", "ContactWay"]
@@ -204,5 +234,10 @@ if __name__ == "__main__":
         for at in attr:
             print at
         for mt in meth:
-            print mt
+            print mt"""
+    paths = buildWindowPaths()
+    for mod in sorted(paths):
+        print mod
+        for level in paths[mod]:
+            print "--->", level, paths[mod][level]
 
