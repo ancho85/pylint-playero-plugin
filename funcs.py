@@ -44,23 +44,22 @@ def buildPaths():
             for filename in os.listdir(interfacePath):
                 uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
                 realname = filename.split('.')[0]
-                if filename.endswith(RECORD):
-                    if realname not in recPaths:
-                        recPaths[realname] = {}
-                    recPaths[realname].update([(len(recPaths[realname]), uniquePath)])
 
-                    if realname.endswith("Row"):
-                        dh = parseRecordRowName(uniquePath)
-                        if dh.name not in recPaths:
-                            recPaths[dh.name] = {0: uniquePath}
+                if filename.endswith(RECORD):
+                    dicPaths = recPaths
                 elif filename.endswith(REPORT):
-                    if realname not in repPaths:
-                        repPaths[realname] = {}
-                    repPaths[realname].update([(len(repPaths[realname]), uniquePath)])
+                    dicPaths = repPaths
                 elif filename.endswith(ROUTINE):
-                    if realname not in rouPaths:
-                        rouPaths[realname] = {}
-                    rouPaths[realname].update([(len(rouPaths[realname]), uniquePath)])
+                    dicPaths = rouPaths
+
+                if realname not in dicPaths:
+                    dicPaths[realname] = {}
+                dicPaths[realname].update([(len(dicPaths[realname]), uniquePath)])
+
+                if id(dicPaths) == id(recPaths) and realname.endswith("Row"):
+                    dh = parseRecordRowName(uniquePath)
+                    if dh.name not in dicPaths:
+                        dicPaths[dh.name] = {0: uniquePath}
     return (recPaths, repPaths, rouPaths)
 
 def buildWindowPaths(recPaths):
