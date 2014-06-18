@@ -1,16 +1,20 @@
 from xml.sax import handler
-from xml.sax import make_parser
+from xml.sax import make_parser, parseString
 from xml.sax.handler import feature_namespaces
 from xml.sax._exceptions import SAXParseException
 
 ###RECORD###
 
 def parseRecordXML(filename):
-    parser = make_parser()
-    parser.setFeature(feature_namespaces, 0)
     dh = XMLRecordHandler()
-    parser.setContentHandler(dh)
-    parser.parse(open(filename, "r"))
+    try:
+        parser = make_parser()
+        parser.setFeature(feature_namespaces, 0)
+        parser.setContentHandler(dh)
+        parser.parse(open(filename, "r"))
+    except SAXParseException:
+        fixedTxt = reformatXml(filename)
+        parseString(fixedTxt, dh)
     return dh
 
 class XMLRecordHandler(handler.ContentHandler):
@@ -42,11 +46,15 @@ class XMLRecordHandler(handler.ContentHandler):
         pass
 
 def parseRecordRowName(filename):
-    parser = make_parser()
-    parser.setFeature(feature_namespaces, 0)
     dh = XMLRecordRowHandler()
-    parser.setContentHandler(dh)
-    parser.parse(open(filename, "r"))
+    try:
+        parser = make_parser()
+        parser.setFeature(feature_namespaces, 0)
+        parser.setContentHandler(dh)
+        parser.parse(open(filename, "r"))
+    except SAXParseException:
+        fixedTxt = reformatXml(filename)
+        parseString(fixedTxt, dh)
     return dh
 
 class XMLRecordRowHandler(handler.ContentHandler):
@@ -58,18 +66,16 @@ class XMLRecordRowHandler(handler.ContentHandler):
 
 ###WINDOW###
 def parseWindowRecordName(filename):
-    parser = make_parser()
-    parser.setFeature(feature_namespaces, 0)
     dh = XMLWindowRecordNameHandler()
-    parser.setContentHandler(dh)
-    openedfile = open(filename, "r")
     try:
-        parser.parse(openedfile)
+        parser = make_parser()
+        parser.setFeature(feature_namespaces, 0)
+        parser.setContentHandler(dh)
+        parser.parse(open(filename, "r"))
     except SAXParseException:
         if not dh.name:
-            fixedfile = reformatXml(openedfile)
-            parser.parse(fixedfile)
-    openedfile.close()
+            fixedTxt = reformatXml(open(filename, "r"))
+            parseString(fixedTxt, dh)
     return dh
 
 class XMLWindowRecordNameHandler(handler.ContentHandler):
@@ -81,11 +87,15 @@ class XMLWindowRecordNameHandler(handler.ContentHandler):
 
 ###SETTINGS###
 def parseSettingsXML(filename):
-    parser = make_parser()
-    parser.setFeature(feature_namespaces, 0)
     dh = XMLSettingsHandler()
-    parser.setContentHandler(dh)
-    parser.parse(open(filename, "r"))
+    try:
+        parser = make_parser()
+        parser.setFeature(feature_namespaces, 0)
+        parser.setContentHandler(dh)
+        parser.parse(open(filename, "r"))
+    except SAXParseException:
+        fixedTxt = reformatXml(filename)
+        parseString(fixedTxt, dh)
     return dh
 
 class XMLSettingsHandler(handler.ContentHandler):
@@ -113,14 +123,15 @@ class XMLSettingsHandler(handler.ContentHandler):
             res = repr(value)
         return res
 
-def reformatXml(openedfile):
+def reformatXml(filename):
+    openedfile = open(filename, "r")
     import re
+    from tools import latinToAscii
     readedfile = openedfile.read()
     joinnodes = re.compile(r"\s=\s\"")
     separatenodes = re.compile(r'([a-z]+="[a-z]*")', re.IGNORECASE)
     newread = joinnodes.sub("=\"", readedfile)
     res = re.sub(separatenodes, r' \1', newread)
-    import cStringIO
-    fileobj = cStringIO.StringIO()
-    fileobj.write(res)
-    return fileobj
+    res = latinToAscii(res)
+    openedfile.close()
+    return res
