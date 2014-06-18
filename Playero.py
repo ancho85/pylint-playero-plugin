@@ -28,14 +28,10 @@ def modules_transform(module):
         module.locals.update(buildCore())
     else:
         buildSuperClassModule(module)
-        def isRoutine():
-            return ifElse(module.body[0].parent.name.find(".routines.") > -1, True, False)
-        def isReport():
-            return ifElse(module.body[0].parent.name.find(".reports.") > -1, True, False)
 
-        if isRoutine():
+        if isRoutine(module):
             module.locals['CThread'] = buildCThread()
-        if isReport():
+        if isReport(module):
             pass
 
 
@@ -138,6 +134,18 @@ def buildMethod(name, method):
 
 
 ###modules_transforms_methods###
+def isRoutine(module):
+    if len(module.body):
+        if module.body[0].parent.name.find(".routines.") > -1:
+            return True
+    return False
+
+def isReport(module):
+    if len(module.body):
+        if module.body[0].parent.name.find(".reports.") > -1:
+            return True
+    return False
+
 def buildSuperClassModule(module):
 
     def assHasAssignedStmts(theAss):
