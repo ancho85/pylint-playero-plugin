@@ -47,6 +47,9 @@ def buildPaths():
 
                 if filename.endswith(RECORD):
                     dicPaths = recPaths
+                    if realname.endswith("Row"):
+                        dh = parseRecordRowName(uniquePath)
+                        if dh.name: realname = dh.name
                 elif filename.endswith(REPORT):
                     dicPaths = repPaths
                 elif filename.endswith(ROUTINE):
@@ -56,10 +59,6 @@ def buildPaths():
                     dicPaths[realname] = {}
                 dicPaths[realname].update([(len(dicPaths[realname]), uniquePath)])
 
-                if id(dicPaths) == id(recPaths) and realname.endswith("Row"):
-                    dh = parseRecordRowName(uniquePath)
-                    if dh.name not in dicPaths:
-                        dicPaths[dh.name] = {0: uniquePath}
     return (recPaths, repPaths, rouPaths)
 
 def buildWindowPaths(recPaths):
