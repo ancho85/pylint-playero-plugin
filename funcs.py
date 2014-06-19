@@ -49,9 +49,6 @@ def buildPaths():
 
                 if filename.endswith(RECORD):
                     dicPaths = recPaths
-                    if realname.endswith("Row"):
-                        dh = parseRecordRowName(uniquePath)
-                        if dh.name: realname = dh.name
                 elif filename.endswith(REPORT):
                     dicPaths = repPaths
                 elif filename.endswith(ROUTINE):
