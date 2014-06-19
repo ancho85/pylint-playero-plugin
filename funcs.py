@@ -34,9 +34,11 @@ def getScriptDirs(level=255):
     return res
 
 def buildPaths():
-    recPaths, repPaths, rouPaths = {}, {}, {}
+    recPaths, repPaths, rouPaths, winPaths = {}, {}, {}, {}
     for coremodule in ("User","LoginDialog"):
         recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
+
+    #for filelist in [os.listdir(ip) for ip in getFullPaths(["interface"]) if os.path.exists(ip)]:
 
     for sd in getScriptDirs(255):
         interfacePath = os.path.join(__playeroPath__, sd, "interface")
@@ -54,24 +56,20 @@ def buildPaths():
                     dicPaths = repPaths
                 elif filename.endswith(ROUTINE):
                     dicPaths = rouPaths
+                elif filename.endswith(WINDOW):
+                    dicPaths = winPaths
+                else: continue
 
                 if realname not in dicPaths:
                     dicPaths[realname] = {}
                 dicPaths[realname].update([(len(dicPaths[realname]), uniquePath)])
 
-    return (recPaths, repPaths, rouPaths)
+    for winname in [windef for windef in winPaths if windef not in recPaths]:
+        for wpaths in winPaths[winname].values():
+            dh = parseWindowRecordName(wpaths)
+            recPaths[winname] = recPaths.get(dh.name)
 
-def buildWindowPaths(recPaths):
-    for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
-        if os.path.exists(interfacePath):
-            for filename in [f for f in os.listdir(interfacePath) if f.endswith(WINDOW)]:
-                realname = filename.split('.')[0]
-                if realname not in recPaths:
-                    uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
-                    dh = parseWindowRecordName(uniquePath)
-                    recPaths[realname] = recPaths.get(dh.name)
-    return recPaths
+    return (recPaths, repPaths, rouPaths)
 
 @cache.store
 def getRecordsInfo(modulename, extensions=RECORD):
@@ -115,15 +113,12 @@ def getRecordInheritance(inheritance):
     return (fields, details)
 
 __recordPaths__, __reportPaths__, __routinePaths__ = buildPaths()
-__windowPaths__ = buildWindowPaths(__recordPaths__)
 
 @cache.store
 def findPaths(name, extensions=RECORD):
     foundPaths = {}
     if extensions == RECORD:
         foundPaths = __recordPaths__.get(name, {})
-        if not foundPaths:
-            foundPaths = __windowPaths__.get(name, {})
     elif extensions == REPORT:
         foundPaths = __reportPaths__.get(name, {})
     elif extensions == ROUTINE:
