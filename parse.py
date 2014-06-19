@@ -14,7 +14,10 @@ def parseRecordXML(filename):
         parser.parse(open(filename, "r"))
     except SAXParseException:
         fixedTxt = reformatXml(filename)
-        parseString(fixedTxt, dh)
+        try:
+            parseString(fixedTxt, dh)
+        except SAXParseException:
+            pass
     return dh
 
 class XMLRecordHandler(handler.ContentHandler):
