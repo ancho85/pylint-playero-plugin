@@ -1,6 +1,6 @@
 import os
 from cache import cache
-from parse import parseSettingsXML, parseRecordXML, parseRecordRowName, parseWindowRecordName
+from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from pyparse import parseScript
 
 defaultAttributes = ["rowNr"]
@@ -44,7 +44,7 @@ def buildPaths():
         interfacePath = os.path.join(__playeroPath__, sd, "interface")
         if os.path.exists(interfacePath):
             for filename in os.listdir(interfacePath):
-                uniquePath = os.path.join(__playeroPath__, sd, "interface", filename)
+                uniquePath = "%s/%s" % (interfacePath, filename)
                 realname = filename.split('.')[0]
 
                 if filename.endswith(RECORD):
