@@ -30,10 +30,11 @@ def modules_transform(module):
         buildSuperClassModule(module)
 
         if isRoutine(module):
-            module.locals['CThread'] = buildCThread()
+            pass
         if isReport(module):
             pass
 
+        module.locals['CThread'] = buildCThread()
 
 
 

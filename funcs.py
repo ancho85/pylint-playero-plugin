@@ -4,11 +4,17 @@ from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from pyparse import parseScript
 
 defaultAttributes = ["rowNr"]
-defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete"]
+defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete", "beforeDeleteRow"]
 RECORD = ".record.xml"
 REPORT = ".reportwindow.xml"
 ROUTINE = ".routinewindow.xml"
 WINDOW = ".window.xml"
+
+def logHere(value, filename="log.log"):
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    logfile = os.path.join(HERE, 'logs', filename)
+    f = file(logfile, "a")
+    f.write("%s\n" % str(value))
 
 @cache.store
 def getPlayeroPath():
@@ -153,12 +159,6 @@ def getClassInfo(modulename, parent=""):
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)
-
-def logHere(value, filename="log.log"):
-    HERE = os.path.dirname(os.path.abspath(__file__))
-    logfile = os.path.join(HERE, 'logs', filename)
-    f = file(logfile, "a")
-    f.write("%s\n" % str(value))
 
 def getModName(modname):
     if modname.find(".")>-1:
