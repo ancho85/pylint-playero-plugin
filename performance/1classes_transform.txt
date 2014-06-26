@@ -1,0 +1,215 @@
+Thu Jun 26 16:04:11 2014    classes_transform.stats
+
+         6437059 function calls (5945724 primitive calls) in 24.335 CPU seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  717/306    0.007    0.000   24.335    0.080 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:10(classes_transform)
+      147    0.047    0.000   23.672    0.161 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:44(buildRecordModule)
+    13427    0.149    0.000   16.451    0.001 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:137(string_build)
+    13427    0.103    0.000   14.150    0.001 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:160(_data_build)
+      295    0.047    0.000   11.979    0.041 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:118(buildInstantiator)
+    13427    0.156    0.000   11.223    0.001 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:147(visit_module)
+248287/13427    0.695    0.000   10.597    0.001 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:157(visit)
+    46666    0.791    0.000   10.164    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:499(visit_function)
+      411    0.053    0.000    7.907    0.019 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:322(visit_class)
+2328/1372    0.060    0.000    7.610    0.006 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\cache.py:13(new_f)
+  139/131    0.419    0.003    5.262    0.040 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:134(getClassInfo)
+    46666    1.512    0.000    5.157    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:176(visit_arguments)
+    13540    4.607    0.000    4.607    0.000 {compile}
+    13016    0.105    0.000    4.215    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:132(buildMethod)
+    13427    0.020    0.000    2.749    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:38(parse)
+      132    0.012    0.000    2.333    0.018 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:77(getRecordsInfo)
+      272    0.004    0.000    2.310    0.008 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\parse.py:8(parseRecordXML)
+      272    0.004    0.000    2.260    0.008 c:\Python26\lib\xml\sax\expatreader.py:100(parse)
+      272    0.005    0.000    2.244    0.008 c:\Python26\lib\xml\sax\xmlreader.py:115(parse)
+      657    2.139    0.003    2.139    0.003 {method 'read' of 'file' objects}
+    77625    0.437    0.000    2.094    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:645(visit_name)
+    13427    0.046    0.000    2.078    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:143(_post_build)
+    15332    0.118    0.000    2.011    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:201(delayed_assattr)
+      113    0.014    0.000    2.006    0.018 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:5(parseScript)
+    40/34    0.004    0.000    1.936    0.057 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:98(getRecordInheritance)
+      113    0.001    0.000    1.878    0.017 c:\Python26\lib\ast.py:32(parse)
+    15332    0.602    0.000    1.810    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:224(visit_assign)
+61328/30664    0.189    0.000    1.803    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:307(wrapped)
+     7228    1.583    0.000    1.583    0.000 {nt.listdir}
+   261714    1.105    0.000    1.306    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:413(last_child)
+   172488    1.098    0.000    1.239    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:146(set_local)
+   214637    0.362    0.000    1.160    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:510(set_line_info)
+     8479    0.033    0.000    0.833    0.000 c:\Python26\lib\genericpath.py:15(exists)
+    15332    0.052    0.000    0.828    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\inference.py:144(infer_name)
+61328/30664    0.202    0.000    0.816    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:97(_infer_stmts)
+    46666    0.807    0.000    0.807    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:543(__init__)
+     8479    0.800    0.000    0.800    0.000 {nt.stat}
+    46666    0.208    0.000    0.798    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:524(_fixed_source_line)
+    15332    0.097    0.000    0.784    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:541(visit_getattr)
+   200243    0.513    0.000    0.781    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:104(_lineno_parent)
+    15332    0.032    0.000    0.729    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:108(lookup)
+    46434    0.095    0.000    0.679    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:168(_save_assignment)
+        1    0.000    0.000    0.652    0.652 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:75(buildRoutineModule)
+        1    0.000    0.000    0.652    0.652 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:78(genericBuilder)
+    15332    0.032    0.000    0.645    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:522(scope_lookup)
+    15332    0.056    0.000    0.613    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:127(_scope_lookup)
+    93100    0.217    0.000    0.590    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:315(get_children)
+    46434    0.054    0.000    0.584    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:548(set_local)
+    15332    0.246    0.000    0.557    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:131(_filter_stmts)
+      116    0.004    0.000    0.476    0.004 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:99(buildIterator)
+    61471    0.237    0.000    0.461    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:111(_set_infos)
+    46139    0.079    0.000    0.429    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:680(visit_pass)
+    93100    0.347    0.000    0.373    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:402(get_children)
+    15332    0.148    0.000    0.340    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\inference.py:351(infer_ass)
+   261714    0.245    0.000    0.336    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\manager.py:280(transform)
+   539577    0.328    0.000    0.328    0.000 {hasattr}
+   483968    0.260    0.000    0.260    0.000 {getattr}
+   382393    0.195    0.000    0.195    0.000 {isinstance}
+   246345    0.171    0.000    0.171    0.000 {method 'split' of 'str' objects}
+    13427    0.166    0.000    0.166    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:248(__init__)
+   281112    0.143    0.000    0.143    0.000 {method 'append' of 'list' objects}
+    60504    0.083    0.000    0.134    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:93(_init_set_doc)
+    30664    0.036    0.000    0.128    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:250(arguments_assigned_stmts)
+168652/61328    0.120    0.000    0.120    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:434(statement)
+    45996    0.079    0.000    0.116    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:77(clone)
+   328170    0.111    0.000    0.111    0.000 {method 'endswith' of 'str' objects}
+    46666    0.109    0.000    0.109    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:553(set_line_info)
+      544    0.002    0.000    0.106    0.000 c:\Python26\lib\xml\sax\expatreader.py:196(feed)
+    15332    0.084    0.000    0.102    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:53(are_exclusive)
+      544    0.029    0.000    0.098    0.000 {built-in method Parse}
+    30664    0.073    0.000    0.092    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:218(_arguments_infer_argname)
+76660/30664    0.073    0.000    0.080    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:440(frame)
+    13427    0.073    0.000    0.073    0.000 {method 'encode' of 'str' objects}
+   201247    0.071    0.000    0.071    0.000 {method 'setdefault' of 'dict' objects}
+    30664    0.059    0.000    0.069    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:71(push)
+      139    0.010    0.000    0.068    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:131(getFullPaths)
+     8766    0.040    0.000    0.066    0.000 c:\Python26\lib\ntpath.py:63(join)
+    13427    0.065    0.000    0.065    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:137(__init__)
+    13427    0.064    0.000    0.064    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\brain\py2stdlib.py:21(transform)
+    47077    0.064    0.000    0.064    0.000 {method 'pop' of 'list' objects}
+ 4899/113    0.010    0.000    0.062    0.001 c:\Python26\lib\ast.py:227(visit)
+      113    0.000    0.000    0.061    0.001 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:30(visit_Module)
+ 2611/113    0.005    0.000    0.061    0.001 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:26(generic_visit)
+ 2611/113    0.016    0.000    0.061    0.001 c:\Python26\lib\ast.py:233(generic_visit)
+    30664    0.059    0.000    0.059    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:367(infer)
+    61328    0.058    0.000    0.058    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:62(__init__)
+     4064    0.004    0.000    0.055    0.000 ..\Modules\pyexpat.c:604(StartElement)
+45996/15332    0.048    0.000    0.052    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:445(scope)
+     4064    0.010    0.000    0.051    0.000 c:\Python26\lib\xml\sax\expatreader.py:300(start_element)
+    46666    0.051    0.000    0.051    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:262(__init__)
+    13427    0.038    0.000    0.048    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:88(__init__)
+      385    0.048    0.000    0.048    0.000 {open}
+     4064    0.025    0.000    0.040    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\parse.py:32(startElement)
+    15332    0.018    0.000    0.036    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:65(_get_filtered_stmts)
+      188    0.000    0.000    0.032    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:37(visit_ClassDef)
+    15332    0.025    0.000    0.032    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:46(__getattr__)
+      449    0.002    0.000    0.027    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:46(visit_Assign)
+   108405    0.025    0.000    0.025    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:115(frame)
+    17106    0.016    0.000    0.023    0.000 c:\Python26\lib\ntpath.py:55(isabs)
+    63782    0.022    0.000    0.022    0.000 {method 'get' of 'dict' objects}
+    55058    0.022    0.000    0.022    0.000 {method 'lower' of 'str' objects}
+    13427    0.017    0.000    0.022    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\manager.py:304(cache_module)
+    64155    0.021    0.000    0.021    0.000 {method 'add' of 'set' objects}
+    15332    0.014    0.000    0.018    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:78(ass_type)
+      411    0.003    0.000    0.017    0.000 c:\Python26\lib\profilehooks.py:233(new_fn)
+     1112    0.010    0.000    0.017    0.000 {method 'update' of 'set' objects}
+    15332    0.017    0.000    0.017    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:212(assend_assigned_stmts)
+      411    0.003    0.000    0.015    0.000 c:\Python26\lib\profilehooks.py:326(__call__)
+    15332    0.015    0.000    0.015    0.000 {method 'index' of 'list' objects}
+      544    0.007    0.000    0.012    0.000 c:\Python26\lib\xml\sax\expatreader.py:244(reset)
+     8867    0.006    0.000    0.011    0.000 c:\Python26\lib\ast.py:151(iter_fields)
+      272    0.001    0.000    0.011    0.000 c:\Python26\lib\xml\sax\__init__.py:71(make_parser)
+    13427    0.010    0.000    0.010    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\raw_building.py:210(__init__)
+    13016    0.010    0.000    0.010    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:171(__getitem__)
+    15332    0.010    0.000    0.010    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:42(__init__)
+      272    0.002    0.000    0.010    0.000 c:\Python26\lib\xml\sax\__init__.py:104(_create_parser)
+      113    0.010    0.000    0.010    0.000 {method 'splitlines' of 'str' objects}
+     7764    0.006    0.000    0.009    0.000 c:\Python26\lib\xml\sax\xmlreader.py:327(get)
+      278    0.009    0.000    0.009    0.000 {sorted}
+    13427    0.009    0.000    0.009    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\Playero.py:25(modules_transform)
+    30664    0.008    0.000    0.008    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:565(_infer_name)
+     1292    0.008    0.000    0.008    0.000 {method 'update' of 'dict' objects}
+    15332    0.008    0.000    0.008    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:453(__init__)
+    30664    0.008    0.000    0.008    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:53(infer)
+      820    0.007    0.000    0.007    0.000 {method 'join' of 'str' objects}
+     4064    0.003    0.000    0.007    0.000 ..\Modules\pyexpat.c:656(EndElement)
+    17106    0.007    0.000    0.007    0.000 c:\Python26\lib\ntpath.py:122(splitdrive)
+     1012    0.005    0.000    0.007    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:163(getModName)
+     8572    0.005    0.000    0.007    0.000 ..\Modules\pyexpat.c:479(CharacterData)
+      272    0.001    0.000    0.006    0.000 c:\Python26\lib\xml\sax\expatreader.py:404(create_parser)
+      544    0.004    0.000    0.006    0.000 c:\Python26\lib\xml\sax\saxutils.py:276(prepare_input_source)
+    25475    0.005    0.000    0.005    0.000 {method 'rstrip' of 'str' objects}
+      272    0.002    0.000    0.005    0.000 c:\Python26\lib\xml\sax\expatreader.py:87(__init__)
+      113    0.005    0.000    0.005    0.000 {method 'close' of 'file' objects}
+    15332    0.005    0.000    0.005    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:582(has_base)
+      272    0.004    0.000    0.005    0.000 c:\Python26\lib\xml\sax\expatreader.py:213(close)
+     4064    0.004    0.000    0.005    0.000 c:\Python26\lib\xml\sax\expatreader.py:303(end_element)
+      217    0.002    0.000    0.004    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:52(visit_Call)
+    11661    0.004    0.000    0.004    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:155(<genexpr>)
+    15332    0.004    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:62(ass_type)
+    15332    0.004    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:120(scope)
+      116    0.001    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:716(visit_return)
+      544    0.003    0.000    0.003    0.000 {pyexpat.ParserCreate}
+     4608    0.003    0.000    0.003    0.000 c:\Python26\lib\xml\sax\xmlreader.py:321(has_key)
+      958    0.002    0.000    0.003    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:120(findPaths)
+      272    0.001    0.000    0.003    0.000 c:\Python26\lib\xml\sax\xmlreader.py:111(__init__)
+    17106    0.003    0.000    0.003    0.000 {len}
+      411    0.002    0.000    0.002    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:761(__init__)
+     1422    0.001    0.000    0.002    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:42(visit_FunctionDef)
+      273    0.002    0.000    0.002    0.000 {__import__}
+      272    0.002    0.000    0.002    0.000 c:\Python26\lib\xml\sax\xmlreader.py:24(__init__)
+     4064    0.002    0.000    0.002    0.000 {method 'lower' of 'unicode' objects}
+     4900    0.002    0.000    0.002    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:148(<genexpr>)
+      272    0.001    0.000    0.002    0.000 c:\Python26\lib\xml\sax\expatreader.py:109(prepareParser)
+      113    0.002    0.000    0.002    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:18(__init__)
+     4064    0.002    0.000    0.002    0.000 c:\Python26\lib\xml\sax\xmlreader.py:278(__init__)
+      272    0.001    0.000    0.002    0.000 c:\Python26\lib\xml\sax\expatreader.py:54(__init__)
+     8572    0.002    0.000    0.002    0.000 c:\Python26\lib\xml\sax\handler.py:158(characters)
+     1012    0.001    0.000    0.001    0.000 {method 'find' of 'str' objects}
+      272    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:115(setContentHandler)
+      411    0.001    0.000    0.001    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:787(set_line_info)
+      544    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:223(_reset_cont_handler)
+      649    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:33(visit_Name)
+      272    0.001    0.000    0.001    0.000 {_weakref.proxy}
+      272    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\parse.py:25(__init__)
+      203    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\pyparse.py:64(subnodeVisit)
+     2328    0.001    0.000    0.001    0.000 {method 'items' of 'dict' objects}
+        1    0.000    0.000    0.001    0.001 c:\Python26\lib\encodings\__init__.py:71(search_function)
+     4064    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\parse.py:48(endElement)
+     1787    0.001    0.000    0.001    0.000 {method 'startswith' of 'str' objects}
+      272    0.001    0.000    0.001    0.000 {built-in method SetBase}
+     1202    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:147(<genexpr>)
+      544    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\xmlreader.py:203(__init__)
+     1168    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:154(<genexpr>)
+      544    0.000    0.000    0.000    0.000 {built-in method SetParamEntityParsing}
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\expatreader.py:132(setFeature)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:57(setDocumentLocator)
+      816    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:253(getByteStream)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:38(setContentHandler)
+      544    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:236(getEncoding)
+      828    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:158(<genexpr>)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:80(startDocument)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:54(__init__)
+      544    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:222(getSystemId)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:240(setByteStream)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:218(setSystemId)
+      306    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+      276    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\sublimetext-playero-plugin\funcs.py:157(<genexpr>)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:8(<module>)
+      272    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:87(endDocument)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:33(getregentry)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:828(basenames)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:591(as_string)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\codecs.py:77(__new__)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\__init__.py:49(normalize_encoding)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\as_string.py:76(__call__)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:397(accept)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:18(IncrementalEncoder)
+        1    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x1E1CE5A8}
+        1    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:22(IncrementalDecoder)
+        1    0.000    0.000    0.000    0.000 {method 'translate' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:25(StreamWriter)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\as_string.py:323(visit_name)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:28(StreamReader)
+        0    0.000             0.000          profile:0(profiler)
+
+
