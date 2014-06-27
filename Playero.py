@@ -9,14 +9,17 @@ notFound = set()
 def classes_transform(module):
     modname = getModName(module.name)
     if modname in notFound: return
-    found = False
-    if findPaths(modname, RECORD):
-        found = buildRecordModule(module)
-    elif findPaths(modname, REPORT):
-        found = buildReportModule(module)
-    elif findPaths(modname, ROUTINE):
-        found = buildRoutineModule(module)
-    if not found:
+    paths, pathType = findPaths(modname)
+    if pathType:
+        found = False
+        if pathType == RECORD:
+            found = buildRecordModule(module)
+        elif pathType == REPORT:
+            found = buildReportModule(module)
+        elif pathType == ROUTINE:
+            found = buildRoutineModule(module)
+        if not found: notFound.add(modname)
+    else:
         notFound.add(modname)
 
 
@@ -46,7 +49,7 @@ def buildRecordModule(module):
     for fields in records[modname]:
         if records[modname][fields] == "detail":
             detailname = details[modname][fields]
-            detrecords = getRecordsInfo(detailname)[0]
+            detrecords = getRecordsInfo(detailname, RECORD)[0]
             module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
         else:
             module.locals[fields] = records[modname][fields]
@@ -61,9 +64,11 @@ def buildRecordModule(module):
 
     if module.name.endswith("Window"): #Window Class
         if len(methods) == len(defaultMethods):
-            realpath = findPaths(modname, RECORD)[0]
-            dh = parseRecordXML(realpath)
-            methods += list(getClassInfo(dh.name, dh.inheritance)[1])
+            path, pathType = findPaths(modname)
+            if pathType == RECORD:
+                realpath = path[0]
+                dh = parseRecordXML(realpath)
+                methods += list(getClassInfo(dh.name, dh.inheritance)[1])
         module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
     return True
 
@@ -153,7 +158,7 @@ def buildSuperClassModule(module):
         """ pylint's problem with lines like: "a = [x for x in tuple([1,2])]" """
         res = True
         try:
-            for x in theAss.assigned_stmts():
+            for _ in theAss.assigned_stmts():
                 pass
         except InferenceError:
             res = False
@@ -209,7 +214,6 @@ class CThread:
     return fake.locals["CThread"]
 
 def buildCore():
-    import os
     coreTxt = open(os.path.join(os.path.dirname(__file__), "corepy","coreRedef.py"), "r").read()
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals

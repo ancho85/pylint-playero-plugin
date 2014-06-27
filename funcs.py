@@ -2,6 +2,7 @@ import os
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from pyparse import parseScript
+from tools import logHere
 
 defaultAttributes = ["rowNr"]
 defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete", "beforeDeleteRow"]
@@ -9,12 +10,6 @@ RECORD = ".record.xml"
 REPORT = ".reportwindow.xml"
 ROUTINE = ".routinewindow.xml"
 WINDOW = ".window.xml"
-
-def logHere(value, filename="log.log"):
-    HERE = os.path.dirname(os.path.abspath(__file__))
-    logfile = os.path.join(HERE, 'logs', filename)
-    f = file(logfile, "a")
-    f.write("%s\n" % str(value))
 
 @cache.store
 def getPlayeroPath():
@@ -29,11 +24,9 @@ def getPlayeroPath():
             res = "/home/ancho/Develop/Playero/"
     return res
 
-__playeroPath__ = getPlayeroPath()
-
 @cache.store
 def getScriptDirs(level=255):
-    settingsFile = __playeroPath__+"settings/settings.xml"
+    settingsFile = getPlayeroPath()+"settings/settings.xml"
     dh = parseSettingsXML(settingsFile)
     res = dh.scriptdirs[:level+1]
     res.reverse()
@@ -47,7 +40,7 @@ def buildPaths():
     #for filelist in [os.listdir(ip) for ip in getFullPaths(["interface"]) if os.path.exists(ip)]:
 
     for sd in getScriptDirs(255):
-        interfacePath = os.path.join(__playeroPath__, sd, "interface")
+        interfacePath = os.path.join(getPlayeroPath(), sd, "interface")
         if os.path.exists(interfacePath):
             for filename in os.listdir(interfacePath):
                 uniquePath = "%s/%s" % (interfacePath, filename)
@@ -78,7 +71,8 @@ def buildPaths():
 def getRecordsInfo(modulename, extensions=RECORD):
     fields = {}
     details = {}
-    paths = findPaths(modulename, extensions)
+    paths, pathType = findPaths(modulename)
+    if pathType != extensions: return (fields, details)
     for level in paths:
         fullpath = paths[level]
         recordname = modulename
@@ -100,8 +94,8 @@ def getRecordInheritance(inheritance):
     """Recursive search of inheritance"""
     fields = {}
     details = {}
-    paths = findPaths(inheritance, extensions=RECORD)
-    if not paths: return (fields, details)
+    paths, pathType = findPaths(inheritance)
+    if pathType != RECORD or not paths: return (fields, details)
     for level in paths:
         fullpath = paths[level]
         dh = parseRecordXML(fullpath)
@@ -118,24 +112,23 @@ def getRecordInheritance(inheritance):
 __recordPaths__, __reportPaths__, __routinePaths__ = buildPaths()
 
 @cache.store
-def findPaths(name, extensions=RECORD):
-    foundPaths = {}
-    if extensions == RECORD:
-        foundPaths = __recordPaths__.get(name, {})
-    elif extensions == REPORT:
-        foundPaths = __reportPaths__.get(name, {})
-    elif extensions == ROUTINE:
-        foundPaths = __routinePaths__.get(name, {})
-    return foundPaths
+def findPaths(name):
+    foundPaths, pathType = __recordPaths__.get(name, {}), RECORD
+    if not foundPaths:
+        foundPaths, pathType = __reportPaths__.get(name, {}), REPORT
+    if not foundPaths:
+        foundPaths, pathType = __routinePaths__.get(name, {}), ROUTINE
+    if not foundPaths: pathType = None
+    return (foundPaths, pathType)
 
 def getFullPaths(extraDirs):
-    return [os.path.join(__playeroPath__, x, y) for x in getScriptDirs(255) for y in extraDirs]
+    return [os.path.join(getPlayeroPath(), x, y) for x in getScriptDirs(255) for y in extraDirs]
 
 @cache.store
 def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = set(), set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
-    paths.append(os.path.join(__playeroPath__,"core"))
+    paths.append(os.path.join(getPlayeroPath(),"core"))
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
@@ -196,7 +189,6 @@ def inspectModule(module, inspectName, inspectValue):
         exe += """    logHere("\\n\\n")"""
         exec(exe)
 
-
 if __name__ == "__main__":
     """ok =  ["PayMode", "CredCardType"] #lineending failure
     ok += ["Invoice", "PySettings", "AccountSettings", "Cheque"]
@@ -214,4 +206,3 @@ if __name__ == "__main__":
         print mod
         for level in recPaths[mod]:
             print "--->", level, recPaths[mod][level]
-

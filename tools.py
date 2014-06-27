@@ -50,3 +50,18 @@ def latinToAscii(unicrap):
         else:
             r += str(i)
     return r
+
+def ifElse(condition, trueVal, falseVal):
+    try: condition = bool(condition)
+    except: pass
+    if isinstance(condition, str):
+        condition = self.ifElse(len(condition.strip())>1,condition,"")
+    if condition: return trueVal
+    return falseVal
+
+def logHere(value, filename="log.log"):
+    import os
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    logfile = os.path.join(HERE, 'logs', filename)
+    f = file(logfile, "a")
+    f.write("%s\n" % str(value))
