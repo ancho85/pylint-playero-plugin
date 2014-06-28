@@ -12,7 +12,7 @@ sublimetext-playero-plugin
 Ensure `sublimetext-playero-plugin` is installed and on your path, and then run pylint:
 
 ```
-pylint --load-plugins sublimetext-playero-plugin [..other options..]
+pylint --load-plugins Playero [..other options..]
 ```
 
 # Features
