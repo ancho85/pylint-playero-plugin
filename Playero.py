@@ -219,9 +219,31 @@ def buildCore():
     return fake.locals
 
 
+from pylint.interfaces import IRawChecker
+from pylint.checkers import BaseChecker
+
+class CacheStatisticWriter(BaseChecker):
+    """write the cache statistics after plugin usage"""
+
+    __implements__ = IRawChecker
+
+    name = 'cache_statistics_writer'
+    msgs = {'C6666': ('cache statistics writed at log directory',
+                      ('cache statistics writed at log directory')),
+            }
+    options = ()
+    priority = -666
+
+    def process_module(self, node):
+        """write the cache statistics after plugin usage"""
+        logHere(cache.getStatistics())
+        lastline = sum(2 for line in node.file_stream)
+        self.add_message('C6666', lastline)
 
 def register(linter):
-    pass
+    """required method to auto register this checker"""
+    if cache.collectStats:
+        linter.register_checker(CacheStatisticWriter(linter))
 
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
