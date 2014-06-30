@@ -219,34 +219,13 @@ def buildCore():
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals
 
-
-from pylint.interfaces import IRawChecker
-from pylint.checkers import BaseChecker
-
-class CacheStatisticWriter(BaseChecker):
-    """write the cache statistics after plugin usage"""
-
-    __implements__ = IRawChecker
-
-    name = 'cache_statistics_writer'
-    msgs = {'C6666': ('cache statistics writed at log directory',
-                      ('cache statistics writed at log directory'),
-                      ('cache statistics writed at log directory')),
-            }
-    options = ()
-    priority = -666
-
-    def process_module(self, node):
-        """write the cache statistics after plugin usage"""
-        logHere(cache.getStatistics())
-        lastline = sum(1 for line in node.file_stream)
-        self.add_message('C6666', lastline)
-
 def register(linter):
     """required method to auto register this checker"""
     if cache.collectStats:
-        linter.register_checker(CacheStatisticWriter(linter))
+        from checkers_classes import CacheStatisticWriter
+        linter.register_checker(CacheStatisticWriter(linter, cache))
 
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
 MANAGER.register_transform(scoped_nodes.Class, classes_transform)
+
