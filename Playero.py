@@ -229,6 +229,7 @@ class CacheStatisticWriter(BaseChecker):
 
     name = 'cache_statistics_writer'
     msgs = {'C6666': ('cache statistics writed at log directory',
+                      ('cache statistics writed at log directory'),
                       ('cache statistics writed at log directory')),
             }
     options = ()
@@ -237,7 +238,7 @@ class CacheStatisticWriter(BaseChecker):
     def process_module(self, node):
         """write the cache statistics after plugin usage"""
         logHere(cache.getStatistics())
-        lastline = sum(2 for line in node.file_stream)
+        lastline = sum(1 for line in node.file_stream)
         self.add_message('C6666', lastline)
 
 def register(linter):
