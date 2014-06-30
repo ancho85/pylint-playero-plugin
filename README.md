@@ -1,15 +1,15 @@
-sublimetext-playero-plugin
+pylint-playero-plugin
 ==========================
 
 # About
 
-`sublimetext-playero-plugin` is a [Pylint](http://pylint.org) plugin for improving code analysis for when analysing code using Playero.
+`pylint-playero-plugin` is a [Pylint](http://pylint.org) plugin for improving code analysis for when analysing code using Playero.
 
 ## Usage
 
 #### Pylint
 
-Ensure `sublimetext-playero-plugin` is installed and on your path, and then run pylint:
+Ensure `pylint-playero-plugin` is installed and on your path, and then run pylint:
 
 ```
 pylint --load-plugins Playero [..other options..]
@@ -27,4 +27,4 @@ pylint --load-plugins Playero [..other options..]
 
 # License
 
-`sublimetext-playero-plugin` is available under the GPLv2 license.
+`pylint-playero-plugin` is available under the GPLv2 license.
