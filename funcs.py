@@ -158,6 +158,8 @@ def getModName(modname):
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
     if modname.endswith("Window"):
         modname = modname.split("Window")[0]
+    elif modname.find("_")>-1:
+        modname = None
     return modname
 
 def ifElse(condition, trueVal, falseVal):

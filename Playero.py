@@ -8,6 +8,7 @@ notFound = set()
 
 def classes_transform(module):
     modname = getModName(module.name)
+    if not modname: return
     if modname in notFound: return
     paths, pathType = findPaths(modname)
     if pathType:
