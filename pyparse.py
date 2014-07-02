@@ -6,11 +6,14 @@ from cache import cache
 def parseScript(filefullpath):
     f = open(filefullpath, "r")
     lines = f.read().splitlines() #best handling for CR LF and LF
-    fixed = "\n".join([line.rstrip() for line in lines]) #force \n for each line
-    nodes = ast.parse(fixed)
     f.close()
+    fixed = "\n".join([line.rstrip() for line in lines]) #force \n for each line
     parse = PyParse()
-    parse.visit(nodes)
+    try:
+        nodes = ast.parse(fixed, mode="exec")
+        parse.visit(nodes)
+    except SyntaxError:
+        pass
     return parse
 
 class PyParse(ast.NodeVisitor):
@@ -72,11 +75,11 @@ class PyParse(ast.NodeVisitor):
 
 
 if __name__ == "__main__":
-    filepath = "e:/Develop/desarrollo/python/ancho/workspace/Playero/standard/records/Invoice.py"
+    filepath = "e:/Develop/desarrollo/python/ancho/workspace/Playero/extra/StdPY/records/Invoice.py"
     if (os.name == "posix"):
         filepath = "/home/ancho/Develop/Playero/standard/records/Invoice.py"
     par = parseScript(filepath)
-    print "---attributes---"
+    """print "---attributes---"
     for a in par.attributes:
         print a
     print "---methods---"
@@ -84,4 +87,4 @@ if __name__ == "__main__":
         print b
     print "---inheritance---"
     for k in par.inheritance:
-        print k, par.inheritance[k]
+        print k, par.inheritance[k]"""
