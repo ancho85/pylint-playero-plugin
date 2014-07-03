@@ -1,0 +1,215 @@
+Thu Jul 03 12:31:24 2014    13classes_transform.stats
+
+         5378094 function calls (4896321 primitive calls) in 10.505 CPU seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  655/225    0.002    0.000   10.505    0.047 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:10(classes_transform)
+      153    0.023    0.000   10.462    0.068 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:48(buildRecordModule)
+     1017    0.041    0.000    7.594    0.007 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:137(string_build)
+      308    0.031    0.000    7.241    0.024 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:125(buildInstantiator)
+     1017    0.009    0.000    6.216    0.006 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:160(_data_build)
+     1017    0.010    0.000    4.175    0.004 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:147(visit_module)
+207208/1017    0.303    0.000    4.141    0.004 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:157(visit)
+      430    0.031    0.000    4.071    0.009 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:322(visit_class)
+    35784    0.361    0.000    4.016    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:499(visit_function)
+24130/14275    0.071    0.000    2.942    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\cache.py:20(new_f)
+  146/138    0.274    0.002    2.662    0.019 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:127(getClassInfo)
+     1137    2.331    0.002    2.331    0.002 {compile}
+    35784    0.327    0.000    2.024    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:176(visit_arguments)
+     1017    0.002    0.000    1.808    0.002 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:38(parse)
+     1017    0.013    0.000    1.323    0.001 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:143(_post_build)
+    15941    0.077    0.000    1.309    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:201(delayed_assattr)
+63764/31882    0.125    0.000    1.175    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:307(wrapped)
+    67974    0.221    0.000    1.082    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:645(visit_name)
+     7592    0.962    0.000    0.962    0.000 {nt.listdir}
+    15941    0.104    0.000    0.837    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:224(visit_assign)
+   208225    0.561    0.000    0.659    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:413(last_child)
+   157052    0.512    0.000    0.626    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:104(_lineno_parent)
+      120    0.009    0.000    0.607    0.005 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:5(parseScript)
+    15941    0.033    0.000    0.549    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\inference.py:144(infer_name)
+      120    0.000    0.000    0.525    0.004 c:\Python26\lib\ast.py:32(parse)
+63764/31882    0.129    0.000    0.521    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:97(_infer_stmts)
+     8906    0.017    0.000    0.519    0.000 c:\Python26\lib\genericpath.py:15(exists)
+     8906    0.501    0.000    0.501    0.000 {nt.stat}
+    15941    0.021    0.000    0.487    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:108(lookup)
+    15941    0.066    0.000    0.460    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:541(visit_getattr)
+   172011    0.184    0.000    0.441    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:510(set_line_info)
+    15941    0.019    0.000    0.429    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:522(scope_lookup)
+    15941    0.036    0.000    0.410    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:127(_scope_lookup)
+    15941    0.166    0.000    0.374    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:131(_filter_stmts)
+   141329    0.289    0.000    0.351    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:146(set_local)
+      122    0.002    0.000    0.292    0.002 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:105(buildIterator)
+    35540    0.045    0.000    0.269    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:168(_save_assignment)
+    35784    0.088    0.000    0.257    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:524(_fixed_source_line)
+    51173    0.125    0.000    0.230    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:111(_set_infos)
+    35540    0.025    0.000    0.224    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:548(set_local)
+     1017    0.223    0.000    0.223    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:137(__init__)
+    15941    0.086    0.000    0.211    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\inference.py:351(infer_ass)
+    35232    0.035    0.000    0.194    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:680(visit_pass)
+    71324    0.090    0.000    0.169    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:315(get_children)
+   433142    0.142    0.000    0.142    0.000 {hasattr}
+      112    0.006    0.000    0.142    0.001 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:70(getRecordsInfo)
+      250    0.002    0.000    0.129    0.001 e:\Develop\desarrollo\python\other\pylint-playero-plugin\parse.py:8(parseRecordXML)
+   258899    0.116    0.000    0.116    0.000 {method 'split' of 'str' objects}
+   349498    0.113    0.000    0.113    0.000 {getattr}
+      587    0.003    0.000    0.106    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:138(buildMethod)
+   208225    0.088    0.000    0.099    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\manager.py:280(transform)
+    35784    0.097    0.000    0.097    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:543(__init__)
+      250    0.002    0.000    0.097    0.000 c:\Python26\lib\xml\sax\expatreader.py:100(parse)
+   308251    0.093    0.000    0.093    0.000 {isinstance}
+      250    0.003    0.000    0.087    0.000 c:\Python26\lib\xml\sax\xmlreader.py:115(parse)
+    31882    0.024    0.000    0.084    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:250(arguments_assigned_stmts)
+175351/63764    0.083    0.000    0.083    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:434(statement)
+    71324    0.065    0.000    0.079    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:402(get_children)
+    47823    0.053    0.000    0.077    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:77(clone)
+   331801    0.070    0.000    0.070    0.000 {method 'endswith' of 'str' objects}
+      500    0.001    0.000    0.070    0.000 c:\Python26\lib\xml\sax\expatreader.py:196(feed)
+   241538    0.068    0.000    0.068    0.000 {method 'append' of 'list' objects}
+      146    0.010    0.000    0.067    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:124(getFullPaths)
+      500    0.020    0.000    0.065    0.000 {built-in method Parse}
+    15941    0.052    0.000    0.064    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:53(are_exclusive)
+    31882    0.047    0.000    0.060    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:218(_arguments_infer_argname)
+79705/31882    0.051    0.000    0.056    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:440(frame)
+    37231    0.034    0.000    0.052    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:93(_init_set_doc)
+    35784    0.050    0.000    0.050    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:553(set_line_info)
+    43/37    0.003    0.000    0.049    0.001 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:92(getRecordInheritance)
+     9215    0.026    0.000    0.045    0.000 c:\Python26\lib\ntpath.py:63(join)
+    31882    0.038    0.000    0.045    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:71(push)
+ 5135/120    0.007    0.000    0.041    0.000 c:\Python26\lib\ast.py:227(visit)
+      120    0.000    0.000    0.040    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:33(visit_Module)
+ 2726/120    0.003    0.000    0.040    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:29(generic_visit)
+ 2726/120    0.011    0.000    0.040    0.000 c:\Python26\lib\ast.py:233(generic_visit)
+    63764    0.038    0.000    0.038    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:62(__init__)
+        2    0.000    0.000    0.037    0.018 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:81(buildRoutineModule)
+        2    0.000    0.000    0.037    0.018 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:84(genericBuilder)
+47823/15941    0.034    0.000    0.037    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:445(scope)
+     3858    0.002    0.000    0.036    0.000 ..\Modules\pyexpat.c:604(StartElement)
+    31882    0.035    0.000    0.035    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:367(infer)
+     3858    0.006    0.000    0.033    0.000 c:\Python26\lib\xml\sax\expatreader.py:300(start_element)
+      370    0.032    0.000    0.032    0.000 {open}
+   158287    0.031    0.000    0.031    0.000 {method 'setdefault' of 'dict' objects}
+     3858    0.017    0.000    0.026    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\parse.py:32(startElement)
+    15941    0.012    0.000    0.025    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:65(_get_filtered_stmts)
+    36214    0.024    0.000    0.024    0.000 {method 'pop' of 'list' objects}
+    35784    0.022    0.000    0.022    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:262(__init__)
+    15941    0.017    0.000    0.021    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:46(__getattr__)
+      620    0.020    0.000    0.020    0.000 {method 'read' of 'file' objects}
+      203    0.000    0.000    0.020    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:40(visit_ClassDef)
+      462    0.001    0.000    0.017    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:49(visit_Assign)
+    17975    0.011    0.000    0.017    0.000 c:\Python26\lib\ntpath.py:55(isabs)
+    99978    0.015    0.000    0.015    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:115(frame)
+     1017    0.014    0.000    0.015    0.000 {method 'encode' of 'str' objects}
+    15941    0.010    0.000    0.013    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:78(ass_type)
+    66498    0.012    0.000    0.012    0.000 {method 'add' of 'set' objects}
+     1180    0.007    0.000    0.012    0.000 {method 'update' of 'set' objects}
+    15941    0.012    0.000    0.012    0.000 {method 'index' of 'list' objects}
+    15941    0.010    0.000    0.010    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\protocols.py:212(assend_assigned_stmts)
+      500    0.005    0.000    0.008    0.000 c:\Python26\lib\xml\sax\expatreader.py:244(reset)
+      292    0.007    0.000    0.007    0.000 {sorted}
+    15941    0.007    0.000    0.007    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:42(__init__)
+     9343    0.005    0.000    0.006    0.000 c:\Python26\lib\ast.py:151(iter_fields)
+      430    0.002    0.000    0.006    0.000 c:\Python26\lib\profilehooks.py:233(new_fn)
+      250    0.001    0.000    0.006    0.000 c:\Python26\lib\xml\sax\__init__.py:71(make_parser)
+     7402    0.004    0.000    0.006    0.000 c:\Python26\lib\xml\sax\xmlreader.py:327(get)
+    31882    0.006    0.000    0.006    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:53(infer)
+    31882    0.006    0.000    0.006    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:565(_infer_name)
+      250    0.001    0.000    0.006    0.000 c:\Python26\lib\xml\sax\__init__.py:104(_create_parser)
+    15941    0.006    0.000    0.006    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\node_classes.py:453(__init__)
+    17975    0.005    0.000    0.005    0.000 c:\Python26\lib\ntpath.py:122(splitdrive)
+      859    0.005    0.000    0.005    0.000 {method 'join' of 'str' objects}
+      120    0.005    0.000    0.005    0.000 {method 'splitlines' of 'str' objects}
+      963    0.003    0.000    0.005    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:156(getModName)
+     3858    0.002    0.000    0.005    0.000 ..\Modules\pyexpat.c:656(EndElement)
+      430    0.002    0.000    0.005    0.000 c:\Python26\lib\profilehooks.py:326(__call__)
+     1017    0.005    0.000    0.005    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\brain\py2stdlib.py:21(transform)
+     1017    0.004    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:248(__init__)
+     8168    0.003    0.000    0.004    0.000 ..\Modules\pyexpat.c:479(CharacterData)
+    13129    0.004    0.000    0.004    0.000 {method 'get' of 'dict' objects}
+     1210    0.004    0.000    0.004    0.000 {method 'update' of 'dict' objects}
+     1017    0.003    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\builder.py:88(__init__)
+      250    0.001    0.000    0.004    0.000 c:\Python26\lib\xml\sax\expatreader.py:404(create_parser)
+    15941    0.004    0.000    0.004    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:582(has_base)
+      500    0.002    0.000    0.003    0.000 c:\Python26\lib\xml\sax\saxutils.py:276(prepare_input_source)
+      250    0.001    0.000    0.003    0.000 c:\Python26\lib\xml\sax\expatreader.py:87(__init__)
+     3858    0.003    0.000    0.003    0.000 c:\Python26\lib\xml\sax\expatreader.py:303(end_element)
+    24130    0.003    0.000    0.003    0.000 {method 'items' of 'dict' objects}
+      230    0.001    0.000    0.003    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:55(visit_Call)
+    15941    0.003    0.000    0.003    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\mixins.py:62(ass_type)
+    12279    0.003    0.000    0.003    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:148(<genexpr>)
+    15941    0.003    0.000    0.003    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:120(scope)
+      122    0.000    0.000    0.003    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\rebuilder.py:716(visit_return)
+      250    0.002    0.000    0.002    0.000 c:\Python26\lib\xml\sax\expatreader.py:213(close)
+    27140    0.002    0.000    0.002    0.000 {method 'rstrip' of 'str' objects}
+      120    0.002    0.000    0.002    0.000 {method 'close' of 'file' objects}
+     4358    0.002    0.000    0.002    0.000 c:\Python26\lib\xml\sax\xmlreader.py:321(has_key)
+    17975    0.002    0.000    0.002    0.000 {len}
+      250    0.001    0.000    0.002    0.000 c:\Python26\lib\xml\sax\xmlreader.py:111(__init__)
+      500    0.002    0.000    0.002    0.000 {pyexpat.ParserCreate}
+     1017    0.001    0.000    0.001    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\manager.py:304(cache_module)
+     5482    0.001    0.000    0.001    0.000 {method 'lower' of 'str' objects}
+      251    0.001    0.000    0.001    0.000 {__import__}
+     1502    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:45(visit_FunctionDef)
+      430    0.001    0.000    0.001    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:761(__init__)
+     5224    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:141(<genexpr>)
+      250    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\xmlreader.py:24(__init__)
+      120    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:21(__init__)
+     3858    0.001    0.000    0.001    0.000 {method 'lower' of 'unicode' objects}
+      250    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:109(prepareParser)
+     1926    0.001    0.000    0.001    0.000 {method 'find' of 'str' objects}
+     8168    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\handler.py:158(characters)
+     3858    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\xmlreader.py:278(__init__)
+      250    0.000    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:54(__init__)
+     1017    0.001    0.000    0.001    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\raw_building.py:210(__init__)
+      430    0.001    0.000    0.001    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:787(set_line_info)
+      250    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:115(setContentHandler)
+      500    0.001    0.000    0.001    0.000 c:\Python26\lib\xml\sax\expatreader.py:223(_reset_cont_handler)
+      216    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:67(subnodeVisit)
+      677    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\pyparse.py:36(visit_Name)
+      158    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:114(findPaths)
+      250    0.001    0.000    0.001    0.000 {_weakref.proxy}
+     3858    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\parse.py:48(endElement)
+     1017    0.001    0.000    0.001    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\Playero.py:29(modules_transform)
+        1    0.000    0.000    0.001    0.001 c:\Python26\lib\encodings\__init__.py:71(search_function)
+     1274    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:140(<genexpr>)
+     1857    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+     1230    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:147(<genexpr>)
+      500    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:203(__init__)
+      250    0.000    0.000    0.000    0.000 {built-in method SetBase}
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:57(setDocumentLocator)
+      587    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:171(__getitem__)
+      250    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\parse.py:25(__init__)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\expatreader.py:132(setFeature)
+      500    0.000    0.000    0.000    0.000 {built-in method SetParamEntityParsing}
+      750    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:253(getByteStream)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:38(setContentHandler)
+      864    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:151(<genexpr>)
+      500    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:236(getEncoding)
+      500    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:222(getSystemId)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:240(setByteStream)
+      288    0.000    0.000    0.000    0.000 e:\Develop\desarrollo\python\other\pylint-playero-plugin\funcs.py:150(<genexpr>)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:54(__init__)
+      225    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\xmlreader.py:218(setSystemId)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:8(<module>)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:80(startDocument)
+      250    0.000    0.000    0.000    0.000 c:\Python26\lib\xml\sax\handler.py:87(endDocument)
+        2    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\scoped_nodes.py:828(basenames)
+        2    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:591(as_string)
+        2    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\as_string.py:76(__call__)
+        2    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\bases.py:397(accept)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:33(getregentry)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\codecs.py:77(__new__)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\__init__.py:49(normalize_encoding)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:18(IncrementalEncoder)
+        1    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x1E1CE5A8}
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:28(StreamReader)
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:22(IncrementalDecoder)
+        1    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'translate' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 c:\Python26\lib\encodings\utf_8.py:25(StreamWriter)
+        2    0.000    0.000    0.000    0.000 c:\Python26\lib\site-packages\astroid-1.1.1-py2.6.egg\astroid\as_string.py:323(visit_name)
+        0    0.000             0.000          profile:0(profiler)
+
+
