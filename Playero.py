@@ -3,6 +3,7 @@ from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
 from astroid.exceptions import InferenceError
 from funcs import *
+from tools import hashIt
 
 notFound = set()
 
@@ -58,7 +59,7 @@ def buildRecordModule(module):
     instanceFields = list(records[modname]) + list(attributes)
 
     for insBuilder in ("bring", "getMasterRecord"):
-        module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
+        module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((instanceFields, methods)))
 
     module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
@@ -70,7 +71,7 @@ def buildRecordModule(module):
                 realpath = path[0]
                 dh = parseRecordXML(realpath)
                 methods += list(getClassInfo(dh.name, dh.inheritance)[1])
-        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((instanceFields, methods)))
     return True
 
 def buildReportModule(module):
@@ -96,7 +97,7 @@ def genericBuilder(module, buildIdx):
         records = getRecordsInfo(modname, extensions=ext)[0]
         attributes, methods = getClassInfo(modname, parent=classtype)
         instanceFields = list(records[modname]) + list(attributes)
-        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", instanceFields, methods)
+        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((instanceFields, methods)))
         res = True
     return res
 
@@ -119,8 +120,9 @@ class %s(object):
 ''' % (itername, "\n".join(fieldTxt)))
     return fake.locals[itername]
 
-
-def buildInstantiator(name, instancerName, fields, methods):
+@cache.store
+def buildInstantiator(name, instancerName, fieldsMethodsHashed):
+    (fields, methods) = hashIt(fieldsMethodsHashed, unhash=True)
     instantiatorname = "%s_%s" % (name, instancerName)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
     methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods]

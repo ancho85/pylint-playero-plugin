@@ -52,10 +52,8 @@ def latinToAscii(unicrap):
     return r
 
 def ifElse(condition, trueVal, falseVal):
-    try: condition = bool(condition)
-    except: pass
     if isinstance(condition, str):
-        condition = self.ifElse(len(condition.strip())>1,condition,"")
+        condition = ifElse(len(condition.strip()) > 1, condition, "")
     if condition: return trueVal
     return falseVal
 
@@ -65,3 +63,9 @@ def logHere(value, filename="log.log"):
     logfile = os.path.join(HERE, 'logs', filename)
     f = file(logfile, "a")
     f.write("%s\n" % str(value))
+
+def hashIt(param, unhash=False):
+    import cPickle
+    if unhash:
+        return cPickle.loads(param)
+    return cPickle.dumps(param, 2) #binary format

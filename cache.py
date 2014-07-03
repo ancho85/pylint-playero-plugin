@@ -1,12 +1,13 @@
 from tools import logHere
 
-class cache:
+class cache(object):
     storage = {}
 
     debug = False
     skipDebug = []
 
     collectStats = False
+    detailedStats = True
     statistics = {}
 
 
@@ -52,12 +53,14 @@ class cache:
 
 
     @classmethod
-    def getStatistics(cls, detailed = True):
+    def getStatistics(cls, detailed=True):
         res = []
         for fname in sorted(cls.statistics):
             for arg in sorted(cls.statistics[fname]["hit"]):
                 hits = cls.statistics[fname]["hit"][arg]
                 misses = cls.statistics[fname]["miss"][arg]
-                res.append("Total %s(%s) Hits: %i -- Miss: %i" % (fname, arg, hits, misses))
-                #if hits+misses > 0: res.append("Total %%Hits: %%%.2f\n" % (float(hits) / hits+misses * 100))
+                if detailed and cls.detailedStats:
+                    res.append("Total %s(%s) Hits: %i -- Miss: %i" % (fname, arg, hits, misses))
+                else:
+                    res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses))
         return '\n'.join(res)
