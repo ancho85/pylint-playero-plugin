@@ -61,7 +61,7 @@ def buildRecordModule(module):
         module.locals[insBuilder] = buildInstantiator(modname, insBuilder, instanceFields, methods)
 
     module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
-    module.locals.update([(meths, buildMethod(modname, meths)) for meths in methods if meths not in module.locals])
+    module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
 
     if module.name.endswith("Window"): #Window Class
         if len(methods) == len(defaultMethods):
@@ -133,11 +133,10 @@ class %s(object):
 ''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(methsTxt)))
     return fake.locals[instantiatorname]
 
-
-def buildMethod(name, method):
-    methodname = "%s_%s" % (name, method)
-    fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % methodname)
-    return  {0:fake[methodname]}
+@cache.store
+def buildMethod(method):
+    fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % method)
+    return  {0:fake[method]}
 
 
 ###modules_transforms_methods###
@@ -204,6 +203,7 @@ def %s(classname, superclassname, filename):
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals["SuperClass"]
 
+@cache.store
 def buildCThread():
     txt = """
 class CThread:
