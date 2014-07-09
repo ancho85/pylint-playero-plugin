@@ -10,6 +10,10 @@ RECORD = ".record.xml"
 REPORT = ".reportwindow.xml"
 ROUTINE = ".routinewindow.xml"
 WINDOW = ".window.xml"
+reportClasses  = ["Report", "ReportA"]
+routineClasses = ["Routine", "RoutineA"]
+otherClasses   = ["Window", "WindowA"]
+allCoreClasses = reportClasses + routineClasses + otherClasses
 
 @cache.store
 def getPlayeroPath():
@@ -146,7 +150,7 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
-    if parent not in ("Report","Routine"):
+    if parent not in allCoreClasses:
         attributes.update(x for x in defaultAttributes)
         methods.update(x for x in defaultMethods)
     methods = sorted(methods)
