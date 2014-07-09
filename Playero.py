@@ -21,6 +21,8 @@ def classes_transform(module):
         elif pathType == ROUTINE:
             found = buildRoutineModule(module)
         if not found: notFound.add(modname)
+    elif modname in allCoreClasses:
+        baseClassBuilder(module, modname)
     else:
         notFound.add(modname)
 
@@ -86,6 +88,7 @@ def genericBuilder(module, buildIdx):
                 "Report": [REPORT, ".reports."],
                 "Routine": [ROUTINE,".routines."]
     }
+    if buildIdx not in buildType: return res
     ext = buildType[buildIdx][0]
     cls = buildType[buildIdx][1]
     modname = getModName(module.name)
@@ -96,10 +99,36 @@ def genericBuilder(module, buildIdx):
     if classtype == buildIdx:
         records = getRecordsInfo(modname, extensions=ext)[0]
         attributes, methods = getClassInfo(modname, parent=classtype)
-        instanceFields = list(records[modname]) + list(attributes)
+        instanceFields = list(records.get(modname, [])) + list(attributes)
         module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((instanceFields, methods)))
         res = True
     return res
+
+def baseClassBuilder(module, baseclass):
+    if baseclass == "ReportA":
+        module.locals["setView"] = buildMethod("setView")
+        module.locals["setAutoRefresh"] = buildMethod("setAutoRefresh")
+        module.locals["run"] = buildMethod("run")
+        module.locals["reportid"] = {0:0}
+        module.locals["decimalsspec"] = {0:0}
+        module.locals["routinemode"] = {0:0}
+        records = getRecordsInfo("Transaction", extensions=RECORD)[0]
+        attributes, methods = getClassInfo("Report", parent="Record")
+        attributes += ["StartDate", "EndDate", "DateField"]
+        instanceFields = list(records.get("Transaction", [])) + list(attributes)
+        module.locals["getRecord"] = buildInstantiator("ReportA", "getRecord", hashIt((instanceFields, methods)))
+    elif baseclass == "RoutineA":
+        module.locals["background"] = buildMethod("background")
+        module.locals["run"] = buildMethod("run")
+
+        attributes, methods = getClassInfo("Routine", parent="Record")
+        instanceFields = list(attributes)
+        module.locals["getRecord"] = buildInstantiator("RoutineA", "getRecord", hashIt((instanceFields, methods)))
+    elif baseclass == "WindowA":
+        module.locals["filterPasteWindow"] = buildMethod("filterPasteWindow")
+        attributes, methods = getClassInfo("Window", parent="Record")
+        instanceFields = list(attributes) + ["Currency", "Contact", "SupCode", "CustCode", "SerNr", "internalId"]
+        module.locals["getRecord"] = buildInstantiator("WindowA", "getRecord", hashIt((instanceFields, methods)))
 
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
