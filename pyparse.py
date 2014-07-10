@@ -73,6 +73,33 @@ class PyParse(ast.NodeVisitor):
                 else:
                     pass # probably ast.Name instance. __file__
 
+@cache.store
+def parseExecLine(txtLine, mode="single"): #eval
+    parse = PyExecLineParse()
+    try:
+        nodes = ast.parse(txtLine, mode=mode)
+        parse.visit(nodes)
+    except SyntaxError, e:
+        parse.errors = e
+    return parse
+
+class PyExecLineParse(ast.NodeVisitor):
+
+    def __init__(self):
+        ast.NodeVisitor.__init__(self)
+        self.importfrom = ""
+        self.importwhat = ""
+        self.alias = None
+        self.errors = None
+
+    def generic_visit(self, node):
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_ImportFrom(self, node):
+        self.importfrom = node.module
+        self.importwhat = node.names[0].name
+        self.alias = node.names[0].asname
+
 
 if __name__ == "__main__":
     filepath = "e:/Develop/desarrollo/python/ancho/workspace/Playero/extra/StdPY/records/Invoice.py"

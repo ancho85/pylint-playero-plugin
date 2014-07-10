@@ -35,11 +35,11 @@ def modules_transform(module):
         module.locals.update(buildCore())
     else:
         buildSuperClassModule(module)
-
-        if isRoutine(module):
-            pass
-        if isReport(module):
-            pass
+        buildExecModule(module)
+        #if isRoutine(module):
+        #    pass
+        #if isReport(module):
+        #    pass
 
         module.locals['CThread'] = buildCThread()
 
@@ -181,6 +181,22 @@ def isReport(module):
             return True
     return False
 
+def buildExecModule(module):
+    for assnode in module.body:
+        if isinstance(assnode, node_classes.Exec):
+            if isinstance(assnode.expr, node_classes.BinOp): #something % somethingelse
+                left = assnode.expr.left.as_string()
+                right = assnode.expr.right.as_string()
+                statement = "%s" % (left + " % " + right)
+                dic = {}
+                dic.update([(key, key) for key in module.globals])
+                newstatement = eval(statement, dic)
+                parsed = parseExecLine(newstatement, mode="single")
+                if not parsed.errors:
+                    name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
+                    module.locals[name] = buildSuperClass(name)
+
+
 def buildSuperClassModule(module):
 
     def assHasAssignedStmts(theAss):
@@ -248,12 +264,13 @@ def buildCore():
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals
 
+###plugin's default methods###
+
 def register(linter):
     """required method to auto register this checker"""
     if cache.collectStats:
         from checkers_classes import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
-
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
 MANAGER.register_transform(scoped_nodes.Class, classes_transform)

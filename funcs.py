@@ -1,7 +1,7 @@
 import os
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
-from pyparse import parseScript
+from pyparse import parseScript, parseExecLine
 from tools import logHere
 
 defaultAttributes = ["rowNr"]
@@ -173,10 +173,12 @@ def ifElse(condition, trueVal, falseVal):
     if condition: res = trueVal
     return res
 
-def inspectModule(module, inspectName, inspectValue):
+def inspectModule(module, inspectName, inspectValue, force=False):
     """inspects module functions. Ex: inspectName='DelTransaction', inspectValue='module.body[0].parent.name' """
-    modname = getModName(module.name)
-    if modname == inspectName:
+    modname = module
+    if hasattr(module, "name"):
+        modname = getModName(module.name)
+    if modname == inspectName or force:
         logHere("Inspecting %s --> %s" % (modname, inspectValue))
         exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
         exe += """    exec("xdir = dir(%s.%%s)" %% x) \n""" % inspectValue
