@@ -189,12 +189,21 @@ def buildExecModule(module):
                 right = assnode.expr.right.as_string()
                 statement = "%s" % (left + " % " + right)
                 dic = {}
-                dic.update([(key, key) for key in module.globals])
+                dic.update([(key, key) for key in module.locals])
                 newstatement = eval(statement, dic)
                 parsed = parseExecLine(newstatement, mode="single")
                 if not parsed.errors:
                     name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
-                    module.locals[name] = buildSuperClass(name)
+                    module.locals[name] = buildMethod(name)
+            elif isinstance(assnode.expr, node_classes.Const):
+                newstatement = eval(assnode.expr.as_string())
+                parsed = parseExecLine(newstatement, mode="single")
+                if not parsed.errors:
+                    for newvar in parsed.targets:
+                        txt  = "class %s(object):\n" % (newvar)
+                        txt += "\tpass\n"
+                        module.locals[newvar] = AstroidBuilder(MANAGER).string_build(txt).locals[newvar]
+
 
 
 def buildSuperClassModule(module):
