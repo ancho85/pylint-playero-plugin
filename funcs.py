@@ -173,28 +173,28 @@ def ifElse(condition, trueVal, falseVal):
     if condition: res = trueVal
     return res
 
-def inspectModule(module, inspectName, inspectValue, force=False):
+def inspectModule(module, inspectName, inspectValue, force=False, filename="inspect.log"):
     """inspects module functions. Ex: inspectName='DelTransaction', inspectValue='module.body[0].parent.name' """
     modname = module
     if hasattr(module, "name"):
         modname = getModName(module.name)
     if modname == inspectName or force:
-        logHere("Inspecting %s --> %s" % (modname, inspectValue))
+        logHere("Inspecting %s --> %s" % (modname, inspectValue), filename=filename)
         exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
         exe += """    exec("xdir = dir(%s.%%s)" %% x) \n""" % inspectValue
-        exe += """    logHere((x, '----->', xdir))\n"""
+        exe += """    logHere((x, '----->', xdir), filename='%s')\n""" % filename
         exe += """    res = False\n"""
         exe += """    exec("res = callable(%s.%%s)" %% x) \n""" % inspectValue
         exe += """    if res:\n"""
         exe += """        try:\n"""
         exe += """            exec("funccall = %s.%%s()" %% x)\n""" % inspectValue
         exe += """            exec('funcname = \"----> function call %s\" % x')\n"""
-        exe += """            logHere((funcname, 'VALUE:', funccall)) \n"""
+        exe += """            logHere((funcname, 'VALUE:', funccall), filename='%s') \n""" % filename
         exe += """        except:\n"""
-        exe += """            logHere('---->funcall %s missing parameters' % x)\n"""
+        exe += """            logHere('---->funcall %%s missing parameters' %% x, filename='%s')\n""" % filename
         exe += """    else:\n"""
-        exe += """        exec("logHere(('---->value %%s', %s.%%s))" %% (x,x))\n""" % inspectValue
-        exe += """    logHere("\\n\\n")"""
+        exe += """        exec("logHere(('---->value %%s', %s.%%s), filename='%s')" %% (x,x))\n""" % (inspectValue, filename)
+        exe += """    logHere("\\n\\n", filename='%s')""" % filename
         exec(exe)
 
 if __name__ == "__main__":
