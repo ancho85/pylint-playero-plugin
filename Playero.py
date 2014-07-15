@@ -1,6 +1,6 @@
 from astroid import MANAGER, node_classes
 from astroid.builder import AstroidBuilder
-from astroid import scoped_nodes
+from astroid import scoped_nodes, raw_building
 from astroid.exceptions import InferenceError
 from funcs import *
 from tools import hashIt
@@ -43,6 +43,16 @@ def modules_transform(module):
 
         module.locals['CThread'] = buildCThread()
 
+def function_transform(callFunc):
+    if callFunc.func.as_string() == "hasattr":
+        left = callFunc.args[0]
+        right = callFunc.args[1]
+        if isinstance(left, node_classes.Name) and isinstance(right, node_classes.Const):
+            if left.name == "self":
+                parentclass = left.frame().parent
+                if right.value not in parentclass.locals:
+                    newFunc = raw_building.build_function(right.value)
+                    parentclass.add_local_node(newFunc, right.value)
 
 
 ###classes_transform_methods###
@@ -112,7 +122,7 @@ def baseClassBuilder(module, baseclass):
         m += list(methods) + ["setView", "setAutoRefresh", "run"]
         a += records.get("Transaction", {}).keys() + list(attributes)
         a += ["reportid", "decimalsspec", "routinemode"]
-        e += ["StartDate", "EndDate", "DateField"]
+        #e += ["StartDate", "EndDate", "DateField"]
     elif baseclass in routineClasses:
         attributes, methods = getClassInfo("Routine", parent="Record")
         m += list(methods) + ["background", "run"]
@@ -121,7 +131,7 @@ def baseClassBuilder(module, baseclass):
         attributes, methods = getClassInfo("Window", parent="Record")
         m += list(methods) + ["filterPasteWindow"]
         a += list(attributes)
-        e += ["Currency", "Contact", "SupCode", "CustCode", "SerNr", "internalId"]
+        #e += ["Currency", "Contact", "SupCode", "CustCode", "SerNr", "internalId"]
     else: return
     module.locals.update([(method, buildMethod(method)) for method in m if method not in module.locals])
     module.locals.update([(attr, {0:None}) for attr in a if attr not in module.locals])
@@ -283,4 +293,5 @@ def register(linter):
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
 MANAGER.register_transform(scoped_nodes.Class, classes_transform)
+MANAGER.register_transform(node_classes.CallFunc, function_transform)
 
