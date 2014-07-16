@@ -160,7 +160,7 @@ def getClassInfo(modulename, parent=""):
 def getModName(modname):
     if modname.find(".")>-1:
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
-    if modname.endswith("Window"):
+    if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
     elif modname.find("_")>-1:
         modname = None
@@ -189,6 +189,10 @@ def inspectModule(module, inspectName, inspectValue, force=False, filename="insp
         exe += """        try:\n"""
         exe += """            exec("funccall = %s.%%s()" %% x)\n""" % inspectValue
         exe += """            exec('funcname = \"----> function call %s\" % x')\n"""
+        exe += """            import types\n"""
+        exe += """            if isinstance(funccall, types.GeneratorType):\n"""
+        exe += """                funcname += " GENERATOR"\n"""
+        exe += """                funccall = [x for x in funccall]\n"""
         exe += """            logHere((funcname, 'VALUE:', funccall), filename='%s') \n""" % filename
         exe += """        except:\n"""
         exe += """            logHere('---->funcall %%s missing parameters' %% x, filename='%s')\n""" % filename
