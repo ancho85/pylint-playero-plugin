@@ -35,7 +35,7 @@ def modules_transform(module):
         module.locals.update(buildCore())
     else:
         buildSuperClassModule(module)
-        buildExecModule(module)
+
         #if isRoutine(module):
         #    pass
         #if isReport(module):
@@ -53,6 +53,37 @@ def function_transform(callFunc):
                 if right.value not in parentclass.locals:
                     newFunc = raw_building.build_function(right.value)
                     parentclass.add_local_node(newFunc, right.value)
+
+def exec_transform(assnode):
+    module = assnode.frame().parent
+    modname = getModName(module.name)
+    if not modname: return
+    paths, pathType = findPaths(modname)
+    if paths or pathType or modname in allCoreClasses:
+        if isinstance(assnode.expr, node_classes.BinOp): #something % somethingelse
+            left = assnode.expr.left.as_string()
+            right = assnode.expr.right.as_string()
+            statement = "%s" % (left + " % " + right)
+            dic = dict((key, key) for key in assnode.frame().locals)
+            newstatement = eval(statement, {}, dic)
+            parsed = parseExecLine(newstatement, mode="single")
+            if not parsed.errors:
+                name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
+                newClass = raw_building.build_class(name)
+                assnode.root().add_local_node(newClass, name)
+        elif isinstance(assnode.expr, node_classes.Const):
+            newstatement = eval(assnode.expr.as_string())
+            parsed = parseExecLine(newstatement, mode="single")
+            if not parsed.errors:
+                for key, newvar in parsed.targets.iteritems():
+                    value = parsed.values[key]
+                    newvalue = ""
+                    if hasattr(value, "func"):
+                        newvalue = value.func.id
+                    elif hasattr(value, "s"):
+                        newvalue = value.s
+                    raw_building.attach_const_node(assnode.scope(), newvar, newvalue)
+
 
 
 ###classes_transform_methods###
@@ -122,7 +153,7 @@ def baseClassBuilder(module, baseclass):
         m += list(methods) + ["setView", "setAutoRefresh", "run"]
         a += records.get("Transaction", {}).keys() + list(attributes)
         a += ["reportid", "decimalsspec", "routinemode"]
-        #e += ["StartDate", "EndDate", "DateField"]
+        e += ["StartDate", "EndDate", "DateField"]
     elif baseclass in routineClasses:
         attributes, methods = getClassInfo("Routine", parent="Record")
         m += list(methods) + ["background", "run"]
@@ -131,7 +162,7 @@ def baseClassBuilder(module, baseclass):
         attributes, methods = getClassInfo("Window", parent="Record")
         m += list(methods) + ["filterPasteWindow"]
         a += list(attributes)
-        #e += ["Currency", "Contact", "SupCode", "CustCode", "SerNr", "internalId"]
+        e += ["Currency", "Contact", "SupCode", "CustCode", "SerNr", "internalId"]
     else: return
     module.locals.update([(method, buildMethod(method)) for method in m if method not in module.locals])
     module.locals.update([(attr, {0:None}) for attr in a if attr not in module.locals])
@@ -190,31 +221,6 @@ def isReport(module):
         if module.body[0].parent.name.find(".reports.") > -1:
             return True
     return False
-
-def buildExecModule(module):
-    for assnode in module.body:
-        if isinstance(assnode, node_classes.Exec):
-            if isinstance(assnode.expr, node_classes.BinOp): #something % somethingelse
-                left = assnode.expr.left.as_string()
-                right = assnode.expr.right.as_string()
-                statement = "%s" % (left + " % " + right)
-                dic = {}
-                dic.update([(key, key) for key in module.locals])
-                newstatement = eval(statement, dic)
-                parsed = parseExecLine(newstatement, mode="single")
-                if not parsed.errors:
-                    name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
-                    module.locals[name] = buildMethod(name)
-            elif isinstance(assnode.expr, node_classes.Const):
-                newstatement = eval(assnode.expr.as_string())
-                parsed = parseExecLine(newstatement, mode="single")
-                if not parsed.errors:
-                    for newvar in parsed.targets:
-                        txt  = "class %s(object):\n" % (newvar)
-                        txt += "\tpass\n"
-                        module.locals[newvar] = AstroidBuilder(MANAGER).string_build(txt).locals[newvar]
-
-
 
 def buildSuperClassModule(module):
 
@@ -294,4 +300,5 @@ def register(linter):
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
 MANAGER.register_transform(scoped_nodes.Class, classes_transform)
 MANAGER.register_transform(node_classes.CallFunc, function_transform)
+MANAGER.register_transform(node_classes.Exec, exec_transform)
 

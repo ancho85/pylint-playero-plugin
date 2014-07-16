@@ -90,8 +90,8 @@ class PyExecLineParse(ast.NodeVisitor):
         self.importfrom = ""
         self.importwhat = ""
         self.alias = None
-        self.targets = []
-        self.values = []
+        self.targets = {}
+        self.values = {}
         self.errors = None
 
     def generic_visit(self, node):
@@ -104,11 +104,11 @@ class PyExecLineParse(ast.NodeVisitor):
 
     def visit_Assign(self, node):
         if isinstance(node.targets[0], ast.Name):
-            self.targets = [node.targets[0].id]
-        elif isinstance(node.targets[0], ast.Tuple):
-            for t in [tar for tar in node.targets[0].elts if isinstance(tar, ast.Name)]:
-                self.targets.append(t.id)
-        #self.values = node.value
+            self.targets[0] = node.targets[0].id
+            self.values[0] = node.value
+        #elif isinstance(node.targets[0], ast.Tuple):
+        #    for t in [tar for tar in node.targets[0].elts if isinstance(tar, ast.Name)]:
+        #        self.targets.append(t.id)
 
 
 
