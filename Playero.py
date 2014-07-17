@@ -65,12 +65,15 @@ def exec_transform(assnode):
             right = assnode.expr.right.as_string()
             statement = "%s" % (left + " % " + right)
             dic = dict((key, key) for key in assnode.frame().locals)
-            newstatement = eval(statement, {}, dic)
-            parsed = parseExecLine(newstatement, mode="single")
-            if not parsed.errors:
-                name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
-                newClass = raw_building.build_class(name)
-                assnode.root().add_local_node(newClass, name)
+            try: #the dic cannot have string values only.
+                newstatement = eval(statement, {}, dic)
+                parsed = parseExecLine(newstatement, mode="single")
+                if not parsed.errors:
+                    name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
+                    newClass = raw_building.build_class(name)
+                    assnode.root().add_local_node(newClass, name)
+            except Exception:
+                pass
         elif isinstance(assnode.expr, node_classes.Const):
             newstatement = eval(assnode.expr.as_string())
             parsed = parseExecLine(newstatement, mode="single")
@@ -104,7 +107,7 @@ def buildRecordModule(module):
     for insBuilder in ("bring", "getMasterRecord"):
         module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((instanceFields, methods)))
 
-    module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_")])
+    module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
 
     if module.name.endswith("Window"): #Window Class
