@@ -12,7 +12,7 @@ def classes_transform(module):
     if not modname: return
     if modname in notFound: return
     paths, pathType = findPaths(modname)
-    if pathType:
+    if paths or pathType:
         found = False
         if pathType == RECORD:
             found = buildRecordModule(module)
@@ -65,15 +65,21 @@ def exec_transform(assnode):
             right = assnode.expr.right.as_string()
             statement = "%s" % (left + " % " + right)
             dic = dict((key, key) for key in assnode.frame().locals)
-            try: #the dic cannot have string values only.
-                newstatement = eval(statement, {}, dic)
-                parsed = parseExecLine(newstatement, mode="single")
-                if not parsed.errors:
+            newstatement = eval(statement, {}, dic)
+            parsed = parseExecLine(newstatement, mode="single")
+            if not parsed.errors:
+                if parsed.importfrom:
                     name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
                     newClass = raw_building.build_class(name)
                     assnode.root().add_local_node(newClass, name)
-            except Exception:
-                pass
+                elif parsed.targets:
+                    value = parsed.values[0]
+                    newvalue = ""
+                    if hasattr(value, "func"):
+                        newvalue = value.func.id
+                    elif hasattr(value, "s"):
+                        newvalue = value.s
+                    raw_building.attach_const_node(assnode.scope(), parsed.targets[0], newvalue)
         elif isinstance(assnode.expr, node_classes.Const):
             newstatement = eval(assnode.expr.as_string())
             parsed = parseExecLine(newstatement, mode="single")
