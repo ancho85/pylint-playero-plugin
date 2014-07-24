@@ -26,7 +26,6 @@ def classes_transform(module):
     else:
         notFound.add(modname)
 
-
 def modules_transform(module):
     modname = module.name
     if not modname: return
@@ -306,9 +305,22 @@ def buildCore():
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals
 
-def astroid_wrapper(func, modname):
-    return func(modname)
+def buildEmbedded():
+    pass
+    #don't know how to include all modules defined here
+    """from astroid import inspector
+    from astroid.manager import _silent_no_wrap
+    from os.path import join, abspath, dirname
+    EMBEDDED = join(dirname(abspath(__file__)), 'corepy', "embedded")
+    project = MANAGER.project_from_files([EMBEDDED], func_wrapper=_silent_no_wrap, project_name="embedded")
+    linker = inspector.Linker(project)
+    linker.visit(project)"""
 
+    #def buildWindowEmbedded():
+    #    from os.path import join, abspath, dirname
+    #    COREDIR = join(dirname(abspath(__file__)), 'corepy')
+    #    MODULE = AstroidBuilder(MANAGER).file_build(join(COREDIR, 'Embedded_Window.py'), 'Embedded_Window')
+    #    return MODULE.locals
 
 ###plugin's default methods###
 
