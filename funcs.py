@@ -181,7 +181,7 @@ def inspectModule(module, inspectName, inspectValue, force=False, filename="insp
     if modname == inspectName or force:
         logHere("Inspecting %s --> %s" % (modname, inspectValue), filename=filename)
         exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
-        exe += """    exec("xdir = dir(%s.%%s)" %% x) \n""" % inspectValue
+        exe += """    exec("xdir = type(%s.%%s)" %% x) \n""" % inspectValue
         exe += """    logHere((x, '----->', xdir), filename='%s')\n""" % filename
         exe += """    res = False\n"""
         exe += """    exec("res = callable(%s.%%s)" %% x) \n""" % inspectValue
@@ -195,7 +195,9 @@ def inspectModule(module, inspectName, inspectValue, force=False, filename="insp
         exe += """                funccall = [x for x in funccall]\n"""
         exe += """            logHere((funcname, 'VALUE:', funccall), filename='%s') \n""" % filename
         exe += """        except:\n"""
-        exe += """            logHere('---->funcall %%s missing parameters' %% x, filename='%s')\n""" % filename
+        exe += """            import inspect\n"""
+        exe += """            exec("funcparameters = inspect.getargspec(%s.%%s)" %% x)\n""" % inspectValue
+        exe += """            logHere('---->funcall %%s missing parameters: %%s' %% (x, funcparameters), filename='%s')\n""" % filename
         exe += """    else:\n"""
         exe += """        exec("logHere(('---->value %%s', %s.%%s), filename='%s')" %% (x,x))\n""" % (inspectValue, filename)
         exe += """    logHere("\\n\\n", filename='%s')""" % filename
