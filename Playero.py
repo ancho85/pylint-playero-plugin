@@ -56,6 +56,7 @@ def function_transform(callFunc):
 
 def exec_transform(assnode):
     module = assnode.frame().parent
+    if not module: return
     modname = getModName(module.name)
     if not modname: return
     paths, pathType = findPaths(modname)
@@ -65,21 +66,28 @@ def exec_transform(assnode):
             right = assnode.expr.right.as_string()
             statement = "%s" % (left + " % " + right)
             dic = dict((key, key) for key in assnode.frame().locals)
-            newstatement = eval(statement, {}, dic)
-            parsed = parseExecLine(newstatement, mode="single")
-            if not parsed.errors:
-                if parsed.importfrom:
-                    name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
-                    newClass = raw_building.build_class(name)
-                    assnode.root().add_local_node(newClass, name)
-                elif parsed.targets:
-                    value = parsed.values[0]
-                    newvalue = ""
-                    if hasattr(value, "func"):
-                        newvalue = value.func.id
-                    elif hasattr(value, "s"):
-                        newvalue = value.s
-                    raw_building.attach_const_node(assnode.scope(), parsed.targets[0], newvalue)
+            try:
+                newstatement = eval(statement, {}, dic)
+            except Exception, e:
+                #logHere(assnode.frame().lookup("gr").next())
+                #a = assnode.frame().locals['gr'][0].ilookup('gr').next()
+                #inspectModule(a, "", "module", force=True)
+                pass
+            else:
+                parsed = parseExecLine(newstatement, mode="single")
+                if not parsed.errors:
+                    if parsed.importfrom:
+                        name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
+                        newClass = raw_building.build_class(name)
+                        assnode.root().add_local_node(newClass, name)
+                    elif parsed.targets:
+                        value = parsed.values[0]
+                        newvalue = ""
+                        if hasattr(value, "func"):
+                            newvalue = value.func.id
+                        elif hasattr(value, "s"):
+                            newvalue = value.s
+                        raw_building.attach_const_node(assnode.scope(), parsed.targets[0], newvalue)
         elif isinstance(assnode.expr, node_classes.Const):
             newstatement = eval(assnode.expr.as_string())
             parsed = parseExecLine(newstatement, mode="single")
@@ -297,6 +305,10 @@ def buildCore():
     coreTxt = open(os.path.join(os.path.dirname(__file__), "corepy","coreRedef.py"), "r").read()
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals
+
+def astroid_wrapper(func, modname):
+    return func(modname)
+
 
 ###plugin's default methods###
 
