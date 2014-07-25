@@ -32,6 +32,7 @@ def modules_transform(module):
     modname = getModName(modname)
     if modname == "OpenOrange":
         module.locals.update(buildCore())
+        module.locals.update(get_embedded_locals())
     else:
         buildSuperClassModule(module)
 
@@ -305,22 +306,16 @@ def buildCore():
     fake = AstroidBuilder(MANAGER).string_build(coreTxt)
     return fake.locals
 
-def buildEmbedded():
-    pass
-    #don't know how to include all modules defined here
-    """from astroid import inspector
+def get_embedded_locals():
     from astroid.manager import _silent_no_wrap
     from os.path import join, abspath, dirname
     EMBEDDED = join(dirname(abspath(__file__)), 'corepy', "embedded")
     project = MANAGER.project_from_files([EMBEDDED], func_wrapper=_silent_no_wrap, project_name="embedded")
-    linker = inspector.Linker(project)
-    linker.visit(project)"""
 
-    #def buildWindowEmbedded():
-    #    from os.path import join, abspath, dirname
-    #    COREDIR = join(dirname(abspath(__file__)), 'corepy')
-    #    MODULE = AstroidBuilder(MANAGER).file_build(join(COREDIR, 'Embedded_Window.py'), 'Embedded_Window')
-    #    return MODULE.locals
+    for modules in project.get_children():
+        for k, v in modules.locals.items():
+            yield (k, v)
+
 
 ###plugin's default methods###
 
@@ -329,6 +324,7 @@ def register(linter):
     if cache.collectStats:
         from checkers_classes import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
+
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
 MANAGER.register_transform(scoped_nodes.Class, classes_transform)
