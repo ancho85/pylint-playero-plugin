@@ -32,7 +32,7 @@ def modules_transform(module):
     modname = getModName(modname)
     if modname == "OpenOrange":
         module.locals.update(buildCore())
-        module.locals.update(get_embedded_locals())
+        #module.locals.update(get_embedded_locals()) #not yet ready...
     else:
         buildSuperClassModule(module)
 
