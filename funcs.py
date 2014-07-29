@@ -3,6 +3,7 @@ from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from pyparse import parseScript, parseExecLine
 from tools import logHere
+import ConfigParser
 
 defaultAttributes = ["rowNr"]
 defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete", "beforeDeleteRow"]
@@ -10,22 +11,40 @@ RECORD = ".record.xml"
 REPORT = ".reportwindow.xml"
 ROUTINE = ".routinewindow.xml"
 WINDOW = ".window.xml"
+EMBCORE = ".py"
 reportClasses  = ["Report", "ReportA"]
 routineClasses = ["Routine", "RoutineA"]
 otherClasses   = ["Window", "WindowA"]
 allCoreClasses = reportClasses + routineClasses + otherClasses
 
+def getConfig():
+    config = ConfigParser.ConfigParser()
+    configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config", "playero.cfg")
+    f = open(configLocation, "r")
+    config.readfp(f) #the configuration file can change, so it must be opened every time
+    f.close()
+    return config
+
 @cache.store
 def getPlayeroPath():
-    import ConfigParser
     try:
-        config = ConfigParser.SafeConfigParser()
-        config.read("config/playero.cfg")
+        config = getConfig()
         res = config.get('paths', os.name)
     except ConfigParser.NoSectionError:
         res = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
         if (os.name == "posix"):
             res = "/home/ancho/Develop/Playero/"
+    return res
+
+@cache.store
+def getEmbeddedPath():
+    try:
+        config = getConfig()
+        res = config.get('plugin_paths', os.name)
+    except ConfigParser.NoSectionError:
+        res = "e:/Develop/desarrollo/python/other/pylint-playero-plugin"
+        if (os.name == "posix"):
+            res = "/home/ancho/Develop/pylint-playero-plugin"
     return res
 
 @cache.store
@@ -37,7 +56,7 @@ def getScriptDirs(level=255):
     return res
 
 def buildPaths():
-    recPaths, repPaths, rouPaths, winPaths = {}, {}, {}, {}
+    recPaths, repPaths, rouPaths, winPaths, corePaths = {}, {}, {}, {}, {}
     for coremodule in ("User","LoginDialog"):
         recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
 
@@ -69,7 +88,19 @@ def buildPaths():
             dh = parseWindowRecordName(wpaths)
             recPaths[winname] = recPaths.get(dh.name)
 
-    return (recPaths, repPaths, rouPaths)
+    a = []
+    a.append(os.path.join(getEmbeddedPath(),"corepy", "embedded"))
+    a.append(os.path.join(getEmbeddedPath(),"corepy", "embedded", "classes"))
+    for cpth in a:
+        for filename in os.listdir(cpth):
+            uniquePath = "%s/%s" % (cpth, filename)
+            realname = filename.split('.')[0]
+            if filename.endswith(EMBCORE):
+                if realname not in corePaths:
+                    corePaths[realname] = {}
+                corePaths[realname].update([(len(corePaths[realname]), uniquePath)])
+
+    return (recPaths, repPaths, rouPaths, corePaths)
 
 @cache.store
 def getRecordsInfo(modulename, extensions=RECORD):
@@ -113,7 +144,7 @@ def getRecordInheritance(inheritance):
         details.update(heirDetails)
     return (fields, details)
 
-__recordPaths__, __reportPaths__, __routinePaths__ = buildPaths()
+__recordPaths__, __reportPaths__, __routinePaths__, __corePaths__ = buildPaths()
 
 @cache.store
 def findPaths(name):
@@ -133,13 +164,17 @@ def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = set(), set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
+    paths.append(os.path.join(getEmbeddedPath(),"corepy", "embedded"))
+    paths.append(os.path.join(getEmbeddedPath(),"corepy", "embedded", "classes"))
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
+    #logHere(searchInList)
     for path in paths:
         if os.path.exists(path):
             for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in searchInList]:
                 fullfilepath = os.path.join(path, filename)
+                #logHere(fullfilepath)
                 parse = parseScript(fullfilepath)
                 attributes.update(x for x in parse.attributes)
                 methods.update(x for x in parse.methods)
