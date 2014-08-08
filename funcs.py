@@ -88,10 +88,7 @@ def buildPaths():
             dh = parseWindowRecordName(wpaths)
             recPaths[winname] = recPaths.get(dh.name)
 
-    a = []
-    a.append(os.path.join(getEmbeddedPath(),"corepy", "embedded"))
-    a.append(os.path.join(getEmbeddedPath(),"corepy", "embedded", "classes"))
-    for cpth in a:
+    for cpth in [os.path.join(getEmbeddedPath(),"corepy", "embedded")]:
         for filename in os.listdir(cpth):
             uniquePath = "%s/%s" % (cpth, filename)
             realname = filename.split('.')[0]
@@ -153,6 +150,8 @@ def findPaths(name):
         foundPaths, pathType = __reportPaths__.get(name, {}), REPORT
     if not foundPaths:
         foundPaths, pathType = __routinePaths__.get(name, {}), ROUTINE
+    if not foundPaths:
+        foundPaths, pathType = __corePaths__.get(name, {}), EMBCORE
     if not foundPaths: pathType = None
     return (foundPaths, pathType)
 
@@ -165,16 +164,13 @@ def getClassInfo(modulename, parent=""):
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
     paths.append(os.path.join(getEmbeddedPath(),"corepy", "embedded"))
-    paths.append(os.path.join(getEmbeddedPath(),"corepy", "embedded", "classes"))
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
-    #logHere(searchInList)
     for path in paths:
         if os.path.exists(path):
             for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in searchInList]:
                 fullfilepath = os.path.join(path, filename)
-                #logHere(fullfilepath)
                 parse = parseScript(fullfilepath)
                 attributes.update(x for x in parse.attributes)
                 methods.update(x for x in parse.methods)
@@ -197,8 +193,8 @@ def getModName(modname):
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
     if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
-    elif modname.find("_")>-1:
-        modname = None
+    #elif modname.find("_")>-1: #FIXME
+    #    modname = None
     return modname
 
 def ifElse(condition, trueVal, falseVal):

@@ -29,19 +29,7 @@ def classes_transform(module):
 def modules_transform(module):
     modname = module.name
     if not modname: return
-    modname = getModName(modname)
-    if modname == "OpenOrange":
-        module.locals.update(buildCore())
-        #module.locals.update(get_embedded_locals()) #not yet ready...
-    else:
-        buildSuperClassModule(module)
-
-        #if isRoutine(module):
-        #    pass
-        #if isReport(module):
-        #    pass
-
-        module.locals['CThread'] = buildCThread()
+    buildSuperClassModule(module)
 
 def function_transform(callFunc):
     if callFunc.func.as_string() == "hasattr":
@@ -198,6 +186,7 @@ class %s(object):
     def remove(int): pass
     def insert(int, *args): pass
     def append(*args): pass
+    def clear(*args): pass
 
     def __init__(self, *args):
         self.__fail__ = None
@@ -290,23 +279,8 @@ def %s(classname, superclassname, filename):
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals["SuperClass"]
 
-@cache.store
-def buildCThread():
-    txt = """
-class CThread:
-    def __init__(*args): pass
-    def setName(*args): pass
-    def start(*args): pass
-"""
-    fake = AstroidBuilder(MANAGER).string_build(txt)
-    return fake.locals["CThread"]
-
-def buildCore():
-    coreTxt = open(os.path.join(os.path.dirname(__file__), "corepy","coreRedef.py"), "r").read()
-    fake = AstroidBuilder(MANAGER).string_build(coreTxt)
-    return fake.locals
-
 def get_embedded_locals():
+    """ USELESS: because the path is added in the .pylintrc file"""
     from astroid.manager import _silent_no_wrap
     from os.path import join, abspath, dirname
     EMBEDDED = join(dirname(abspath(__file__)), 'corepy', "embedded")
