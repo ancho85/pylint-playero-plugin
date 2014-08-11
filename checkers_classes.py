@@ -22,6 +22,6 @@ class CacheStatisticWriter(BaseChecker):
 
     def process_module(self, node):
         """write the cache statistics after plugin usage"""
-        logHere(self.cache.getStatistics())
+        logHere(self.cache.getStatistics(), 'stats.log')
         lastline = sum(1 for line in node.file_stream)
         self.add_message('C6666', lastline)
