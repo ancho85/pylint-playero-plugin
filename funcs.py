@@ -193,8 +193,13 @@ def getModName(modname):
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
     if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
-    #elif modname.find("_")>-1: #FIXME
-    #    modname = None
+    if modname.find("_")>-1:
+        embpath = os.path.join(getEmbeddedPath(),"corepy", "embedded")
+        corePath = False
+        for filename in [f for f in os.listdir(embpath) if f.split(".py")[0] == modname]:
+            corePath = True
+        if not corePath:
+            modname = None
     return modname
 
 def ifElse(condition, trueVal, falseVal):
