@@ -25,8 +25,9 @@ class Embedded_Window(object):
                 return
             from globalfunctions import rawAction
             rawAction("Window", self.__window.windowid, "listViewModified", self.__name, value=(self.__listview,))
-    
+
     def __init__(self):
+        self.windowid = id(self)
         self.followStatus = False
         self.ListWindowSortFields = ()
         self.ListWindowFilter = ""
@@ -43,25 +44,13 @@ class Embedded_Window(object):
     def beforeDeleteRow(self, detailfieldname, rownr):
         return True
 
-    #~ def setRecord(self, record):
-        #~ #used in webmode
-        #~ self.__record__ = record
-        #~ return None
     def open(self):
-        #~ print "OPENING WINDOW"*50
-        from ClientServerTools import getClientConnection
-        cc = getClientConnection()
-        if cc:
-            return cc.openWindow(self)
-        else:
-            try:
-                print "openWindow: " + str(self)
-            except Exception, e:
-                pass
+        return True
 
     def setTabPageVisibility(self, tabname, pagename, doshow):
         return rawAction("Window", self.windowid, "setTabPageVisibility", tabname, pagename, doshow, doReturn=False)
-    def setFocus(*args, **kwargs):
+
+    def setFocus(self, *args, **kwargs):
         pass
     #~ def getRecord(self):
         #~ #used in webmode
@@ -77,10 +66,10 @@ class Embedded_Window(object):
             uniqueKeys = rec.uniqueKey()
             if uniqueKeys:
                 t += " %s" % getattr(rec, rec.uniqueKey()[0])
-        from Company import Company
-        lcom = Company.getLoguedCompanies()
-        if (len(lcom) > 1):
-            t = "[%s] %s" %(Company.getCurrent().Code,t)
+        #from Company import Company
+        #lcom = Company.getLoguedCompanies()
+        #if (len(lcom) > 1):
+        #    t = "[%s] %s" %(Company.getCurrent().Code,t)
         if rec.isPersistent() and not rec.internalId:
             t += ": " + tr("New")
         elif rec.isModified():
@@ -132,7 +121,7 @@ class Embedded_Window(object):
         #~ self.ListWindowFilter = v
     def setListWindowFilterSafe(self, fieldlist, value):
         v = ""
-        
+
         if value and fieldlist:
             v = "("
             fconditions = []
@@ -140,7 +129,7 @@ class Embedded_Window(object):
                 fconditions.append( "{%s} LIKE s|%%%s%%|"%(f, value) )
             v += " OR ".join(fconditions)
             v += ") WHERE?AND ({Closed} is NULL or {Closed}=i|0|)"
-        
+
         # access group filter
         from User import User
         from functions import currentUser
@@ -162,7 +151,7 @@ class Embedded_Window(object):
                 record_filter_data = getattr(u, record_filter[0])
                 record_filter_clause = " WHERE?AND {%s}=s|%s|" % (record_filter[1], record_filter_data)
             v += record_filter_clause
-            
+
         self.ListWindowFilter = v
     def setMatrixRowBGColor(self, name, rownr, color):
         pass
@@ -187,11 +176,12 @@ class Embedded_Window(object):
     def name(self):
         return self.__class__.__name__
     def getOriginalTitle(self):
-        try:
-            from ParserNew import WindowParser
-            w = WindowParser.get_instance(self.name()[:-6])
-            return w.title
-        except:
+        #try:
+        #    from ParserNew import WindowParser
+        #    w = WindowParser.get_instance(self.name()[:-6])
+        #    return w.title
+        #except:
+        if True:
             if self.__record__:
                 from functions import tr
                 return tr(self.__record__.__class__.__name__)
@@ -210,7 +200,7 @@ class Embedded_Window(object):
                 #~ self.__recordListener.fieldModified(fn, self.__record__.fields(fn).getValue())
             #~ for fn in self.__record__.detailNames():
                 #~ self.__recordListener.fieldModified(fn, self.__record__.details(fn).getValue())
-                
+
     def getRecord(self):
         return self.__record__
     def setRowFieldDecimals(self, *args, **kwargs):
@@ -224,6 +214,59 @@ class Embedded_Window(object):
             lv.addListener(self.__class__.ListViewListener(self, name, lv))
             self.__listviews[name] = lv
         return self.__listviews[name]
+    def getFieldLabel(self, fname, fvalue=None, rowfname=None, rowfvalue=None):
+        from globalfunctions import getWindowsInfo, utf8, tr
+        gwi = getWindowsInfo()
+        #print fname, fvalue, rowfname, rowfvalue
+        res = ""
+        if (fvalue != None):  fvalue = utf8(fvalue)
+        if (rowfvalue != None): rowfvalue = utf8(rowfvalue)
+        if (not "FieldsData" in gwi.keys()):
+            return res
+        if (fname):
+            obj = gwi["FieldsData"].get(fname,"")
+            if (obj):
+                res = gwi["FieldsData"][fname]["Label"]
+            else:
+                return tr(res)
+        else:
+            return tr(res)
+        if (fvalue):
+            obj = gwi["FieldsData"][fname].get("OptionValues","")
+            if (obj):
+                res = "%s?" %(tr(res))
+                #alert((fvalue,gwi["FieldsData"][fname]["OptionValues"]))
+                if (fvalue in gwi["FieldsData"][fname]["OptionValues"]):
+                    idx = gwi["FieldsData"][fname]["OptionValues"].index(fvalue)
+                    res = gwi["FieldsData"][fname]["OptionLabels"][idx]
+                else:
+                    return tr(res)
+            else:
+                return tr(res)
+        if (rowfname):
+            obj = gwi["FieldsData"][fname].get("Columns","")
+            if (obj):
+                obj = gwi["FieldsData"][fname]["Columns"].get(rowfname,"")
+                if (obj):
+                    res = gwi["FieldsData"][fname]["Columns"][rowfname]["Label"]
+                else:
+                    return tr(res)
+            else:
+                return tr(res)
+        if (rowfvalue):
+            obj = gwi["FieldsData"][fname]["Columns"][rowfname].get("OptionValues","")
+            if (obj):
+                res = "%s?" %(tr(res))
+                if (rowfvalue in gwi["FieldsData"][fname]["Columns"][rowfname]["OptionValues"]):
+                    idx = gwi["FieldsData"][fname]["Columns"][rowfname]["OptionValues"].index(rowfvalue)
+                    res = gwi["FieldsData"][fname]["Columns"][rowfname]["OptionLabels"][idx]
+                else:
+                    return tr(res)
+            else:
+                return tr(res)
+        else:
+            return tr(res)
+        return tr(res)
     class ScrollAreaView(object):
         class Listener(object):
             def onModified(self):
@@ -261,7 +304,7 @@ class Embedded_Window(object):
             if not hasattr(self.__window, "windowid"):
                 return
             rawAction("Window", self.__window.windowid, "scrollAreaViewModified", self.__name, value=(self.__scrollareaview.getScrollArea(),))
-    
+
     def getScrollAreaView(self, name):
         if not name in self.__scrollareaviews:
             self.__scrollareaviews[name] = self.__class__.ScrollAreaView()
@@ -276,14 +319,15 @@ class Embedded_Window(object):
         return rawAction("Window", self.windowid, "getCurrentRow", fieldname, doReturn=True)
 
     def getMatrixColumns(self, matrixname):
-        from ParserNew import WindowParser
-        windownode = WindowParser.get_instance(self.name()[:-6]).tree
-        try:
-            matrixnode = windownode.find_first("matrix", name=matrixname)
-        except:
-            matrixnode = windownode.find_first("matrix", fieldname=matrixname)
-        columnnodes = matrixnode.find_all('matrixcolumn')
-        return [col.attrs["fieldname"] for col in columnnodes]
+        #from ParserNew import WindowParser
+        #windownode = WindowParser.get_instance(self.name()[:-6]).tree
+        #try:
+        #    matrixnode = windownode.find_first("matrix", name=matrixname)
+        #except:
+        #    matrixnode = windownode.find_first("matrix", fieldname=matrixname)
+        #columnnodes = matrixnode.find_all('matrixcolumn')
+        #return [col.attrs["fieldname"] for col in columnnodes]
+        return []
 
     def setStyle(self, style):
         pass

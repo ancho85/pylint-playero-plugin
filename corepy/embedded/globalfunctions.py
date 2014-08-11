@@ -3,7 +3,7 @@ WEBCLIENT = True
 import sys
 import os
 import threading
-from core.ClientServerTools import InteractionRequest, getClientConnection
+from ClientServerTools import getClientConnection
 
 
 _settingsfile = {"path": None}
@@ -54,21 +54,17 @@ def sysprint(s):
 def hasConsole():
     return True
 
-def getQueryLogging():
-    return True
-
-def sysprint(s):
-    print "%s\n" % s
-
 def NewRecord(rname):
-    res = None
-    try:
-        exec("from %s import %s as CLS" % (rname, rname))
-        res = CLS()
-    except Exception, e:
-        import traceback
-        traceback.print_exc()
-    return res
+    themod = __import__(rname)
+    return themod()
+    #res = None
+    #try:
+    #    exec("from %s import %s as CLS" % (rname, rname))
+    #    res = CLS()
+    #except Exception, e:
+    #    import traceback
+    #    traceback.print_exc()
+    #return res
 
 def NewWindow(wname):
     exec("from %s import %s as CLS" % (wname, wname))
@@ -111,9 +107,6 @@ def getLanguage():
 
 def runningInBackground():
     return False
-
-def getSelection(msg, options):
-    return None
 
 def curUser():
     return ""
@@ -416,8 +409,9 @@ def getTimezone():
     return SettingsFile.getInstance().getTimezone()
 
 def createRecordModuleAndClass(name, baseclassname):
+    import new
     from Record import Record
-    classobject = new.classobj(name, (Record,),{})
+    classobject = new.classobj(name, (Record, ), {})
     mod = new.module(name)
     mod.__dict__[name] = classobject
     sys.modules[name] = mod
@@ -481,3 +475,53 @@ def commit():
 def rollback():
     #Database.getCurrentDB().rollback()
     return True
+
+def exitProgram():
+    sys.exit(0)
+
+def processEvents():
+    pass
+
+
+def currentCompanyHost():
+    return ""
+
+def currentWindow():
+    from Embedded_Window import Embedded_Window
+    return Embedded_Window()
+
+def utf8(value):
+    if isinstance(value, unicode):
+        return value.encode("utf8")
+    elif isinstance(value, str):
+        return unicode(value, 'utf8', errors='replace')
+        #elif isinstance(value, DBError):
+        #   return utf8(value.__str__())
+    else:
+        try:
+            return unicode(value, 'utf8', errors='replace')
+        except:
+            try:
+                s = str(value)
+            except:
+                s = repr(value)
+            return unicode(s, 'utf8', errors='replace')
+
+def tr(*args):        # old definition was tr(msg, default=-1):
+    eles = []
+    for ele in args:
+        if isinstance(ele, unicode):
+            sele = ele
+        else:
+            if hasattr(ele, "__str__"):
+                sele = ele.__str__() #__str__ funciona mejor cuando el objeto es un errorresponse
+            else:
+                sele = str(ele)
+        a =  {True: langdict().get(ele,langdict("en").get(ele,ele)), False: sele}[bool(langdict().get(ele,langdict("en").get(ele,ele)))]
+        eles.append("%s" %(a))
+    if (eles):
+        res = " ".join(eles)
+    else:
+        res = ""
+    if isinstance(res, unicode): return res
+    return unicode(res, 'utf8', 'replace')

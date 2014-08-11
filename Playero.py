@@ -113,6 +113,7 @@ def buildRecordModule(module):
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
 
     if module.name.endswith("Window"): #Window Class
+        module.locals.update([(meths, buildMethod(meths)) for meths in list(getClassInfo("Embedded_Window")[1]) if meths not in module.locals])
         if len(methods) == len(defaultMethods):
             path, pathType = findPaths(modname)
             if pathType == RECORD:

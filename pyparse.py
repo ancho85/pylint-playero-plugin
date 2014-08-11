@@ -40,6 +40,14 @@ class PyParse(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         #print "class level", node.name
         self.classes.add(node.name)
+        baseid = None
+        if len(node.bases):
+            if isinstance(node.bases[0], ast.Name):
+                baseid = node.bases[0].id
+            elif isinstance(node.bases[0], ast.Attribute):
+                baseid = node.bases[0].value.id
+        if node.name not in self.inheritance:
+            self.inheritance[node.name] = baseid
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):

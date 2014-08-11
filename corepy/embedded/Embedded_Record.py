@@ -27,17 +27,18 @@ class Embedded_Record(object):
             f = Embedded_DetailField(self, ddef)
             self.__details__[ddef.name] = f
 
-    def __getattribute__(self, name):
-        try:
-            try:
-                return object.__getattribute__(self, "__fields__")[name].getValue()
-            except KeyError, e:
-                try:
-                    return object.__getattribute__(self, "__details__")[name].getValue()
-                except KeyError, e:
-                    raise AttributeError
-        except AttributeError, e:
-            return object.__getattribute__(self, name)
+    #WON'T FIX: PYLINT'S CONFLICT
+    #def __getattribute__(self, name):
+    #    try:
+    #        try:
+    #            return object.__getattribute__(self, "__fields__")[name].getValue()
+    #        except KeyError, e:
+    #            try:
+    #                return object.__getattribute__(self, "__details__")[name].getValue()
+    #            except KeyError, e:
+    #                raise AttributeError
+    #    except AttributeError, e:
+    #        return object.__getattribute__(self, name)
 
     def __setattr__(self, name, v):
         if self.hasField(name):
@@ -187,6 +188,17 @@ class Embedded_Record(object):
         if self._master_record: self._master_record._modified = True
         for l in self.__listeners:
             l.fieldModified(fn, value)
+
+    def getFieldLabel(self, fname, fvalue=None, rowfname=None, rowfvalue=None):
+        from globalfunctions import getWindowsInfo
+        gwi = getWindowsInfo()
+        res = ""
+        for win in gwi.keys():
+            if (self.name() == gwi[win]["RecordName"]):
+                exec("from %s import %s" %(win,win))
+                exec("rwin = %s()" %(win))
+                res = rwin.getFieldLabel(fname,fvalue,rowfname,rowfvalue)
+        return res
 
     class Listener(object):
         def fieldModified(self, fn, value):
