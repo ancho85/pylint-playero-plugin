@@ -207,10 +207,13 @@ __messages_enabled__ = True
 def disableMessages():
     __messages_enabled__ = False
 
+def enableMessages():
+    __messages_enabled__ = True
+
 def messagesEnabled():
     return __messages_enabled__
 
-def displaymessage(msg, icon):
+def displaymessage(msg, icon=None):
     cc = getClientConnection()
     #print "client connection: ", cc
     if cc:
@@ -549,3 +552,16 @@ def getServerConnection(automatic_login=True):
         threading.currentThread().server_connection = createServerConnection(automatic_login)
         return threading.currentThread().server_connection
     return None
+
+def printRecord(docinfo, record, showPreview=None, showPrinterDialog=None, docParams=None):
+    ed = docinfo()
+    ed.setDocumentSpec(docinfo, record)
+    res = ed.printDocument()
+    return res
+
+def getDirectoryName():
+    return ""
+
+def md5(value):
+    from md5 import md5
+    return md5(value).hexdigest()

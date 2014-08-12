@@ -230,7 +230,7 @@ dummy-variables-rgx=_$|dummy
 # List of additional names supposed to be defined in builtins. Remember that
 
 # you should avoid to define new builtins when possible.
-additional-builtins=Query,getSettingsFileName,commit,rollback,getApplicationType,embedded_getSaveFileName,hasConsole,curUser,messagesEnabled,displaymessage,logstring,getSelection,askYesNo,Embedded_Record,getRecordsInfo,NewRecord,sysprint,Embedded_Report,Embedded_Document,processEvents,getImagePath,currentCompany,genPassword,postMessage,decode,currentWindow,beep,printRecord,disableMessages,getWebDir,getDirectoryName,getOpenFileName,currentCompanyHost,exitProgram,md5,Embedded_Routine,enableMessages
+additional-builtins=Query
 
 
 [CLASSES]
