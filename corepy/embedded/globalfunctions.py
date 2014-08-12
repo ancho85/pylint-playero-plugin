@@ -525,3 +525,27 @@ def tr(*args):        # old definition was tr(msg, default=-1):
         res = ""
     if isinstance(res, unicode): return res
     return unicode(res, 'utf8', 'replace')
+
+def createServerConnection(automatic_login=True):
+    import socket
+    from ProtocolInterface import ClientProtocolInterface
+    try:
+        conn = ClientProtocolInterface("127.0.0.1", 3306)
+        if automatic_login:
+            u = "user"
+            p = "password"
+            if conn.login(u, p):
+                return conn
+        else:
+            return conn
+    except socket.error, e:
+        raise Exception("Error connecting to server %s" % e)
+
+def getServerConnection(automatic_login=True):
+    ApplicationType = 1
+    if ApplicationType == 1:
+        #if not hasattr(threading.currentThread(), "server_connection") or not threading.currentThread().server_connection:
+        threading.currentThread().server_connection = None
+        threading.currentThread().server_connection = createServerConnection(automatic_login)
+        return threading.currentThread().server_connection
+    return None

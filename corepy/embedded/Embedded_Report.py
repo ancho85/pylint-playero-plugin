@@ -10,6 +10,8 @@ class Embedded_Report(object):
         self._content = ""
         self._view = None
         self.autoRefreshMillis = 0
+        self.fontSize = 7
+        self.session = Embedded_Record()
 
     def getRecord(self):
         return self._record
@@ -85,3 +87,5 @@ class Embedded_Report(object):
             def resize(self,x,y): return None
         return obj()
 
+    def setDefaultFontSize(self, value):
+        self.fontSize = value

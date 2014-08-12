@@ -214,7 +214,7 @@ zope=no
 # system, and so shouldn't trigger E0201 when accessed. Python regular
 
 # expressions are accepted.
-generated-members=REQUEST,acl_users,aq_parent,load,isLocal,isNew,name,fields,setFocusOnField,details,calculateDetailNames,calculateFieldNames,calculateIndexes,isModified,getFieldLabel,hasField,oldFields,setModified,setNew,isDetail,setFieldDecimals,setRowFieldDecimals,getListWindowFilter,getListWindowSortFields,setRecord,getMatrixColumns,close,getFileOutput,clear,render,session,addImageLink,getAbsolutePos,getRelativePos,getListView,getColumnText,confirming,unconfirming,open,refresh,getView,currentPageNr,shouldFinish,tableName,getTitle,getReportView,setFocus,currentField,currentMatrixName,currentRow,setTabPageVisibility,getImageView,getParameter,setDefaultFontSize,__field_decimals__,isHeaderEnabled,createMimeImageAttach,getLastErrorResponse
+generated-members=REQUEST,acl_users,aq_parent
 
 
 [VARIABLES]

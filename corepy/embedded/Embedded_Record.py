@@ -170,6 +170,9 @@ class Embedded_Record(object):
     def refresh(self):
         pass
 
+    def calculateIndexes():
+        return []
+
     def getAttachAsString(self, attachid):
         from globalfunctions import NewRecord
         a = NewRecord("Attach")
@@ -199,6 +202,37 @@ class Embedded_Record(object):
                 exec("rwin = %s()" %(win))
                 res = rwin.getFieldLabel(fname,fvalue,rowfname,rowfvalue)
         return res
+
+    def getPortableId(self, useOldFields=False):
+        originrecordname = self.__class__.__name__ #self.OriginRecordName
+        originid = id(self)
+        if useOldFields:
+            originrecordname = self.oldFields('OriginRecordName').getValue()
+            originid = self.oldFields('OriginId').getValue()
+        return str("%s|%s" % (originrecordname, originid))
+
+    def createMimeImageAttach(self, bytearray):
+        res = self.attachMimeImage(bytearray)
+        if not res: return res
+        return str(res.internalId)
+
+    def attachMimeImage(self, image_str, attach_type=2):
+        #this method doesnt commit to database. You must commit after calling it.
+        from Attach import Attach
+        att = Attach()
+        att.Value = image_str
+        att.Type = attach_type
+        att.OriginRecordName = self.name()
+        att.OriginId = self.getPortableId()
+        res = att.store()
+        if not res: return res
+        return att
+
+    def getLastErrorResponse(self):
+        return ""
+
+    def getId(self):
+        return id(self)
 
     class Listener(object):
         def fieldModified(self, fn, value):
