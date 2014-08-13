@@ -331,3 +331,6 @@ class Embedded_Window(object):
 
     def setStyle(self, style):
         pass
+
+    def filterPasteWindow(self, fieldname):
+        return True

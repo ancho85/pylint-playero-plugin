@@ -5,6 +5,8 @@ from FieldDef import FieldDef
 
 class Embedded_Record(object):
 
+    internalId = 0
+
     def __init__(self, recorddef=None):
         object.__init__(self)
         if not recorddef:
@@ -233,6 +235,36 @@ class Embedded_Record(object):
 
     def getId(self):
         return id(self)
+
+    def getDecimalFieldNames(self):
+        return []
+
+    def getDecimalRowFieldNames(self):
+        return {}
+
+    def invalidate(self):
+        return True
+
+    def store(self):
+        return True
+
+    def getHTML(self):
+        return ""
+
+    def balance(self):
+        return True
+
+    def exportRecord(self):
+        return True
+
+    def fieldIsEditable(self, fieldname, detailfieldname=None, rownr=None):
+        return True
+
+    def delete_fromGUI(self):
+        return True
+
+    def save_fromGUI(self):
+        return True
 
     class Listener(object):
         def fieldModified(self, fn, value):

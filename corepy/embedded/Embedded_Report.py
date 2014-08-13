@@ -12,6 +12,7 @@ class Embedded_Report(object):
         self.autoRefreshMillis = 0
         self.fontSize = 7
         self.session = Embedded_Record()
+        self.reportid = id(self)
 
     def getRecord(self):
         return self._record

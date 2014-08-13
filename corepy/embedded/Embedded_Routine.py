@@ -59,6 +59,9 @@ class Embedded_Routine(object):
     def getBackground(self):
         return self.__background__
 
+    def background(self):
+        return self.__background__
+
     def getRunOnServer(self):
         return self.__runOnServer__
 
