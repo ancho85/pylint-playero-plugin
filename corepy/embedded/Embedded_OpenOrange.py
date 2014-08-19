@@ -13,6 +13,7 @@ from Embedded_ScrollArea import * #ScrollArea
 from Embedded_ButtonObj import *
 from Embedded_Routine import *
 from CThread import * #CThread
+from ButtonArea import *
 
 
 #root_path = os.path.join(os.getcwd(), "..")

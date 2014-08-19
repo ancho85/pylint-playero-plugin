@@ -5,8 +5,6 @@ from pyparse import parseScript, parseExecLine
 from tools import logHere
 import ConfigParser
 
-defaultAttributes = ["rowNr"]
-defaultMethods = ["forceDelete", "afterCopy", "printDocument", "afterDelete", "beforeDeleteRow"]
 RECORD = ".record.xml"
 REPORT = ".reportwindow.xml"
 ROUTINE = ".routinewindow.xml"
@@ -181,9 +179,6 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
-    if parent not in allCoreClasses:
-        attributes.update(x for x in defaultAttributes)
-        methods.update(x for x in defaultMethods)
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)

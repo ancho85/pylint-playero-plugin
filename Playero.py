@@ -113,13 +113,8 @@ def buildRecordModule(module):
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
 
     if module.name.endswith("Window"): #Window Class
-        module.locals.update([(meths, buildMethod(meths)) for meths in list(getClassInfo("Embedded_Window")[1]) if meths not in module.locals])
-        if len(methods) == len(defaultMethods):
-            path, pathType = findPaths(modname)
-            if pathType == RECORD:
-                realpath = path[0]
-                dh = parseRecordXML(realpath)
-                methods += list(getClassInfo(dh.name, dh.inheritance)[1])
+        methods += list(getClassInfo("Window", "Embedded_Window")[1])
+        module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
         module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((instanceFields, methods)))
     return True
 
@@ -152,18 +147,18 @@ def genericBuilder(module, buildIdx):
     return res
 
 def baseClassBuilder(module, baseclass):
-    if baseclass in reportClasses:
-        records = getRecordsInfo("Transaction", extensions=RECORD)[0]
-        attributes, methods = getClassInfo("Embedded_Report", parent="Embedded_Record")
-        attributes += records.get("Transaction", {}).keys()
-    elif baseclass in routineClasses:
-        attributes, methods = getClassInfo("Embedded_Routine", parent="Embedded_Record")
-    elif baseclass in otherClasses:
-        attributes, methods = getClassInfo("Embedded_Window", parent="Embedded_Record")
-    else: return
-    module.locals.update([(method, buildMethod(method)) for method in methods if method not in module.locals])
-    module.locals.update([(attr, {0:None}) for attr in attributes if attr not in module.locals])
-    module.locals["getRecord"] = buildInstantiator(baseclass, "getRecord", hashIt((attributes, methods)))
+    if baseclass in allCoreClasses:
+        if baseclass in reportClasses:
+            records = getRecordsInfo("Transaction", extensions=RECORD)[0]
+            attributes, methods = getClassInfo("Embedded_Report", parent="Embedded_Record")
+            attributes += records.get("Transaction", {}).keys()
+        elif baseclass in routineClasses:
+            attributes, methods = getClassInfo("Embedded_Routine", parent="Embedded_Record")
+        elif baseclass in otherClasses:
+            attributes, methods = getClassInfo("Embedded_Window", parent="Embedded_Record")
+        module.locals.update([(method, buildMethod(method)) for method in methods if method not in module.locals])
+        module.locals.update([(attr, {0:None}) for attr in attributes if attr not in module.locals])
+        module.locals["getRecord"] = buildInstantiator(baseclass, "getRecord", hashIt((attributes, methods)))
 
 
 def buildIterator(name, detailfield, fields):

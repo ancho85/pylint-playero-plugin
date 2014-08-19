@@ -334,3 +334,7 @@ class Embedded_Window(object):
 
     def filterPasteWindow(self, fieldname):
         return True
+
+    def getButtonAreaView(self, batext):
+        from ButtonArea import ButtonArea
+        return ButtonArea()
