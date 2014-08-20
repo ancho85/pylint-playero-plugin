@@ -490,8 +490,8 @@ def currentCompanyHost():
     return ""
 
 def currentWindow():
-    from Embedded_Window import Embedded_Window
-    return Embedded_Window()
+    from Window import Window
+    return Window()
 
 def utf8(value):
     if isinstance(value, unicode):

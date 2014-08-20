@@ -164,6 +164,8 @@ def baseClassBuilder(module, baseclass):
 def buildIterator(name, detailfield, fields):
     itername = "%s_%s" % (name, detailfield)
     fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
+    methods = list(getClassInfo("Record", "Embedded_Record")[1])
+    methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
     def __iter__(self):
@@ -178,7 +180,8 @@ class %s(object):
     def __init__(self, *args):
         self.__fail__ = None
 %s
-''' % (itername, "\n".join(fieldTxt)))
+%s
+''' % (itername, "\n".join(fieldTxt), "\n".join(methsTxt)))
     return fake.locals[itername]
 
 @cache.store

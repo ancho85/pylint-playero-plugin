@@ -11,9 +11,6 @@ class ButtonArea(object):
     def load(self):
         pass
 
-    def setShortcut(self, sc):
-        pass
-
     def setAutoRefresh(self, v):
         pass
 

@@ -6,6 +6,7 @@ from FieldDef import FieldDef
 class Embedded_Record(object):
 
     internalId = 0
+    rowNr = 0
 
     def __init__(self, recorddef=None):
         object.__init__(self)
@@ -16,6 +17,7 @@ class Embedded_Record(object):
         self.__fields__ = {}
         self.__oldfields__ = {}
         self.__details__ = {}
+        self.__removed__ = {}
         self._new = True
         self._modified = True
         self._master_record = None
@@ -265,6 +267,18 @@ class Embedded_Record(object):
 
     def save_fromGUI(self):
         return True
+
+    def forceDelete(self):
+        return True
+
+    def printDocument(self, showPreview=False, showPrintDialog=False, parameters=""):
+        return True
+
+    def removedRecordsCount(self):
+        return len(self.__removed__)
+
+    def getRemovedRecord(self, internalId=0):
+        return self
 
     class Listener(object):
         def fieldModified(self, fn, value):

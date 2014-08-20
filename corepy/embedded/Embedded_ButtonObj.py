@@ -25,6 +25,9 @@ class Embedded_ButtonObj(object):
     def getSize(self):
         return (0, 0)
 
+    def setShortcut(self, sc):
+        pass
+
     def __str__(self):
         x,y = self.getPos()
         w,h = self.getSize()
