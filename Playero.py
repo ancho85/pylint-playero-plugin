@@ -45,6 +45,7 @@ def function_transform(callFunc):
 def exec_transform(assnode):
     module = assnode.frame().parent
     if not module: return
+    if not hasattr(module, "name"): return
     modname = getModName(module.name)
     if not modname: return
     paths, pathType = findPaths(modname)

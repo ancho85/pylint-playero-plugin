@@ -565,3 +565,12 @@ def getDirectoryName():
 def md5(value):
     from md5 import md5
     return md5(value).hexdigest()
+
+def getMainWindowImage(format,size): pass
+def moveMouseCursor(x, y): pass
+def pressMouseCursor(): pass
+def releaseMouseCursor(): pass
+def dblClickMouseCursor(): pass
+def pressKey(KeyEvent): pass
+def releaseKey(KeyEvent): pass
+def setMessageBlocking(boolvalue): pass
