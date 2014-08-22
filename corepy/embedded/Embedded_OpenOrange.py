@@ -12,6 +12,7 @@ from Embedded_Report import * #Embedded_Report
 from Embedded_ScrollArea import * #ScrollArea
 from Embedded_ButtonObj import *
 from Embedded_Routine import *
+from Embedded_TreeWidget import *
 from CThread import * #CThread
 from ButtonArea import *
 
@@ -52,4 +53,3 @@ def SuperClass(classname, superclassname, filename):
     return None
     #clsstruct = modulesindex[classname]
     #from
-

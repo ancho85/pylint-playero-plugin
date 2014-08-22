@@ -46,3 +46,5 @@ class Embedded_ListViewItem(object):
 		return self.parent.getListView()
 	def getColumnText(self, idx):
 		return self.texts[idx]
+	def getParent(self):
+		return self.parent

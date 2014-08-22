@@ -30,7 +30,7 @@ def getScriptDirs(levels=999):
     return list(reversed(xmlhandler.scriptdirs))
 
 def logstring(s):
-    #from core.functions import currentUser
+    from functions import currentUser
     rawmsg = "%s %s\n" % (currentUser().encode("utf8"), s)
     open("OpenOrange.log","ab").write(rawmsg)
 
@@ -511,6 +511,7 @@ def utf8(value):
             return unicode(s, 'utf8', errors='replace')
 
 def tr(*args):        # old definition was tr(msg, default=-1):
+    from functions import langdict
     eles = []
     for ele in args:
         if isinstance(ele, unicode):
@@ -520,7 +521,7 @@ def tr(*args):        # old definition was tr(msg, default=-1):
                 sele = ele.__str__() #__str__ funciona mejor cuando el objeto es un errorresponse
             else:
                 sele = str(ele)
-        a =  {True: langdict().get(ele,langdict("en").get(ele,ele)), False: sele}[bool(langdict().get(ele,langdict("en").get(ele,ele)))]
+        a =  {True: langdict().get(ele,langdict().get(ele,ele)), False: sele}[bool(langdict().get(ele,langdict().get(ele,ele)))]
         eles.append("%s" %(a))
     if (eles):
         res = " ".join(eles)
@@ -563,8 +564,10 @@ def getDirectoryName():
     return ""
 
 def md5(value):
-    from md5 import md5
-    return md5(value).hexdigest()
+    from md5 import md5 as md5hex
+    return md5hex(value).hexdigest()
+
+def getListWindowsInfo(): return {}
 
 def getMainWindowImage(format,size): pass
 def moveMouseCursor(x, y): pass
@@ -574,3 +577,26 @@ def dblClickMouseCursor(): pass
 def pressKey(KeyEvent): pass
 def releaseKey(KeyEvent): pass
 def setMessageBlocking(boolvalue): pass
+def currentMousePosition(): return (0, 0)
+def getValue(txt="", floatValue=.0): return float(floatValue)
+def getInteger(txt="", intValue=0): return int(intValue)
+
+def findReport(reportId):
+    from ChatConversationReport import ChatConversationReport
+    class ContactChatReportFinder(ChatConversationReport):
+        def getId(self): return id(self)
+        def hasDeceivedContacts(self): return bool(self)
+        def getContactInfo(self, ce): return ce
+        def getContactList(self): return (self, self)
+        def isDeveived(self): return bool(self)
+        def setOffline(self): pass
+        def setOnline(self): pass
+        def setAlert(self, ce): pass
+        def unsetAlert(self, ce): pass
+        def resetContacts(self): pass
+        def addContact(self, ce): pass
+        def delContact(self, ce): pass
+        def setAccount(self, ac): pass
+        def delPendingContact(self, ac): pass
+        def addPendingAcceptContact(self, ac): pass
+    return ContactChatReportFinder()

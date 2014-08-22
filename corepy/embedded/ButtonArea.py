@@ -32,3 +32,6 @@ class ButtonArea(object):
     def setBackGroundColor(self, color):
         pass
 
+    def setGraphLine(self, counth, countv, xi, yi, xf, yf, width, height):
+        pass
+
