@@ -70,6 +70,10 @@ def NewWindow(wname):
     exec("from %s import %s as CLS" % (wname, wname))
     return CLS()
 
+def NewReport(rname):
+    themod = __import__(rname)
+    return themod()
+
 current_company = [""] # awful
 
 def currentCompany():
