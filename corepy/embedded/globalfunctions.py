@@ -257,15 +257,12 @@ def getString(msg, default=""):
             pass
     return None
 
-def postMessage(msg, *args):
-    cc = getClientConnection()
-    if cc:
-        return cc.postMessage(msg)
-    else:
-        try:
-            print "postMessage: " + msg
-        except Exception, e:
-            pass
+def postMessage(msg, function=(), ms1=10000, ms2=10000, Color="White", BGColor="Black"):
+    """ function must be a tuple of a callback function (outside of the class) with and a object as a param
+    ex: postMessage("hola mundo ",(ClickCallBack,self),1000,3600000)
+    ms1 and ms2 are milliseconds
+    """
+    pass
 
 def heartbeat():
     cc = getClientConnection()
@@ -578,6 +575,7 @@ def pressKey(KeyEvent): pass
 def releaseKey(KeyEvent): pass
 def setMessageBlocking(boolvalue): pass
 def currentMousePosition(): return (0, 0)
+def clickMouseCursor(): pass
 def getValue(txt="", floatValue=.0): return float(floatValue)
 def getInteger(txt="", intValue=0): return int(intValue)
 
@@ -599,4 +597,5 @@ def findReport(reportId):
         def setAccount(self, ac): pass
         def delPendingContact(self, ac): pass
         def addPendingAcceptContact(self, ac): pass
+        def getTitle(self): return str(self)
     return ContactChatReportFinder()
