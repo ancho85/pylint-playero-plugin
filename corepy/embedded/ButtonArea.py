@@ -35,3 +35,5 @@ class ButtonArea(object):
     def setGraphLine(self, counth, countv, xi, yi, xf, yf, width, height):
         pass
 
+class ButtonAreaView(ButtonArea):
+    pass

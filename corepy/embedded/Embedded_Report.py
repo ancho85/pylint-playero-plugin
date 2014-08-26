@@ -90,3 +90,12 @@ class Embedded_Report(object):
 
     def setDefaultFontSize(self, value):
         self.fontSize = value
+
+    def beforeStartRun(self):
+        pass
+
+    def call_run(self):
+        pass
+
+class ReportView(Embedded_Report):
+    pass

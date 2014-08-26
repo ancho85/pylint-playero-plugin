@@ -582,6 +582,19 @@ def currentMousePosition(): return (0, 0)
 def clickMouseCursor(): pass
 def getValue(txt="", floatValue=.0): return float(floatValue)
 def getInteger(txt="", intValue=0): return int(intValue)
+def hideModuleButtonsBar(): pass
+def hideModuleToolsBar(): pass
+def hidePersonalBar(): pass
+def hideSearchBar(): pass
+def mainWindowOSId(): pass
+def openListWindow(listwindowname): pass
+def setCurrentDatabase(db): pass
+def setLanguage(): pass
+def setQueryLogging(): pass
+def setTaskCheckingInterval(value): pass
+def webMode(): pass
+def debug(txt): pass
+def getThreadsList(): return []
 
 def findReport(reportId):
     from ChatConversationReport import ChatConversationReport

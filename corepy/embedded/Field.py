@@ -19,3 +19,16 @@ class Field(Embedded_Field):
     def getPythonSQLValue(self):
         return None
         #return Database.getCurrentDB().parsePythonFieldValue(self)
+
+    def getAsString(self): pass
+    def getDecimals(self): pass
+    def getLinkTo(self): pass
+    def getMaxLength(self): pass
+    def getName(self): pass
+    def getRecordName(self): pass
+    def getType(self): pass
+    def getValue(self): pass
+    def isNone(self): pass
+    def isPersistent(self): pass
+    def setDecimals(self): pass
+    def setFromString(self): pass
