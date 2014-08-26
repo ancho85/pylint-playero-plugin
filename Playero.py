@@ -1,9 +1,11 @@
 from astroid import MANAGER, node_classes
 from astroid.builder import AstroidBuilder
-from astroid import scoped_nodes, raw_building
-from astroid.exceptions import InferenceError
+from astroid import scoped_nodes
 from funcs import *
 from tools import hashIt
+from transform_mods import modules_transform
+from transform_func import function_transform
+from transform_exec import exec_transform
 
 notFound = set()
 
@@ -25,72 +27,6 @@ def classes_transform(module):
         baseClassBuilder(module, modname)
     else:
         notFound.add(modname)
-
-def modules_transform(module):
-    modname = module.name
-    if not modname: return
-    buildSuperClassModule(module)
-
-def function_transform(callFunc):
-    if callFunc.func.as_string() == "hasattr":
-        left = callFunc.args[0]
-        right = callFunc.args[1]
-        if isinstance(left, node_classes.Name) and isinstance(right, node_classes.Const):
-            if left.name == "self":
-                parentclass = left.frame().parent
-                if right.value not in parentclass.locals:
-                    newFunc = raw_building.build_function(right.value)
-                    parentclass.add_local_node(newFunc, right.value)
-
-def exec_transform(assnode):
-    module = assnode.frame().parent
-    if not module: return
-    if not hasattr(module, "name"): return
-    modname = getModName(module.name)
-    if not modname: return
-    paths, pathType = findPaths(modname)
-    if paths or pathType or modname in allCoreClasses:
-        if isinstance(assnode.expr, node_classes.BinOp): #something % somethingelse
-            left = assnode.expr.left.as_string()
-            right = assnode.expr.right.as_string()
-            statement = "%s" % (left + " % " + right)
-            dic = dict((key, key) for key in assnode.frame().locals)
-            try:
-                newstatement = eval(statement, {}, dic)
-            except Exception, e:
-                #logHere(assnode.frame().lookup("gr").next())
-                #a = assnode.frame().locals['gr'][0].ilookup('gr').next()
-                #inspectModule(a, "", "module", force=True)
-                pass
-            else:
-                parsed = parseExecLine(newstatement, mode="single")
-                if not parsed.errors:
-                    if parsed.importfrom:
-                        name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
-                        newClass = raw_building.build_class(name)
-                        assnode.root().add_local_node(newClass, name)
-                    elif parsed.targets:
-                        value = parsed.values[0]
-                        newvalue = ""
-                        if hasattr(value, "func"):
-                            newvalue = value.func.id
-                        elif hasattr(value, "s"):
-                            newvalue = value.s
-                        raw_building.attach_const_node(assnode.scope(), parsed.targets[0], newvalue)
-        elif isinstance(assnode.expr, node_classes.Const):
-            newstatement = eval(assnode.expr.as_string())
-            parsed = parseExecLine(newstatement, mode="single")
-            if not parsed.errors:
-                for key, newvar in parsed.targets.iteritems():
-                    value = parsed.values[key]
-                    newvalue = ""
-                    if hasattr(value, "func"):
-                        newvalue = value.func.id
-                    elif hasattr(value, "s"):
-                        newvalue = value.s
-                    raw_building.attach_const_node(assnode.scope(), newvar, newvalue)
-
-
 
 ###classes_transform_methods###
 def buildRecordModule(module):
@@ -204,82 +140,6 @@ class %s(object):
 def buildMethod(method):
     fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % method)
     return  {0:fake[method]}
-
-
-###modules_transforms_methods###
-def isRoutine(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".routines.") > -1:
-            return True
-    return False
-
-def isReport(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".reports.") > -1:
-            return True
-    return False
-
-def buildSuperClassModule(module):
-
-    def assHasAssignedStmts(theAss):
-        """ pylint's problem with lines like: "a = [x for x in tuple([1,2])]" """
-        res = True
-        try:
-            for _ in theAss.assigned_stmts():
-                pass
-        except InferenceError:
-            res = False
-        return res
-
-    parents = {}
-    for assnodes in module.locals:
-        ass = module.locals[assnodes][0]
-        if not (
-                isinstance(ass, node_classes.AssName)
-                and isinstance(ass.statement(), node_classes.Assign)
-                and assHasAssignedStmts(ass)
-                ): continue
-        else:
-            for supers in [ #list comprehention of SuperClass' calls
-                            superCall for superCall in ass.assigned_stmts()
-                            if isinstance(superCall, node_classes.CallFunc)
-                            and superCall.as_string().startswith("SuperClass")
-            ]:
-                parents[ass.name] = []
-                for arg in [
-                            classString for classString in supers.args
-                            if isinstance(classString, node_classes.Const)
-                            and not classString.value.endswith("Row")
-                ]:
-                    parents[ass.name].append(arg.value)
-    if parents:
-        for supers in parents:
-            if len(parents[supers]) > 1:
-                heir, dad = parents[supers][0], parents[supers][1]
-                module.locals['SuperClass'] = buildSuperClass(heir, dad)
-
-def buildSuperClass(classname, parent=""):
-    methods = getClassInfo(classname, parent)[1]
-    methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
-    txt = '''
-def %s(classname, superclassname, filename):
-    class %s(object):
-%s
-    return %s()
-''' % ("SuperClass", classname, "\n".join(methsTxt), classname)
-    fake = AstroidBuilder(MANAGER).string_build(txt)
-    return fake.locals["SuperClass"]
-
-def get_embedded_locals():
-    """ USELESS: because the path is added in the .pylintrc file"""
-    from astroid.manager import _silent_no_wrap
-    from os.path import join, abspath, dirname
-    EMBEDDED = join(dirname(abspath(__file__)), 'corepy', "embedded")
-    project = MANAGER.project_from_files([EMBEDDED], func_wrapper=_silent_no_wrap, project_name="embedded")
-
-    for modules in project.get_children():
-        for k, v in modules.locals.items():
-            yield (k, v)
 
 
 ###plugin's default methods###
