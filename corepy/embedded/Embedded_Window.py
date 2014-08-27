@@ -35,6 +35,8 @@ class Embedded_Window(object):
         self.__recordListener = RecordListener(self)
         self.__listviews = {}
         self.__scrollareaviews = {}
+    def fillPasteWindow(self, pastewindowname, fieldname):
+        return []
     def setFieldOptions(self, fieldname, options):
         self._FieldOptions[fieldname] = options
     def getFieldOptions(self, fieldname):

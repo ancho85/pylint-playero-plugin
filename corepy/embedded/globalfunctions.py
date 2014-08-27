@@ -55,24 +55,22 @@ def hasConsole():
     return True
 
 def NewRecord(rname):
-    themod = __import__(rname)
-    return themod()
-    #res = None
-    #try:
-    #    exec("from %s import %s as CLS" % (rname, rname))
-    #    res = CLS()
-    #except Exception, e:
-    #    import traceback
-    #    traceback.print_exc()
-    #return res
+    theModule = __import__(rname, fromlist=[rname])
+    theClass = getattr(theModule, rname)
+    theInstance = theClass()
+    return theInstance
 
 def NewWindow(wname):
-    exec("from %s import %s as CLS" % (wname, wname))
-    return CLS()
+    theModule = __import__(wname, fromlist=[wname])
+    theClass = getattr(theModule, wname)
+    theInstance = theClass()
+    return theInstance
 
 def NewReport(rname):
-    themod = __import__(rname)
-    return themod()
+    theModule = __import__(rname, fromlist=[rname])
+    theClass = getattr(theModule, rname)
+    theInstance = theClass()
+    return theInstance
 
 current_company = [""] # awful
 
