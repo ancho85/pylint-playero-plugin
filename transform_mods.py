@@ -33,8 +33,8 @@ def assHasAssignedStmts(theAss):
         res = False
     return res
 
-def buildSuperClassModule(module):
-    parents = {}
+def getFunctionArguments(module, funcTxt):
+    res = []
     for assnodes in module.locals:
         ass = module.locals[assnodes][0]
         if not (
@@ -43,23 +43,35 @@ def buildSuperClassModule(module):
                 and assHasAssignedStmts(ass)
                 ): continue
         else:
-            for supers in [ #list comprehention of SuperClass' calls
+            for supers in [ #list comprehention of funcTxt's calls
                             superCall for superCall in ass.assigned_stmts()
                             if isinstance(superCall, node_classes.CallFunc)
-                            and superCall.as_string().startswith("SuperClass")
+                            and superCall.as_string().startswith(funcTxt)
             ]:
-                parents[ass.name] = []
-                for arg in [
-                            classString for classString in supers.args
-                            if isinstance(classString, node_classes.Const)
-                            and not classString.value.endswith("Row")
-                ]:
-                    parents[ass.name].append(arg.value)
-    if parents:
-        for supers in parents:
-            if len(parents[supers]) > 1:
-                heir, dad = parents[supers][0], parents[supers][1]
-                module.locals['SuperClass'] = classBuilder("SuperClass", heir, dad)
+                for arg in supers.args:
+                    if isinstance(arg, node_classes.Const):
+                        res.append(arg.value)
+                    elif isinstance(arg, node_classes.Name):
+                        for iarg in [x for x in arg.infered() if isinstance(x, node_classes.Const)]:
+                            res.append(iarg.value)
+    return res
+
+def buildSuperClassModule(module):
+    sclist = getFunctionArguments(module, "SuperClass")
+    if not len(sclist) % 3 == 0: return
+    while len(sclist):
+        if not sclist[0].endswith("Row"):
+            module.locals['SuperClass'] = classBuilder("SuperClass", sclist[0], sclist[1])
+        sclist = sclist[3:]
+
+def buildNewRecordModule(module):
+    for arg in getFunctionArguments(module, "NewRecord"):
+        module.locals["NewRecord"] = classBuilder("NewRecord", arg)
+
+def buildNewReportModule(module):
+    for arg in getFunctionArguments(module, "NewReport"):
+        module.locals["NewReport"] = classBuilder("NewReport", arg, "Embedded_Report")
+
 
 def classBuilder(name, classname, parent=""):
     methods = getClassInfo(classname, parent)[1]
@@ -72,55 +84,3 @@ def %s(classname, superclassname, filename):
 ''' % (name, classname, "\n".join(methsTxt), classname)
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals[name]
-
-def buildNewRecordModule(module):
-    parents = {}
-    for assnodes in module.locals:
-        ass = module.locals[assnodes][0]
-        if not (
-                isinstance(ass, node_classes.AssName)
-                and isinstance(ass.statement(), node_classes.Assign)
-                and assHasAssignedStmts(ass)
-                ): continue
-        else:
-            for supers in [ #list comprehention of NewRecord's calls
-                            superCall for superCall in ass.assigned_stmts()
-                            if isinstance(superCall, node_classes.CallFunc)
-                            and superCall.as_string().startswith("NewRecord")
-            ]:
-                parents[ass.name] = []
-                for arg in supers.args:
-                    if isinstance(arg, node_classes.Const):
-                        parents[ass.name].append(arg.value)
-                    elif isinstance(arg, node_classes.Name):
-                        for iarg in [x for x in arg.infered() if isinstance(x, node_classes.Const)]:
-                            parents[ass.name].append(iarg.value)
-    for newr in parents:
-        if len(parents[newr]):
-            module.locals["NewRecord"] = classBuilder("NewRecord", parents[newr][0])
-
-def buildNewReportModule(module):
-    parents = {}
-    for assnodes in module.locals:
-        ass = module.locals[assnodes][0]
-        if not (
-                isinstance(ass, node_classes.AssName)
-                and isinstance(ass.statement(), node_classes.Assign)
-                and assHasAssignedStmts(ass)
-                ): continue
-        else:
-            for supers in [ #list comprehention of NewReport's calls
-                            superCall for superCall in ass.assigned_stmts()
-                            if isinstance(superCall, node_classes.CallFunc)
-                            and superCall.as_string().startswith("NewReport")
-            ]:
-                parents[ass.name] = []
-                for arg in supers.args:
-                    if isinstance(arg, node_classes.Const):
-                        parents[ass.name].append(arg.value)
-                    elif isinstance(arg, node_classes.Name):
-                        for iarg in [x for x in arg.infered() if isinstance(x, node_classes.Const)]:
-                            parents[ass.name].append(iarg.value)
-    for newr in parents:
-        if len(parents[newr]):
-            module.locals["NewReport"] = classBuilder("NewReport", parents[newr][0], "Embedded_Report")
