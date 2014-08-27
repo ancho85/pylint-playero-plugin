@@ -10,6 +10,7 @@ def modules_transform(module):
     buildSuperClassModule(module)
     buildNewRecordModule(module)
     buildNewReportModule(module)
+    buildNewWindowModule(module)
 
 def isRoutine(module):
     if len(module.body):
@@ -71,6 +72,10 @@ def buildNewRecordModule(module):
 def buildNewReportModule(module):
     for arg in getFunctionArguments(module, "NewReport"):
         module.locals["NewReport"] = classBuilder("NewReport", arg, "Embedded_Report")
+
+def buildNewWindowModule(module):
+    for arg in getFunctionArguments(module, "NewWindow"):
+        module.locals["NewWindow"] = classBuilder("NewWindow", arg, "Embedded_Window")
 
 
 def classBuilder(name, classname, parent=""):
