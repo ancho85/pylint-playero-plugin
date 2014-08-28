@@ -1,5 +1,6 @@
 from astroid import node_classes
 from astroid import raw_building
+from pyparse import parseExecLine
 from funcs import *
 
 def exec_transform(assnode):

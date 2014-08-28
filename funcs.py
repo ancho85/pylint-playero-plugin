@@ -56,7 +56,7 @@ def getScriptDirs(level=255):
 def buildPaths():
     recPaths, repPaths, rouPaths, winPaths, corePaths = {}, {}, {}, {}, {}
     for coremodule in ("User","LoginDialog"):
-        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corexml", "%s.record.xml" % coremodule))}
+        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corepy", "xml", "%s.record.xml" % coremodule))}
 
     #for filelist in [os.listdir(ip) for ip in getFullPaths(["interface"]) if os.path.exists(ip)]:
 
