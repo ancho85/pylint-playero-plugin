@@ -39,10 +39,12 @@ def doTest():
     pylintcmd.append(sys.argv[1])
 
     process = subprocess.Popen(
-        pylintcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=envi
+        pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr.txt", "w"), env=envi
     )
-    print process.stderr.read()
-    print "processing\n", process.stdout.read()
+    print process.stdout.read() #to keep the window open until is finished and then delete zero size files
+    for zero in [zf for zf in os.listdir(os.path.dirname(os.path.abspath(__file__))) if os.stat(zf).st_size == 0]:
+        os.remove(zero)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
