@@ -1,7 +1,7 @@
 import os
 from cache import cache
 from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
-from pyparse import parseScript, parseExecLine
+from pyparse import parseScript
 from tools import logHere
 import ConfigParser
 
@@ -86,7 +86,7 @@ def buildPaths():
             dh = parseWindowRecordName(wpaths)
             recPaths[winname] = recPaths.get(dh.name)
 
-    for cpth in [os.path.join(getEmbeddedPath(),"corepy", "embedded")]:
+    for cpth in [os.path.join(getEmbeddedPath(), "corepy", "embedded")]:
         for filename in os.listdir(cpth):
             uniquePath = "%s/%s" % (cpth, filename)
             realname = filename.split('.')[0]
@@ -161,7 +161,7 @@ def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = set(), set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
-    paths.append(os.path.join(getEmbeddedPath(),"corepy", "embedded"))
+    paths.append(os.path.join(getEmbeddedPath(), "corepy", "embedded"))
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
@@ -178,6 +178,12 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
+    if len(methods) == 0 and len(attributes) == 0:
+        from tools import filenameFromPath
+        foundPath, foundName = findPaths(modulename)
+        foundName = filenameFromPath(foundPath.get(0,"")).split(RECORD)[0]
+        if foundName != modulename:
+            attributes, methods = getClassInfo(foundName)
     methods = sorted(methods)
     attributes = sorted(attributes)
     return (attributes, methods)
@@ -188,9 +194,9 @@ def getModName(modname):
     if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
     if modname.find("_")>-1:
-        embpath = os.path.join(getEmbeddedPath(),"corepy", "embedded")
+        embpath = os.path.join(getEmbeddedPath(), "corepy", "embedded")
         corePath = False
-        for filename in [f for f in os.listdir(embpath) if f.split(".py")[0] == modname]:
+        for _ in [f for f in os.listdir(embpath) if f.split(".py")[0] == modname]:
             corePath = True
         if not corePath:
             modname = None

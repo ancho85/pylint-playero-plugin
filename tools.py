@@ -71,3 +71,8 @@ def hashIt(param, unhash=False):
     if unhash:
         return cPickle.loads(param)
     return cPickle.dumps(param, 2) #binary format
+
+def filenameFromPath(path):
+    import ntpath
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
