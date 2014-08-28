@@ -37,6 +37,8 @@ class Embedded_Window(object):
         self.__scrollareaviews = {}
     def fillPasteWindow(self, pastewindowname, fieldname):
         return []
+    def maximize(self): pass
+    def repaint(self): pass
     def setFieldOptions(self, fieldname, options):
         self._FieldOptions[fieldname] = options
     def getFieldOptions(self, fieldname):

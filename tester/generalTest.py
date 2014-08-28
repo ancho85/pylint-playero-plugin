@@ -32,7 +32,7 @@ def doTest():
     pylintcmd.append("--reports=y")
     pylintcmd.append("--files-output=y")
     pylintcmd.append("--output-format=text")
-    pylintcmd.append("--msg-template={path}:{line}:{msg_id}:{msg} ")
+    pylintcmd.append("--msg-template={line}:{msg_id}:{msg} ")
     pylintcmd.append("--load-plugins=Playero ")
     pylintcmd.append("--rcfile=%s/config/.pylintrc" % pluginpath)
     #pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
@@ -41,9 +41,10 @@ def doTest():
     process = subprocess.Popen(
         pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr.txt", "w"), env=envi
     )
-    print process.stdout.read() #to keep the window open until is finished and then delete zero size files
+    process.stdout.read() #to keep the window open until is finished and then delete zero size files
     for zero in [zf for zf in os.listdir(os.path.dirname(os.path.abspath(__file__))) if os.stat(zf).st_size == 0]:
         os.remove(zero)
+    print "\a" #cross-platform alert on finish
 
 
 if __name__ == "__main__":
