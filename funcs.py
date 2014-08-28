@@ -173,9 +173,8 @@ def getClassInfo(modulename, parent=""):
                 attributes.update(x for x in parse.attributes)
                 methods.update(x for x in parse.methods)
                 inheritance = parse.inheritance
-    if modulename in inheritance:
-        heir = inheritance[modulename]
-        if not heir: heir = "Master"
+    heir = inheritance.get(modulename, inheritance.get(parent, ''))
+    if heir:
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(x for x in heirattr)
         methods.update(x for x in heirmeths)
