@@ -57,12 +57,14 @@ def ifElse(condition, trueVal, falseVal):
     if condition: return trueVal
     return falseVal
 
-def logHere(value, filename="log.log"):
+def logHere(*args, **kwargs):
+    filename = "log.log"
+    if "filename" in kwargs: filename = kwargs["filename"]
     import os
     HERE = os.path.dirname(os.path.abspath(__file__))
     logfile = os.path.join(HERE, 'logs', filename)
     f = file(logfile, "a")
-    f.write("%s\n" % str(value))
+    f.write("%s\n" % str(args))
 
 def hashIt(param, unhash=False):
     import cPickle
