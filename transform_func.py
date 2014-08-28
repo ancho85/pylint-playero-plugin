@@ -8,6 +8,7 @@ def function_transform(callFunc):
         if isinstance(left, node_classes.Name) and isinstance(right, node_classes.Const):
             if left.name == "self":
                 parentclass = left.frame().parent
-                if right.value not in parentclass.locals:
-                    newFunc = raw_building.build_function(right.value)
-                    parentclass.add_local_node(newFunc, right.value)
+                if hasattr(parentclass, "locals"):
+                    if right.value not in parentclass.locals:
+                        newFunc = raw_building.build_function(right.value)
+                        parentclass.add_local_node(newFunc, right.value)
