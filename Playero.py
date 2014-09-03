@@ -149,6 +149,8 @@ def register(linter):
     if cache.collectStats:
         from checkers_classes import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
+    from checkers_classes import QueryChecker
+    linter.register_checker(QueryChecker(linter))
 
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)

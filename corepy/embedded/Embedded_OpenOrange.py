@@ -16,6 +16,7 @@ from Embedded_TreeWidget import *
 from CThread import * #CThread
 from ButtonArea import *
 from ComPort import ComPort
+from Query import Query
 
 
 #root_path = os.path.join(os.getcwd(), "..")
