@@ -76,3 +76,9 @@ def filenameFromPath(path):
     import ntpath
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
+
+def embeddedImport(modulename):
+    import os
+    import imp
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    return imp.load_source(modulename, os.path.join(HERE, "corepy", "embedded", "%s.py" % modulename))

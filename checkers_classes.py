@@ -1,6 +1,7 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
 from tools import logHere
+from tools import embeddedImport
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""
@@ -45,11 +46,9 @@ class QueryChecker(BaseChecker):
     def visit_callfunc(self, node):
         if isinstance(node.func, Getattr) and node.func.attrname == "open":
             for x in node.infered():
-                if x.root().values()[0].frame().name == "Query":
-                    import os
-                    HERE = os.path.dirname(os.path.abspath(__file__))
-                    import imp
-                    query = imp.load_source('Query', os.path.join(HERE, "corepy", "embedded", "Query.py"))
+                main = x.root().values()[0].frame()
+                if main.name == "Query":
+                    query = embeddedImport("Query")
                     if not query:
                         self.add_message("E6601", line=node.lineno, node=node, args="QueryError")
 
