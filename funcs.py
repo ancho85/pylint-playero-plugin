@@ -214,7 +214,6 @@ def inspectModule(module, inspectValue="module", filename="inspect.log"):
     modname = module
     if hasattr(module, "name"):
         modname = getModName(module.name)
-        filename = "inspect%s.log" % modname
     if True:
         logHere("Inspecting %s --> %s" % (modname, inspectValue), filename=filename)
         exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
