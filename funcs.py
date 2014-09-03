@@ -209,12 +209,13 @@ def ifElse(condition, trueVal, falseVal):
     if condition: res = trueVal
     return res
 
-def inspectModule(module, inspectName, inspectValue, force=False, filename="inspect.log"):
-    """inspects module functions. Ex: inspectName='DelTransaction', inspectValue='module.body[0].parent.name' """
+def inspectModule(module, inspectValue="module", filename="inspect.log"):
+    """inspects module functions. Ex: inspectValue='module.body[0].parent.name' """
     modname = module
     if hasattr(module, "name"):
         modname = getModName(module.name)
-    if modname == inspectName or force:
+        filename = "inspect%s.log" % modname
+    if True:
         logHere("Inspecting %s --> %s" % (modname, inspectValue), filename=filename)
         exe =  """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
         exe += """    exec("xdir = type(%s.%%s)" %% x) \n""" % inspectValue
