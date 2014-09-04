@@ -236,7 +236,7 @@ def inspectModule(module, inspectValue="module", filename="inspect.log"):
         exe += """            logHere('---->funcall %%s missing parameters: %%s' %% (x, funcparameters), filename='%s')\n""" % filename
         exe += """    else:\n"""
         exe += """        exec("logHere(('---->value %%s', %s.%%s), filename='%s')" %% (x,x))\n""" % (inspectValue, filename)
-        exe += """    logHere("\\n\\n", filename='%s')""" % filename
+        exe += """    logHere("", filename='%s', whitespace=2)""" % filename
         exec(exe)
 
 if __name__ == "__main__":

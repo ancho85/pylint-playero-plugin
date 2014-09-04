@@ -64,7 +64,8 @@ def logHere(*args, **kwargs):
     HERE = os.path.dirname(os.path.abspath(__file__))
     logfile = os.path.join(HERE, 'logs', filename)
     f = file(logfile, "a")
-    f.write("%s\n" % str(args))
+    ws = kwargs.get("whitespace", 1)
+    f.write("%s\n%s" % (str(args), "\n" * ws))
 
 def hashIt(param, unhash=False):
     import cPickle
