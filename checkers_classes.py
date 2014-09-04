@@ -1,7 +1,6 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
 from tools import logHere
-from tools import embeddedImport
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""
@@ -30,6 +29,7 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
+from tools import embeddedImport
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -51,5 +51,8 @@ class QueryChecker(BaseChecker):
                     query = embeddedImport("Query")
                     if not query:
                         self.add_message("E6601", line=node.lineno, node=node, args="QueryError")
+                    for z in node.func.expr.infered()[0].getattr("sql"):
+                        if z.lineno in (5, 6):
+                            logHere(z.infered()[0].value)
 
 
