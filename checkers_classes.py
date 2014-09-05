@@ -26,7 +26,8 @@ class CacheStatisticWriter(BaseChecker):
         lastline = sum(1 for line in node.file_stream)
         self.add_message('C6666', lastline)
 
-from astroid.node_classes import Getattr
+
+from astroid.node_classes import Getattr, AssAttr, Const
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from tools import embeddedImport
@@ -38,9 +39,37 @@ class QueryChecker(BaseChecker):
     msgs = {
             'E6601': ("query syntax error (%s)",
                                 'query-syntax-error',
-                                "Query sentence have a syntax error")
+                                "Query sentence have a syntax error"),
         }
     options = ()
+
+    queryTxt = {}
+
+    @staticmethod
+    def getAssignedTxt(node):
+        qvalue = ""
+        if isinstance(node.value, Const):
+            qvalue = node.value.value
+        elif isinstance(node.value.infered()[0], Const):
+            qvalue = node.value.infered()[0].value
+        return qvalue
+
+    def setUpQueryTxt(self, nodeTarget, value):
+        if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
+            instanceName = nodeTarget.expr.name
+            if instanceName not in self.queryTxt:
+                self.queryTxt[instanceName] = ""
+            self.queryTxt[instanceName] += value
+
+    def visit_assign(self, node):
+        if isinstance(node.targets[0], AssAttr):
+            qvalue = self.getAssignedTxt(node)
+            self.setUpQueryTxt(node.targets[0], qvalue)
+
+    def visit_augassign(self, node):
+        if isinstance(node.target, AssAttr):
+            qvalue = self.getAssignedTxt(node)
+            self.setUpQueryTxt(node.target, qvalue)
 
     @check_messages('query-syntax-error')
     def visit_callfunc(self, node):
@@ -51,8 +80,7 @@ class QueryChecker(BaseChecker):
                     query = embeddedImport("Query")
                     if not query:
                         self.add_message("E6601", line=node.lineno, node=node, args="QueryError")
-                    for z in node.func.expr.infered()[0].getattr("sql"):
-                        if z.lineno in (5, 6):
-                            logHere(z.infered()[0].value)
-
-
+                    name = node.func.expr.name
+                    q = query.Query()
+                    q.sql = self.queryTxt[name]
+                    q.parseSQL()
