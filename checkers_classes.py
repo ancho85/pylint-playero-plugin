@@ -78,9 +78,10 @@ class QueryChecker(BaseChecker):
                 main = x.root().values()[0].frame()
                 if main.name == "Query":
                     query = embeddedImport("Query")
-                    if not query:
-                        self.add_message("E6601", line=node.lineno, node=node, args="QueryError")
                     name = node.func.expr.name
                     q = query.Query()
                     q.sql = self.queryTxt[name]
                     q.parseSQL()
+                    res = q.syntaxCheck()
+                    if not res:
+                        self.add_message("E6601", line=node.lineno, node=node, args="QuerySyntaxError")

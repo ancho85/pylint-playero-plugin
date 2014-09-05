@@ -63,3 +63,6 @@ class Query(object):
         self.sql = field_pattern.sub("`\g<1>`", self.sql)
         self.sql = where_and_pattern.sub(where_and_replacer, self.sql)
         self.sql = self.sql.replace("\\[", "[").replace("\\{", "{")
+
+    def syntaxCheck(self):
+        return True

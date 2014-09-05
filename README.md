@@ -29,3 +29,15 @@ pylint --load-plugins Playero [..other options..]
 # License
 
 `pylint-playero-plugin` is available under the GPLv2 license.
+
+# Required
+
+* logilab-common-0.61.0
+* astroid-1.1.1
+* pylint-1.0.0
+
+# Required to check mysql syntax:
+
+* pyparsing-2.0.2
+* MySQL-python-1.2.5
+* python-gflags-2.0
