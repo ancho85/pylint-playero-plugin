@@ -66,7 +66,7 @@ def logHere(*args, **kwargs):
     f = file(logfile, "a")
     ws = kwargs.get("whitespace", 0)
     for arg in args:
-        f.write("%s  " % arg)
+        f.write("%s  " % str(arg))
     f.write("\n%s" % ifElse(ws > 0, "\n" * ws, ""))
 
 def hashIt(param, unhash=False):
