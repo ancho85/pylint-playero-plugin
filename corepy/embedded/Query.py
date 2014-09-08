@@ -14,6 +14,10 @@ class Query(object):
         self.result = []
         return True
 
+    def close(self):
+        self.sql = ""
+        self.result = []
+
     def execute(self):
         self.sql = ""
         return True
