@@ -30,7 +30,7 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr, AssAttr, Const
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from tools import embeddedImport
+from sqlparse import parseSQL, validateSQL
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -77,11 +77,8 @@ class QueryChecker(BaseChecker):
             for x in node.infered():
                 main = x.root().values()[0].frame()
                 if main.name == "Query":
-                    query = embeddedImport("Query")
                     name = node.func.expr.name
-                    q = query.Query()
-                    q.sql = self.queryTxt[name]
-                    q.parseSQL()
-                    res = q.syntaxCheck()
-                    if not res:
-                        self.add_message("E6601", line=node.lineno, node=node, args="QuerySyntaxError")
+                    parsed = parseSQL(self.queryTxt[name])
+                    from sqlparse import validateSQL
+                    res = validateSQL(self.queryTxt[name])
+                    self.add_message("E6601", line=node.lineno, node=node, args="QuerySyntaxError")

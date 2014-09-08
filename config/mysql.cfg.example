@@ -1,0 +1,9 @@
+#rename this file to mysql.cfg and set values for mysql syntax check
+
+[mysql]
+connect=1 #set to 0 if no query syntax check needed
+host=localhost
+port=3306
+user=root
+pass=******
+dbname=test

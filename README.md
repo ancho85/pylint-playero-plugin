@@ -40,4 +40,3 @@ pylint --load-plugins Playero [..other options..]
 
 * pyparsing-2.0.2
 * MySQL-python-1.2.5
-* python-gflags-2.0
