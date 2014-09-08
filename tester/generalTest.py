@@ -26,6 +26,7 @@ def doTest():
     envi['PYTHONPATH'] = pythonpath + "%s%s" % (preffix, pluginpath)
 
     for filename in os.listdir(sys.argv[1]):
+        if not filename.endswith(".py"): continue
         print "Processing", filename
         pylintcmd = ["python"]
         pylintcmd.append(lintpath)
