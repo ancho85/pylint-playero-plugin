@@ -28,9 +28,10 @@ class CacheStatisticWriter(BaseChecker):
 
 
 from astroid.node_classes import Getattr, AssAttr, Const
+from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from sqlparse import parseSQL, validateSQL
+from sqlparse import validateSQL
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -48,18 +49,24 @@ class QueryChecker(BaseChecker):
     @staticmethod
     def getAssignedTxt(node):
         qvalue = ""
-        if isinstance(node.value, Const):
-            qvalue = node.value.value
-        elif isinstance(node.value.infered()[0], Const):
-            qvalue = node.value.infered()[0].value
+        try:
+            if isinstance(node.value, Const):
+                qvalue = node.value.value
+            elif isinstance(node.value.infered()[0], Const):
+                qvalue = node.value.infered()[0].value
+        except InferenceError, e:
+            pass
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value):
-        if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
-            instanceName = nodeTarget.expr.name
-            if instanceName not in self.queryTxt:
-                self.queryTxt[instanceName] = ""
-            self.queryTxt[instanceName] += value
+        try:
+            if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
+                instanceName = nodeTarget.expr.name
+                if instanceName not in self.queryTxt:
+                    self.queryTxt[instanceName] = ""
+                self.queryTxt[instanceName] += value
+        except InferenceError, e:
+            pass
 
     def visit_assign(self, node):
         if isinstance(node.targets[0], AssAttr):
@@ -74,11 +81,16 @@ class QueryChecker(BaseChecker):
     @check_messages('query-syntax-error')
     def visit_callfunc(self, node):
         if isinstance(node.func, Getattr) and node.func.attrname == "open":
-            for x in node.infered():
-                main = x.root().values()[0].frame()
-                if main.name == "Query":
-                    name = node.func.expr.name
-                    parsed = parseSQL(self.queryTxt[name])
-                    from sqlparse import validateSQL
-                    res = validateSQL(self.queryTxt[name])
-                    self.add_message("E6601", line=node.lineno, node=node, args="QuerySyntaxError")
+            try:
+                for x in node.infered():
+                    try:
+                        main = x.root().values()[0].frame()
+                        if main.name == "Query":
+                            name = node.func.expr.name
+                            res = validateSQL(self.queryTxt[name])
+                            if len(res) > 0:
+                                self.add_message("E6601", line=node.lineno, node=node, args=res)
+                    except TypeError, e:
+                        pass #'_Yes' object does not support indexing
+            except InferenceError, e:
+                pass #open of another kind
