@@ -100,13 +100,17 @@ def cmdValidateSQL(txt, config):
 
     m = re.search('ERROR ([0-9]*).*', process.stderr.read())
     if m:
-        found = m.group(1)
-        if int(found) == 1064: #Query syntax
+        found = int(m.group(1))
+        if found == 1064: #Query syntax
             m2 = re.search('right syntax to use near (.*).*', m.group(0))
             if m2:
                 res = m2.group(1)
-        else:
-            res = m.group(0)
+        elif found == 1146: #Table doesn't exists
+            m2 = re.search('Table (.*).*', m.group(0))
+            if m2:
+                res = m2.group(1)
+        elif found == 1054: #Unknown column
+            pass
     return res
 
 
