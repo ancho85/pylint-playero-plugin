@@ -27,7 +27,7 @@ class CacheStatisticWriter(BaseChecker):
         self.add_message('C6666', lastline)
 
 
-from astroid.node_classes import Getattr, AssAttr, Const
+from astroid.node_classes import Getattr, AssAttr, Const, If
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
@@ -38,9 +38,12 @@ class QueryChecker(BaseChecker):
 
     name = 'playero-query-checker'
     msgs = {
+            'W6602': ("query inference could not be resolved (%s)",
+                                'query-inference',
+                                "Query could not be resolved"),
             'E6601': ("query syntax error (%s)",
                                 'query-syntax-error',
-                                "Query sentence have a syntax error"),
+                                "Query sentence has a syntax error"),
         }
     options = ()
 
@@ -58,20 +61,24 @@ class QueryChecker(BaseChecker):
             pass
         return qvalue
 
-    def setUpQueryTxt(self, nodeTarget, value):
+    def setUpQueryTxt(self, nodeTarget, value, isnew=False):
         try:
             if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
                 instanceName = nodeTarget.expr.name
-                if instanceName not in self.queryTxt:
+                if isnew or instanceName not in self.queryTxt:
                     self.queryTxt[instanceName] = ""
-                self.queryTxt[instanceName] += value
+                if not isinstance(nodeTarget.parent.parent, If):
+                    self.queryTxt[instanceName] += value
+                else:
+                    if not isinstance(nodeTarget.parent.parent.parent, If): #First if in ifElifElse
+                        self.queryTxt[instanceName] += value
         except InferenceError, e:
             pass
 
     def visit_assign(self, node):
         if isinstance(node.targets[0], AssAttr):
             qvalue = self.getAssignedTxt(node)
-            self.setUpQueryTxt(node.targets[0], qvalue)
+            self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
     def visit_augassign(self, node):
         if isinstance(node.target, AssAttr):
@@ -80,16 +87,19 @@ class QueryChecker(BaseChecker):
 
     @check_messages('query-syntax-error')
     def visit_callfunc(self, node):
-        if isinstance(node.func, Getattr) and node.func.attrname == "open":
+        if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
                 for x in node.infered():
                     try:
                         main = x.root().values()[0].frame()
                         if main.name == "Query":
                             name = node.func.expr.name
-                            res = validateSQL(self.queryTxt[name])
-                            if len(res) > 0:
-                                self.add_message("E6601", line=node.lineno, node=node, args=res)
+                            if name in self.queryTxt:
+                                res = validateSQL(self.queryTxt[name])
+                                if res:
+                                    self.add_message("E6601", line=node.lineno, node=node, args=res)
+                            else:
+                                self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
                         pass #'_Yes' object does not support indexing
             except InferenceError, e:
