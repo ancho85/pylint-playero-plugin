@@ -13,7 +13,7 @@ def validateSQL(txt):
     config = getMySQLConfig()
     if not config: return ""
     if not int(config.get("mysql", "connect")): return ""
-    txt = "%s\n%s\n%s" % ("START TRANSACTION;", parseSQL(txt), "ROLLBACK;")
+    txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
     if int(config.get("mysql", "useapi")):
         res = apiValidateSQL(txt, config)
     else:
@@ -23,12 +23,15 @@ def validateSQL(txt):
 def parseSQL(txt):
     import re
     table_pattern = re.compile("([^\\\])\[([^\]]*?)\]")
-    field_pattern = re.compile("\{([^\}]*?)\}")
-    value_pattern = re.compile("[svdt]\|([^\|]*?)\|")
-    integer_value_pattern = re.compile("i\|([^\|]*?)\|")
-    boolean_value_pattern = re.compile("b\|([^\|]*?)\|")
-    where_and_pattern = re.compile("(WHERE\?AND)")
-    schemas_pattern = re.compile("\[([^\]]*?)\]")
+    field_pattern = re.compile(r"\{([^\}]*?)\}")
+    value_pattern = re.compile(r"[svdt]\|([^\|]*?)\|")
+    integer_value_pattern = re.compile(r"i\|([^\|]*?)\|")
+    boolean_value_pattern = re.compile(r"b\|([^\|]*?)\|")
+    where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
+    #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
+    limit_pattern = re.compile(r"(LIMIT [0-9]*[,\s]*[0-9]*|OFFSET [0-9]+)", re.I)
+    unionall_pattern = re.compile(r'UNION ALL', re.I)
+    insert_pattern = re.compile(r'INSERT [INTO]+', re.I)
 
     global k
     k = 0
@@ -46,11 +49,18 @@ def parseSQL(txt):
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
-    txt = table_pattern.sub("\g<1>`\g<2>`", txt)
-    txt = field_pattern.sub("`\g<1>`", txt)
+    txt = table_pattern.sub(r"\g<1>`\g<2>`", txt)
+    txt = field_pattern.sub(r"`\g<1>`", txt)
     txt = where_and_pattern.sub(where_and_replacer, txt)
+    txt = txt.replace(";", " ")
+    txt = limit_pattern.sub(" ", txt) #removes the limit part
+    txt = unionall_pattern.sub("LIMIT 0\nUNION ALL", txt) #if are multiple selects with union all, adds the limit 0
     txt = txt.replace("\\[", "[").replace("\\{", "{")
-    if not txt.find(";") > -1: txt += ";" #at the end of the sentence must always be a ;
+    insertmatch = insert_pattern.search(txt)
+    if insertmatch:
+        txt = limit_pattern.sub(" ", txt) #removes the limit part again. Insert doesn't support LIMIT
+    else:
+        txt += " LIMIT 0"
     return txt
 
 def apiValidateSQL(txt, config):
@@ -67,7 +77,8 @@ def apiValidateSQL(txt, config):
     from mysqlparser.parser_lib import validator
     val = validator.Validator(db_schema=db)
     res = val.ValidateString(txt)
-    return ""
+    res = ""
+    return res
 
 def cmdValidateSQL(txt, config):
     """validates sql string using command line"""
