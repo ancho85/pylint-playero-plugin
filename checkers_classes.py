@@ -27,7 +27,7 @@ class CacheStatisticWriter(BaseChecker):
         self.add_message('C6666', lastline)
 
 
-from astroid.node_classes import Getattr, AssAttr, Const, If
+from astroid.node_classes import Getattr, AssAttr, Const, If, BinOp, CallFunc, Name
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
@@ -49,16 +49,30 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
-    @staticmethod
-    def getAssignedTxt(node):
+    def getAssignedTxt(self, node):
         qvalue = ""
         try:
-            if isinstance(node.value, Const):
+            if type(node.value) == type(""):
+                qvalue = node.value
+            elif isinstance(node.value, Const):
                 qvalue = node.value.value
             elif isinstance(node.value.infered()[0], Const):
                 qvalue = node.value.infered()[0].value
+            elif isinstance(node.value, BinOp):
+                qvalue = self.getAssignedTxt(node.value.left)
+            elif isinstance(node.value, CallFunc):
+                pass
+                #if node.value.as_string().find("PurchaseInvoiceRowLabels") > -1:
+                #    expr_str = node.value.func.accept(self)
+            elif isinstance(node.value, Name):
+                pass
+            else:
+                logHere("WTF IS THIS", type(node.value))
         except InferenceError, e:
-            pass
+            logHere("ERROR DE INFERENCIA", e, filename="errors.log")
+        except Exception, e:
+            logHere("DA FUCK", type(node.value))
+            logHere("ERROR Exception", e, filename="errors.log")
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -70,10 +84,10 @@ class QueryChecker(BaseChecker):
                 if not isinstance(nodeTarget.parent.parent, If):
                     self.queryTxt[instanceName] += value
                 else:
-                    if not isinstance(nodeTarget.parent.parent.parent, If): #First if in ifElifElse
+                    if not isinstance(nodeTarget.parent.parent.parent, If): #First if in if-Elif-Else
                         self.queryTxt[instanceName] += value
         except InferenceError, e:
-            pass
+            logHere("ERROR DE INFERENCIA", e, filename="errors.log")
 
     def visit_assign(self, node):
         if isinstance(node.targets[0], AssAttr):
@@ -101,6 +115,6 @@ class QueryChecker(BaseChecker):
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
-                        pass #'_Yes' object does not support indexing
+                        logHere("ERROR Type CALLFUNC", e, filename="errors.log")
             except InferenceError, e:
-                pass #open of another kind
+                logHere("ERROR DE INFERENCIA CALLFUNC", e, filename="errors.log")
