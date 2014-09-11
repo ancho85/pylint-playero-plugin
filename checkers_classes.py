@@ -60,19 +60,12 @@ class QueryChecker(BaseChecker):
                 qvalue = node.value.infered()[0].value
             elif isinstance(node.value, BinOp):
                 qvalue = self.getAssignedTxt(node.value.left)
-            elif isinstance(node.value, CallFunc):
-                pass
-                #if node.value.as_string().find("PurchaseInvoiceRowLabels") > -1:
-                #    expr_str = node.value.func.accept(self)
-            elif isinstance(node.value, Name):
-                pass
             else:
-                logHere("WTF IS THIS", type(node.value))
+                self.add_message("W6602", line=node.lineno, node=node, args=node.value)
         except InferenceError, e:
-            logHere("ERROR DE INFERENCIA", e, filename="errors.log")
+            logHere("InferenceError getAssignedTxt", e, filename="errors.log")
         except Exception, e:
-            logHere("DA FUCK", type(node.value))
-            logHere("ERROR Exception", e, filename="errors.log")
+            logHere("Exception getAssignedTxt", e, filename="errors.log")
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -87,7 +80,7 @@ class QueryChecker(BaseChecker):
                     if not isinstance(nodeTarget.parent.parent.parent, If): #First if in if-Elif-Else
                         self.queryTxt[instanceName] += value
         except InferenceError, e:
-            logHere("ERROR DE INFERENCIA", e, filename="errors.log")
+            logHere("InferenceError setUpQueryTxt", e, filename="errors.log")
 
     def visit_assign(self, node):
         if isinstance(node.targets[0], AssAttr):
@@ -99,7 +92,7 @@ class QueryChecker(BaseChecker):
             qvalue = self.getAssignedTxt(node)
             self.setUpQueryTxt(node.target, qvalue)
 
-    @check_messages('query-syntax-error')
+    @check_messages('query-syntax-error', 'query-inference')
     def visit_callfunc(self, node):
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
@@ -115,6 +108,6 @@ class QueryChecker(BaseChecker):
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
-                        logHere("ERROR Type CALLFUNC", e, filename="errors.log")
+                        logHere("TypeError visit_callfunc", e, filename="errors.log")
             except InferenceError, e:
-                logHere("ERROR DE INFERENCIA CALLFUNC", e, filename="errors.log")
+                logHere("InferenceError visit_callfunc", e, filename="errors.log")
