@@ -50,14 +50,20 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
+    def getCallFuncValue(self, nodeValue):
+        lastchildValue = nodeValue.func.infered()[0].last_child().value
+        cfvalue = self.getAssignedTxt(lastchildValue)
+        return cfvalue
+
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
+        newleft = '"%s"' % qvalue
+        newright = "(\'%s\')" % ("','" * (qvalue.count("%s") - 1))
         if isinstance(nodeValue.right, Tuple):
-            newleft = '"%s"' % qvalue
-            newright = "(\'%s\')" % self.getTupleValues(nodeValue.right)
-            qvalue = eval("%s %% %s" % (newleft, newright))
-        #elif isinstance(nodeValue.right, CallFunc):
-        #    inspectModule(nodeValue.right.func.infered()[0].last_child())
+            newright = self.getTupleValues(nodeValue.right)
+        elif isinstance(nodeValue.right, CallFunc):
+            newright = self.getCallFuncValue(nodeValue.right)
+        qvalue = eval("%s %% %s" % (newleft, newright))
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -66,7 +72,7 @@ class QueryChecker(BaseChecker):
             if isinstance(elts, Name):
                 elts = elts.infered()[0]
             tvalues.append(self.getAssignedTxt(elts))
-        return "','".join(tvalues)
+        return "(\'%s\')" % "','".join(tvalues)
 
     def getAssignedTxt(self, nodeValue):
         qvalue = ""
@@ -79,6 +85,10 @@ class QueryChecker(BaseChecker):
                 qvalue = nodeValue.infered()[0].value
             elif isinstance(nodeValue, BinOp):
                 qvalue = self.getBinOpValue(nodeValue)
+            elif isinstance(nodeValue, Tuple):
+                qvalue = self.getTupleValues(nodeValue)
+            elif isinstance(nodeValue, CallFunc):
+                qvalue = self.getCallFuncValue(nodeValue)
             else:
                 self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
