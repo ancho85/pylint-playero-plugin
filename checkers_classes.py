@@ -27,7 +27,8 @@ class CacheStatisticWriter(BaseChecker):
         self.add_message('C6666', lastline)
 
 
-from astroid.node_classes import Getattr, AssAttr, Const, If, BinOp, CallFunc, Name
+from astroid.node_classes import Getattr, AssAttr, Const, \
+                                    If, BinOp, CallFunc, Name, Tuple
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
@@ -60,6 +61,15 @@ class QueryChecker(BaseChecker):
                 qvalue = node.value.infered()[0].value
             elif isinstance(node.value, BinOp):
                 qvalue = self.getAssignedTxt(node.value.left)
+                if isinstance(node.value.right, Tuple):
+                    tvalues = []
+                    for elts in node.value.right.itered():
+                        if isinstance(elts, Name):
+                            elts = elts.infered()[0]
+                        tvalues.append(self.getAssignedTxt(elts))
+                    newleft = '"%s"' % qvalue
+                    newright = "(\'%s\')" % "','".join(tvalues)
+                    qvalue = eval("%s %% %s" % (newleft, newright))
             else:
                 self.add_message("W6602", line=node.lineno, node=node, args=node.value)
         except InferenceError, e:
