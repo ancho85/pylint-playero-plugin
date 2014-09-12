@@ -51,14 +51,16 @@ class QueryChecker(BaseChecker):
     queryTxt = {}
 
     def getCallFuncValue(self, nodeValue):
-        lastchildValue = nodeValue.func.infered()[0].last_child().value
-        cfvalue = self.getAssignedTxt(lastchildValue)
+        cfvalue = ""
+        if hasattr(nodeValue, "value"):
+            lastchildValue = nodeValue.func.infered()[0].last_child().value
+            cfvalue = self.getAssignedTxt(lastchildValue)
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
         newleft = '"%s"' % qvalue
-        newright = "(\'%s\')" % ("','" * (qvalue.count("%s") - 1))
+        newright = "(\'0%s\')" % ("','" * (qvalue.count("%s") - 1))
         if isinstance(nodeValue.right, Tuple):
             newright = self.getTupleValues(nodeValue.right)
         elif isinstance(nodeValue.right, CallFunc):
@@ -104,10 +106,10 @@ class QueryChecker(BaseChecker):
                 if isnew or instanceName not in self.queryTxt:
                     self.queryTxt[instanceName] = ""
                 if not isinstance(nodeTarget.parent.parent, If):
-                    self.queryTxt[instanceName] += value
+                    self.queryTxt[instanceName] += str(value)
                 else:
                     if not isinstance(nodeTarget.parent.parent.parent, If): #First if in if-Elif-Else
-                        self.queryTxt[instanceName] += value
+                        self.queryTxt[instanceName] += str(value)
         except InferenceError, e:
             logHere("InferenceError setUpQueryTxt", e, filename="errors.log")
 
@@ -133,7 +135,7 @@ class QueryChecker(BaseChecker):
                             if name in self.queryTxt:
                                 res = validateSQL(self.queryTxt[name])
                                 if res:
-                                    self.add_message("E6601", line=node.lineno, node=node, args=res)
+                                    self.add_message("E6601", line=node.lineno, node=node, args="%s near: %s" % (name, res))
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:

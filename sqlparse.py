@@ -43,7 +43,7 @@ def parseSQL(txt):
     def value_replacer(mo):
         return "'%s'" % mo.group(1).replace("[","\\[").replace("{", "\\{")
     def integer_value_replacer(mo):
-        return "%s" % mo.group(1).replace("[","\\[").replace("{", "\\{")
+        return "%s0" % mo.group(1).replace("[","\\[").replace("{", "\\{")
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     txt = value_pattern.sub(value_replacer, txt)
