@@ -50,28 +50,37 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
-    def getAssignedTxt(self, node):
+    def getBinOpValue(self, nodeValue):
+        qvalue = self.getAssignedTxt(nodeValue.left)
+        if isinstance(nodeValue.right, Tuple):
+            newleft = '"%s"' % qvalue
+            newright = "(\'%s\')" % self.getTupleValues(nodeValue.right)
+            qvalue = eval("%s %% %s" % (newleft, newright))
+        #elif isinstance(nodeValue.right, CallFunc):
+        #    inspectModule(nodeValue.right.func.infered()[0].last_child())
+        return qvalue
+
+    def getTupleValues(self, nodeValue):
+        tvalues = []
+        for elts in nodeValue.itered():
+            if isinstance(elts, Name):
+                elts = elts.infered()[0]
+            tvalues.append(self.getAssignedTxt(elts))
+        return "','".join(tvalues)
+
+    def getAssignedTxt(self, nodeValue):
         qvalue = ""
         try:
-            if type(node.value) == type(""):
-                qvalue = node.value
-            elif isinstance(node.value, Const):
-                qvalue = node.value.value
-            elif isinstance(node.value.infered()[0], Const):
-                qvalue = node.value.infered()[0].value
-            elif isinstance(node.value, BinOp):
-                qvalue = self.getAssignedTxt(node.value.left)
-                if isinstance(node.value.right, Tuple):
-                    tvalues = []
-                    for elts in node.value.right.itered():
-                        if isinstance(elts, Name):
-                            elts = elts.infered()[0]
-                        tvalues.append(self.getAssignedTxt(elts))
-                    newleft = '"%s"' % qvalue
-                    newright = "(\'%s\')" % "','".join(tvalues)
-                    qvalue = eval("%s %% %s" % (newleft, newright))
+            if type(nodeValue) == str:
+                qvalue = nodeValue
+            elif isinstance(nodeValue, Const):
+                qvalue = nodeValue.value
+            elif isinstance(nodeValue.infered()[0], Const):
+                qvalue = nodeValue.infered()[0].value
+            elif isinstance(nodeValue, BinOp):
+                qvalue = self.getBinOpValue(nodeValue)
             else:
-                self.add_message("W6602", line=node.lineno, node=node, args=node.value)
+                self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
             logHere("InferenceError getAssignedTxt", e, filename="errors.log")
         except Exception, e:
@@ -94,12 +103,12 @@ class QueryChecker(BaseChecker):
 
     def visit_assign(self, node):
         if isinstance(node.targets[0], AssAttr):
-            qvalue = self.getAssignedTxt(node)
+            qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
     def visit_augassign(self, node):
         if isinstance(node.target, AssAttr):
-            qvalue = self.getAssignedTxt(node)
+            qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
 
     @check_messages('query-syntax-error', 'query-inference')
