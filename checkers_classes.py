@@ -66,7 +66,7 @@ class QueryChecker(BaseChecker):
 
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
-        newleft = '"%s"' % qvalue
+        newleft = '"%s "' % qvalue.replace("%i","%s").replace("%d", "%s")
         newright = "(\'0%s\')" % ("','" * (qvalue.count("%s") - 1))
         if isinstance(nodeValue.right, Tuple):
             newright = self.getTupleValues(nodeValue.right)
@@ -74,7 +74,10 @@ class QueryChecker(BaseChecker):
             callfuncval = self.getCallFuncValue(nodeValue.right)
             if callfuncval: newright = callfuncval
         toeval = str("%s %% %s" % (newleft, newright)).replace("\n","")
-        qvalue = eval(toeval)
+        try:
+            qvalue = eval(toeval)
+        except Exception, e:
+            logHere("EvaluationError getBinOpValue", toeval, e, filename="errors.log")
         return qvalue
 
     def getTupleValues(self, nodeValue):
