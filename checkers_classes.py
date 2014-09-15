@@ -28,7 +28,8 @@ class CacheStatisticWriter(BaseChecker):
 
 
 from astroid.node_classes import Getattr, AssAttr, Const, \
-                                    If, BinOp, CallFunc, Name, Tuple
+                                    If, BinOp, CallFunc, Name, Tuple, \
+                                    Return
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
@@ -50,11 +51,15 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
+    def getGetattrValue(self, nodeValue):
+        gvalue = ""
+        return gvalue
+
     def getCallFuncValue(self, nodeValue):
         cfvalue = ""
-        if hasattr(nodeValue, "value"):
-            lastchildValue = nodeValue.func.infered()[0].last_child().value
-            cfvalue = self.getAssignedTxt(lastchildValue)
+        lastchild = nodeValue.func.infered()[0].last_child()
+        if isinstance(lastchild, Return):
+            cfvalue = self.getAssignedTxt(lastchild.value)
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -64,8 +69,10 @@ class QueryChecker(BaseChecker):
         if isinstance(nodeValue.right, Tuple):
             newright = self.getTupleValues(nodeValue.right)
         elif isinstance(nodeValue.right, CallFunc):
-            newright = self.getCallFuncValue(nodeValue.right)
-        qvalue = eval("%s %% %s" % (newleft, newright))
+            callfuncval = self.getCallFuncValue(nodeValue.right)
+            if callfuncval: newright = callfuncval
+        toeval = str("%s %% %s" % (newleft, newright)).replace("\n","")
+        qvalue = eval(toeval)
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -91,6 +98,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getTupleValues(nodeValue)
             elif isinstance(nodeValue, CallFunc):
                 qvalue = self.getCallFuncValue(nodeValue)
+            elif isinstance(nodeValue, Getattr):
+                qvalue = self.getGetattrValue(nodeValue)
             else:
                 self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
