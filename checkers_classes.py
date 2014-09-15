@@ -30,10 +30,12 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return
+from astroid.bases import YES
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from sqlparse import validateSQL
+from collections import Iterable
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -80,6 +82,7 @@ class QueryChecker(BaseChecker):
         for elts in nodeValue.itered():
             if isinstance(elts, Name):
                 elts = elts.infered()[0]
+                if elts is YES: elts = "1"
             tvalues.append(self.getAssignedTxt(elts))
         return "(\'%s\')" % "','".join(tvalues)
 
@@ -90,8 +93,6 @@ class QueryChecker(BaseChecker):
                 qvalue = nodeValue
             elif isinstance(nodeValue, Const):
                 qvalue = nodeValue.value
-            elif isinstance(nodeValue.infered()[0], Const):
-                qvalue = nodeValue.infered()[0].value
             elif isinstance(nodeValue, BinOp):
                 qvalue = self.getBinOpValue(nodeValue)
             elif isinstance(nodeValue, Tuple):
@@ -101,7 +102,13 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, Getattr):
                 qvalue = self.getGetattrValue(nodeValue)
             else:
-                self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
+                inferedValue = nodeValue.infered()
+                if inferedValue is YES:
+                    raise InferenceError("YES reached")
+                elif isinstance(inferedValue, Iterable) and isinstance(inferedValue[0], Const):
+                    qvalue = inferedValue[0].value
+                else:
+                    self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
             logHere("InferenceError getAssignedTxt", e, filename="errors.log")
         except Exception, e:
