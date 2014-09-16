@@ -54,16 +54,25 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
+    def getAssNameValue(self, nodeValue):
+        anvalue = ""
+        if isinstance(nodeValue, Assign):
+            if isinstance(nodeValue.targets[0], AssName):
+                if nodeValue.parent.name == nodeValue.targets[0].name:
+                    anvalue = self.getAssignedTxt(nodeValue.value)
+        elif isinstance(nodeValue, AugAssign):
+            if isinstance(nodeValue.target, AssName):
+                if nodeValue.parent.name == nodeValue.target.name:
+                    anvalue = self.getAssignedTxt(nodeValue.value)
+        return anvalue
+
     def getNameValue(self, nodeValue):
         nvalue = nodeValue.infered()[0]
         if nvalue is YES:
             nvalue = " "
             if isinstance(nodeValue.parent, Return):
                 for elm in nodeValue.parent.scope().body:
-                    if isinstance(elm, Assign) and elm.targets[0].name == nodeValue.name:
-                        nvalue += str(elm.accept(self))
-                    elif isinstance(elm, AugAssign) and elm.target.name == nodeValue.name:
-                        nvalue += str(elm.accept(self))
+                    nvalue += self.getAssNameValue(elm)
             if not len(nvalue.strip()): nvalue = "1"
         return nvalue
 
@@ -152,17 +161,11 @@ class QueryChecker(BaseChecker):
         if isinstance(node.targets[0], AssAttr):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
-        elif isinstance(node.targets[0], AssName):
-            nvalue = self.getAssignedTxt(node.value)
-            return nvalue
 
     def visit_augassign(self, node):
         if isinstance(node.target, AssAttr):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
-        elif isinstance(node.target, AssName):
-            nvalue = self.getAssignedTxt(node.value)
-            return nvalue
 
     @check_messages('query-syntax-error', 'query-inference')
     def visit_callfunc(self, node):
