@@ -29,10 +29,7 @@ def parseSQL(txt):
     boolean_value_pattern = re.compile(r"b\|([^\|]*?)\|")
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
-    limit_pattern = re.compile(r"(LIMIT [0-9]*[,\s]*[0-9]*|OFFSET [0-9]+)", re.I)
-    unionall_pattern = re.compile(r'UNION ALL', re.I)
-    insert_pattern = re.compile(r'INSERT [INTO]+', re.I)
-    create_pattern = re.compile(r'CREATE TABLE [IF NOT EXISTS]+', re.I)
+    from_pattern = re.compile(r"(?<=FROM )(.*)", re.I)
 
     global k
     k = 0
@@ -47,22 +44,17 @@ def parseSQL(txt):
         return "%s0" % mo.group(1).replace("[","\\[").replace("{", "\\{")
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
+    def force_no_rows(mo):
+        return "%sINNER JOIN mysql.`user` ON FALSE " % mo.group(1) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
     txt = table_pattern.sub(r"\g<1>`\g<2>`", txt)
     txt = field_pattern.sub(r"`\g<1>`", txt)
     txt = where_and_pattern.sub(where_and_replacer, txt)
+    txt = from_pattern.sub(force_no_rows, txt)
     txt = txt.replace(";", " ")
-    txt = limit_pattern.sub(" ", txt) #removes the limit part
-    txt = unionall_pattern.sub("LIMIT 0\nUNION ALL", txt) #if are multiple selects with union all, adds the limit 0
     txt = txt.replace("\\[", "[").replace("\\{", "{")
-    insertmatch = insert_pattern.search(txt)
-    creatematch = create_pattern.search(txt)
-    if insertmatch or creatematch:
-        txt = limit_pattern.sub(" ", txt) #removes the limit part again. Insert doesn't support LIMIT
-    else:
-        txt += " LIMIT 0"
     return txt
 
 def apiValidateSQL(txt, config):
