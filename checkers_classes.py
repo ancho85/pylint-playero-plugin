@@ -29,13 +29,14 @@ class CacheStatisticWriter(BaseChecker):
 
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
-                                    Return
+                                    Return, Assign, AugAssign, AssName
 from astroid.bases import YES
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from sqlparse import validateSQL
 from collections import Iterable
+from funcs import inspectModule
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -52,6 +53,19 @@ class QueryChecker(BaseChecker):
     options = ()
 
     queryTxt = {}
+
+    def getNameValue(self, nodeValue):
+        nvalue = nodeValue.infered()[0]
+        if nvalue is YES:
+            nvalue = " "
+            if isinstance(nodeValue.parent, Return):
+                for elm in nodeValue.parent.scope().body:
+                    if isinstance(elm, Assign) and elm.targets[0].name == nodeValue.name:
+                        nvalue += str(elm.accept(self))
+                    elif isinstance(elm, AugAssign) and elm.target.name == nodeValue.name:
+                        nvalue += str(elm.accept(self))
+            if not len(nvalue.strip()): nvalue = "1"
+        return nvalue
 
     def getGetattrValue(self, nodeValue):
         gvalue = ""
@@ -72,8 +86,9 @@ class QueryChecker(BaseChecker):
             newright = self.getTupleValues(nodeValue.right)
         elif isinstance(nodeValue.right, CallFunc):
             callfuncval = self.getCallFuncValue(nodeValue.right)
-            if callfuncval: newright = callfuncval
-        toeval = str("%s %% %s" % (newleft, newright)).replace("\n","")
+            if callfuncval:
+                newright = "(\"%s\")" % callfuncval
+        toeval = str("%s %% %s" % (newleft, newright)).replace("\n"," ")
         try:
             qvalue = eval(toeval)
         except Exception, e:
@@ -84,8 +99,7 @@ class QueryChecker(BaseChecker):
         tvalues = []
         for elts in nodeValue.itered():
             if isinstance(elts, Name):
-                elts = elts.infered()[0]
-                if elts is YES: elts = "1"
+                elts = self.getNameValue(elts)
             tvalues.append(self.getAssignedTxt(elts))
         return "(\'%s\')" % "','".join(tvalues)
 
@@ -104,6 +118,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getCallFuncValue(nodeValue)
             elif isinstance(nodeValue, Getattr):
                 qvalue = self.getGetattrValue(nodeValue)
+            elif isinstance(nodeValue, Name):
+                qvalue = self.getNameValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if inferedValue is YES:
@@ -136,11 +152,17 @@ class QueryChecker(BaseChecker):
         if isinstance(node.targets[0], AssAttr):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
+        elif isinstance(node.targets[0], AssName):
+            nvalue = self.getAssignedTxt(node.value)
+            return nvalue
 
     def visit_augassign(self, node):
         if isinstance(node.target, AssAttr):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
+        elif isinstance(node.target, AssName):
+            nvalue = self.getAssignedTxt(node.value)
+            return nvalue
 
     @check_messages('query-syntax-error', 'query-inference')
     def visit_callfunc(self, node):
