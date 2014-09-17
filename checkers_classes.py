@@ -36,7 +36,6 @@ from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from sqlparse import validateSQL
 from collections import Iterable
-from funcs import inspectModule
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
