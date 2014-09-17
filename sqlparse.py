@@ -1,3 +1,6 @@
+import re
+from tools import logHere
+
 def getMySQLConfig():
     import os
     configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config", "mysql.cfg")
@@ -21,7 +24,6 @@ def validateSQL(txt):
     return res
 
 def parseSQL(txt):
-    import re
     table_pattern = re.compile("([^\\\])\[([^\]]*?)\]")
     field_pattern = re.compile(r"\{([^\}]*?)\}")
     value_pattern = re.compile(r"[svdt]\|([^\|]*?)\|")
@@ -29,7 +31,13 @@ def parseSQL(txt):
     boolean_value_pattern = re.compile(r"b\|([^\|]*?)\|")
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
-    from_pattern = re.compile(r"(?<=FROM )(.*)", re.I)
+    from_pattern = re.compile(r"""(?<=FROM\s)                                   #Start of positive lookbehind assertion FROM
+                                  (.*?)                                         #Any character zero to infinite times
+                                  (?=INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|
+                                     WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|
+                                     PROCEDURE|INTO\s+OUTFILE|FOR\s+UPDATE|
+                                     LOCK\s+IN\s+SHARE\s+MODE)                  #Start of positive lookahead assertion NON-Optional syntax
+                               """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     global k
     k = 0
@@ -96,7 +104,6 @@ def cmdValidateSQL(txt, config):
     process = subprocess.Popen(
         mysqlcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    import re
 
     m = re.search('ERROR ([0-9]*).*', process.stderr.read())
     if m:
@@ -115,5 +122,5 @@ def cmdValidateSQL(txt, config):
 
 
 if __name__ == "__main__":
-    sql = "SELECT {Code}, FROM [User]"
+    sql = "SELECT {Code} FROM [User]"
     print validateSQL(sql)
