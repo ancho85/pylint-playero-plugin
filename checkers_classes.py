@@ -53,26 +53,26 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {}
 
-    def getAssNameValue(self, nodeValue):
+    def getAssNameValue(self, nodeValue, nodeName=""):
         anvalue = ""
         if isinstance(nodeValue, Assign):
             if isinstance(nodeValue.targets[0], AssName):
-                if nodeValue.parent.name == nodeValue.targets[0].name:
+                if nodeName and nodeName == nodeValue.targets[0].name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
         elif isinstance(nodeValue, AugAssign):
             if isinstance(nodeValue.target, AssName):
-                if nodeValue.parent.name == nodeValue.target.name:
+                if nodeName and nodeName == nodeValue.target.name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
         return anvalue
 
     def getNameValue(self, nodeValue):
         nvalue = nodeValue.infered()[0]
         if nvalue is YES:
-            nvalue = " "
+            nvalue = ""
             if isinstance(nodeValue.parent, Return):
                 for elm in nodeValue.parent.scope().body:
-                    nvalue += self.getAssNameValue(elm)
-            if not len(nvalue.strip()): nvalue = "1"
+                    nvalue += self.getAssNameValue(elm, nodeName=nodeValue.name)
+            if not nvalue: nvalue = "1"
         return nvalue
 
     def getGetattrValue(self, nodeValue):
@@ -96,9 +96,10 @@ class QueryChecker(BaseChecker):
             callfuncval = self.getCallFuncValue(nodeValue.right)
             if callfuncval:
                 newright = "(\"%s\")" % callfuncval
-        toeval = str("%s %% %s" % (newleft, newright)).replace("\n"," ")
+        toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
         try:
             qvalue = eval(toeval)
+            qvalue = qvalue.replace("NEWLINE","\n")
         except Exception, e:
             logHere("EvaluationError getBinOpValue", toeval, e, filename="errors.log")
         return qvalue
@@ -178,7 +179,7 @@ class QueryChecker(BaseChecker):
                             if name in self.queryTxt:
                                 res = validateSQL(self.queryTxt[name])
                                 if res:
-                                    self.add_message("E6601", line=node.lineno, node=node, args="%s near: %s" % (name, res))
+                                    self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
