@@ -59,6 +59,7 @@ def parseSQL(txt):
 
 def apiValidateSQL(txt, config):
     """validates sql string using google-mysql-tools api"""
+    res = False
     dbstring = config.get('mysql', 'host')
     dbstring += ":" + config.get('mysql', 'user')
     dbstring += ":" + config.get('mysql', 'pass')
@@ -68,10 +69,15 @@ def apiValidateSQL(txt, config):
     dbh = db.Connect(dbstring)
     from mysqlparser.pylib import schema
     db = schema.Schema(dbh)
-    from mysqlparser.parser_lib import validator
-    val = validator.Validator(db_schema=db)
-    res = val.ValidateString(txt)
-    res = ""
+    from mysqlparser.parser_lib.validator import Validator
+    from mysqlparser.parser_lib.parser import SQLParser, ParseError
+    val = Validator(db_schema=db)
+    try:
+        val.ValidateString(txt, parser_class=SQLParser, fail_fast=True)
+    except ParseError, e:
+        res = e.msg
+    else:
+        res = ",".join(err.msg for err in val.Errors() if err.loc != -1)
     return res
 
 def cmdValidateSQL(txt, config):
@@ -109,5 +115,5 @@ def cmdValidateSQL(txt, config):
 
 
 if __name__ == "__main__":
-    sql = "SELECT {Code}, FROM [User];"
+    sql = "SELECT {Code}, FROM [User]"
     print validateSQL(sql)
