@@ -94,7 +94,7 @@ def cmdValidateSQL(txt, config):
     """validates sql string using command line"""
     res = ""
     import subprocess
-    mysqlcmd = ["%s/mysql.exe" % config.get("mysql", "path")]
+    mysqlcmd = ["%s/mysql" % config.get("mysql", "path")]
     mysqlcmd.append("-u%s" % config.get('mysql', 'user'))
     mysqlcmd.append("-p%s" % config.get('mysql', 'pass'))
     mysqlcmd.append("-h%s" % config.get('mysql', 'host'))
