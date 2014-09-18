@@ -33,10 +33,12 @@ def parseSQL(txt):
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
     from_pattern = re.compile(r"""(?<=FROM\s)                                   #Start of positive lookbehind assertion FROM
                                   (.*?)                                         #Any character zero to infinite times
+                                  (?:$|                                         #Start of Non capturing group and Anchor to end of line
                                   (?=INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|
                                      WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|
                                      PROCEDURE|INTO\s+OUTFILE|FOR\s+UPDATE|
                                      LOCK\s+IN\s+SHARE\s+MODE)                  #Start of positive lookahead assertion NON-Optional syntax
+                                  )                                             #End of non capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     global k
@@ -53,7 +55,7 @@ def parseSQL(txt):
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     def force_no_rows(mo):
-        return "%sINNER JOIN mysql.`user` ON FALSE " % mo.group(1) #doing this I make sure never returns any row
+        return "%s INNER JOIN mysql.`user` ON FALSE " % mo.group(1) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
