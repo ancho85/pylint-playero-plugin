@@ -157,13 +157,19 @@ class QueryChecker(BaseChecker):
         except InferenceError, e:
             logHere("InferenceError setUpQueryTxt", e, filename="errors.log")
 
+    def isSqlAssAttr(self, node):
+        res = False
+        if isinstance(node, AssAttr) and node.attrname == "sql":
+            res = True
+        return res
+
     def visit_assign(self, node):
-        if isinstance(node.targets[0], AssAttr):
+        if self.isSqlAssAttr(node.targets[0]):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
     def visit_augassign(self, node):
-        if isinstance(node.target, AssAttr):
+        if self.isSqlAssAttr(node.target):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
 
