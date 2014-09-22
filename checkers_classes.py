@@ -34,6 +34,7 @@ from astroid.bases import YES
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
+from tools import filenameFromPath
 from sqlparse import validateSQL
 from collections import Iterable
 
@@ -101,7 +102,7 @@ class QueryChecker(BaseChecker):
             qvalue = eval(toeval)
             qvalue = qvalue.replace("NEWLINE","\n")
         except Exception, e:
-            logHere("EvaluationError getBinOpValue", toeval, e, filename="errors.log")
+            logHere("EvaluationError getBinOpValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -138,9 +139,9 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("InferenceError getAssignedTxt", e, filename="errors.log")
+            logHere("InferenceError getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         except Exception, e:
-            logHere("Exception getAssignedTxt", e, filename="errors.log")
+            logHere("Exception getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -155,7 +156,7 @@ class QueryChecker(BaseChecker):
                     if not isinstance(nodeTarget.parent.parent.parent, If): #First if in if-Elif-Else
                         self.queryTxt[instanceName] += str(value)
         except InferenceError, e:
-            logHere("InferenceError setUpQueryTxt", e, filename="errors.log")
+            logHere("InferenceError setUpQueryTxt", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
 
     def isSqlAssAttr(self, node):
         res = False
@@ -189,6 +190,6 @@ class QueryChecker(BaseChecker):
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
-                        logHere("TypeError visit_callfunc", e, filename="errors.log")
+                        logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
             except InferenceError, e:
-                logHere("InferenceError visit_callfunc", e, filename="errors.log")
+                logHere("InferenceError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
