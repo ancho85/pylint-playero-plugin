@@ -72,12 +72,14 @@ class QueryChecker(BaseChecker):
 
     def getNameValue(self, nodeValue):
         nvalue = ""
-        if isinstance(nodeValue.parent, Return):
+        if isinstance(nodeValue.statement(), Return):
             for elm in nodeValue.parent.scope().body:
                 assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
                 nvalue += self.getAssignedTxt(assValue)
         else:
-            nvalue = self.getAssignedTxt(nodeValue.infered()[0])
+            inferedValue = nodeValue.infered()[0]
+            if inferedValue is not YES:
+                nvalue = self.getAssignedTxt(inferedValue)
         if not nvalue: nvalue = "1"
         return nvalue
 
@@ -105,6 +107,8 @@ class QueryChecker(BaseChecker):
                 qvalue = qvalue.replace("NEWLINE","\n")
             except Exception, e:
                 logHere("EvaluationError getBinOpValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        else:
+            qvalue += self.getAssignedTxt(nodeValue.right)
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -143,7 +147,7 @@ class QueryChecker(BaseChecker):
         except InferenceError, e:
             logHere("InferenceError getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         except Exception, e:
-            logHere("Exception getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:60], filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
