@@ -67,13 +67,12 @@ class QueryChecker(BaseChecker):
         return anvalue
 
     def getNameValue(self, nodeValue):
-        nvalue = nodeValue.infered()[0]
-        if nvalue is YES:
-            nvalue = ""
-            if isinstance(nodeValue.parent, Return):
-                for elm in nodeValue.parent.scope().body:
-                    nvalue += self.getAssNameValue(elm, nodeName=nodeValue.name)
-            if not nvalue: nvalue = "1"
+        nvalue = ""
+        if isinstance(nodeValue.parent, Return):
+            for elm in nodeValue.parent.scope().body:
+                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                nvalue += self.getAssignedTxt(assValue)
+        if not nvalue: nvalue = "1"
         return nvalue
 
     def getGetattrValue(self, nodeValue):
