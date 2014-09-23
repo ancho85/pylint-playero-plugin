@@ -64,6 +64,10 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.target, AssName):
                 if nodeName and nodeName == nodeValue.target.name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
+        elif isinstance(nodeValue, If):
+            for elm in nodeValue.body:
+                assValue = self.getAssNameValue(elm, nodeName)
+                anvalue += self.getAssignedTxt(assValue)
         return anvalue
 
     def getNameValue(self, nodeValue):
@@ -72,12 +76,10 @@ class QueryChecker(BaseChecker):
             for elm in nodeValue.parent.scope().body:
                 assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
                 nvalue += self.getAssignedTxt(assValue)
+        else:
+            nvalue = self.getAssignedTxt(nodeValue.infered()[0])
         if not nvalue: nvalue = "1"
         return nvalue
-
-    def getGetattrValue(self, nodeValue):
-        gvalue = ""
-        return gvalue
 
     def getCallFuncValue(self, nodeValue):
         cfvalue = ""
@@ -88,20 +90,21 @@ class QueryChecker(BaseChecker):
 
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
-        newleft = '"%s "' % qvalue.replace("%i","%s").replace("%d", "%s")
-        newright = "(\'0%s\')" % ("','" * (qvalue.count("%s") - 1))
-        if isinstance(nodeValue.right, Tuple):
-            newright = self.getTupleValues(nodeValue.right)
-        elif isinstance(nodeValue.right, CallFunc):
-            callfuncval = self.getCallFuncValue(nodeValue.right)
-            if callfuncval:
-                newright = "(\"%s\")" % callfuncval
-        toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
-        try:
-            qvalue = eval(toeval)
-            qvalue = qvalue.replace("NEWLINE","\n")
-        except Exception, e:
-            logHere("EvaluationError getBinOpValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        if nodeValue.op == "%":
+            newleft = '"%s "' % qvalue.replace("%i","%s").replace("%d", "%s")
+            newright = "(\'%s\')" % ("','" * (qvalue.count("%s") - 1))
+            if isinstance(nodeValue.right, Tuple):
+                newright = self.getTupleValues(nodeValue.right)
+            elif isinstance(nodeValue.right, CallFunc):
+                callfuncval = self.getCallFuncValue(nodeValue.right)
+                if callfuncval:
+                    newright = "(\"%s\")" % callfuncval
+            toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
+            try:
+                qvalue = eval(toeval)
+                qvalue = qvalue.replace("NEWLINE","\n")
+            except Exception, e:
+                logHere("EvaluationError getBinOpValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -126,7 +129,7 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, CallFunc):
                 qvalue = self.getCallFuncValue(nodeValue)
             elif isinstance(nodeValue, Getattr):
-                qvalue = self.getGetattrValue(nodeValue)
+                qvalue = nodeValue.attrname
             elif isinstance(nodeValue, Name):
                 qvalue = self.getNameValue(nodeValue)
             else:
