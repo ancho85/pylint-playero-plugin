@@ -99,8 +99,9 @@ class QueryChecker(BaseChecker):
                 newright = self.getTupleValues(nodeValue.right)
             elif isinstance(nodeValue.right, CallFunc):
                 callfuncval = self.getCallFuncValue(nodeValue.right)
-                if callfuncval:
-                    newright = "(\"%s\")" % callfuncval
+                if callfuncval: newright = "(\"%s\")" % callfuncval
+            elif isinstance(nodeValue.right, Name):
+                newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
             toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
             try:
                 qvalue = eval(toeval)
