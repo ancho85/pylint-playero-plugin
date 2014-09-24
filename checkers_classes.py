@@ -29,7 +29,9 @@ class CacheStatisticWriter(BaseChecker):
 
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
-                                    Return, Assign, AugAssign, AssName
+                                    Return, Assign, AugAssign, AssName, \
+                                    Keyword
+from astroid.scoped_nodes import Function
 from astroid.bases import YES
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
@@ -53,6 +55,44 @@ class QueryChecker(BaseChecker):
     options = ()
 
     queryTxt = {}
+    funcParams = {}
+
+    def setUpFuncParams(self, node):
+        if isinstance(node.func, Getattr):
+            funcname = node.func.attrname
+        elif isinstance(node.func, Name):
+            funcname = node.func.name
+        if funcname not in self.funcParams:
+            self.funcParams[funcname] = {}
+        index = 0
+        for nodearg in node.args:
+            index += 1
+            if isinstance(nodearg, Keyword):
+                self.funcParams[funcname][nodearg.arg] = self.getAssignedTxt(nodearg.value)
+            else:
+                self.funcParams[funcname][index] = self.getAssignedTxt(nodearg)
+
+    def getFuncParams(self, node):
+        fparam = ""
+        nodescope = node.scope()
+        if isinstance(nodescope, Function):
+            if node.name in node.scope().argnames():
+                funcname = node.scope().name
+                if funcname in self.funcParams:
+                    index = 0
+                    for funcarg in nodescope.args.args:
+                        index += 1
+                        if isinstance(funcarg, AssName):
+                            if funcarg.name == "self":
+                                index -= 1
+                                continue
+                            else:
+                                if node.name == funcarg.name:
+                                    if funcarg.name in self.funcParams[funcname]:
+                                        fparam = self.funcParams[funcname][funcarg.name]
+                                    elif index in self.funcParams[funcname]:
+                                        fparam = self.funcParams[funcname][index]
+        return fparam
 
     def getAssNameValue(self, nodeValue, nodeName=""):
         anvalue = ""
@@ -77,13 +117,16 @@ class QueryChecker(BaseChecker):
                 assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
                 nvalue += self.getAssignedTxt(assValue)
         else:
-            inferedValue = nodeValue.infered()[0]
-            if inferedValue is not YES:
-                nvalue = self.getAssignedTxt(inferedValue)
+            nvalue = self.getFuncParams(nodeValue)
+            if not nvalue:
+                inferedValue = nodeValue.infered()[0]
+                if inferedValue is not YES:
+                    nvalue = self.getAssignedTxt(inferedValue)
         if not nvalue: nvalue = "1"
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
+        self.setUpFuncParams(nodeValue)
         cfvalue = ""
         lastchild = nodeValue.func.infered()[0].last_child()
         if isinstance(lastchild, Return):
