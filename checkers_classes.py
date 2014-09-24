@@ -125,6 +125,8 @@ class QueryChecker(BaseChecker):
         try:
             if type(nodeValue) == str:
                 qvalue = nodeValue
+            elif type(nodeValue) == float:
+                qvalue = str(nodeValue)
             elif isinstance(nodeValue, Const):
                 qvalue = nodeValue.value
             elif isinstance(nodeValue, BinOp):
