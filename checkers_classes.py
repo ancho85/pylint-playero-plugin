@@ -30,7 +30,7 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
-                                    Keyword
+                                    Keyword, Compare
 from astroid.scoped_nodes import Function
 from astroid.bases import YES
 from astroid.exceptions import InferenceError
@@ -105,9 +105,17 @@ class QueryChecker(BaseChecker):
                 if nodeName and nodeName == nodeValue.target.name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
         elif isinstance(nodeValue, If):
-            for elm in nodeValue.body:
-                assValue = self.getAssNameValue(elm, nodeName)
-                anvalue += self.getAssignedTxt(assValue)
+            lookBody = True
+            if isinstance(nodeValue.test, Compare):
+                leftval = self.getAssignedTxt(nodeValue.test.left)
+                op = nodeValue.test.ops[0] #a list with 1 tuple
+                rightval = self.getAssignedTxt(op[1])
+                evaluation = "'%s' %s '%s'" % (leftval, op[0], rightval)
+                lookBody = eval(evaluation)
+            if lookBody:
+                for elm in nodeValue.body:
+                    assValue = self.getAssNameValue(elm, nodeName)
+                    anvalue += self.getAssignedTxt(assValue)
         return anvalue
 
     def getNameValue(self, nodeValue):
@@ -122,7 +130,6 @@ class QueryChecker(BaseChecker):
                 inferedValue = nodeValue.infered()[0]
                 if inferedValue is not YES:
                     nvalue = self.getAssignedTxt(inferedValue)
-        if not nvalue: nvalue = "1"
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
