@@ -31,8 +31,8 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare
-from astroid.scoped_nodes import Function
-from astroid.bases import YES
+from astroid.scoped_nodes import Function, Class
+from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
@@ -144,7 +144,7 @@ class QueryChecker(BaseChecker):
         qvalue = self.getAssignedTxt(nodeValue.left)
         if nodeValue.op == "%":
             newleft = '"%s "' % qvalue.replace("%i","%s").replace("%d", "%s")
-            newright = "(\'%s\')" % ("','" * (qvalue.count("%s") - 1))
+            newright = '("%s")' % ('","' * (qvalue.count("%s") - 1))
             if isinstance(nodeValue.right, Tuple):
                 newright = self.getTupleValues(nodeValue.right)
             elif isinstance(nodeValue.right, CallFunc):
@@ -152,6 +152,9 @@ class QueryChecker(BaseChecker):
                 if callfuncval: newright = "(\"%s\")" % callfuncval
             elif isinstance(nodeValue.right, Name):
                 newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
+            elif isinstance(nodeValue.right, Getattr):
+                getattrval = self.getAssignedTxt(nodeValue.right)
+                if getattrval: newright = '("%s")' % getattrval
             toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
             try:
                 qvalue = eval(toeval)
@@ -170,6 +173,23 @@ class QueryChecker(BaseChecker):
             tvalues.append(self.getAssignedTxt(elts))
         return "(\'%s\')" % "','".join(tvalues)
 
+    def getGetattrValue(self, nodeValue):
+        gvalue = nodeValue.attrname
+        inferedValue = nodeValue.expr.infered()[0]
+        res = ""
+        if isinstance(inferedValue, Instance) and isinstance(inferedValue.infered()[0], Class):
+            res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+        return {True:res, False:nodeValue.attrname}[bool(res)]
+
+    def getClassAttr(self, nodeValue, attrSeek=""):
+        cvalue = ""
+        for attr in nodeValue["__init__"].body:
+            if isinstance(attr, Assign):
+                if isinstance(attr.targets[0], AssAttr):
+                    if attr.targets[0].attrname == attrSeek:
+                        cvalue = self.getAssignedTxt(attr.value)
+        return cvalue
+
     def getAssignedTxt(self, nodeValue):
         qvalue = ""
         try:
@@ -186,15 +206,15 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, CallFunc):
                 qvalue = self.getCallFuncValue(nodeValue)
             elif isinstance(nodeValue, Getattr):
-                qvalue = nodeValue.attrname
+                qvalue = self.getGetattrValue(nodeValue)
             elif isinstance(nodeValue, Name):
                 qvalue = self.getNameValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if inferedValue is YES:
                     raise InferenceError("YES reached")
-                elif isinstance(inferedValue, Iterable) and isinstance(inferedValue[0], Const):
-                    qvalue = inferedValue[0].value
+                elif isinstance(inferedValue, Iterable):
+                    qvalue = self.getAssignedTxt(inferedValue[0])
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
