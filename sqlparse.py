@@ -31,6 +31,7 @@ def parseSQL(txt):
     boolean_value_pattern = re.compile(r"b\|([^\|]*?)\|")
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
+    show_pattern = re.compile(r"^SHOW.*STATUS", re.I) #Commands like SHOW INNODB STATUS or SHOW TABLE STATUS
     from_pattern = re.compile(r"""(?<=FROM\s)                                   #Start of positive lookbehind assertion FROM
                                   (.*?)                                         #Any character zero to infinite times
                                   (?:$|                                         #Start of Non capturing group and Anchor to end of line
@@ -65,6 +66,8 @@ def parseSQL(txt):
     txt = from_pattern.sub(force_no_rows, txt)
     txt = txt.replace(";", " ")
     txt = txt.replace("\\[", "[").replace("\\{", "{")
+    if show_pattern.match(txt):
+        txt = "SELECT 1" #Forcing a simple query. mysql hangs at cmdValidateSQL
     return txt
 
 def apiValidateSQL(txt, config):
