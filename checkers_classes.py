@@ -83,7 +83,7 @@ class QueryChecker(BaseChecker):
                     for funcarg in nodescope.args.args:
                         index += 1
                         if isinstance(funcarg, AssName):
-                            if funcarg.name == "self":
+                            if funcarg.name in ("self", "classobj", "cls") and index == 1:
                                 index -= 1
                                 continue
                             else:
@@ -193,12 +193,10 @@ class QueryChecker(BaseChecker):
     def getAssignedTxt(self, nodeValue):
         qvalue = ""
         try:
-            if type(nodeValue) == str:
-                qvalue = nodeValue
-            elif type(nodeValue) == float:
+            if type(nodeValue) in (type(None), int, str, float):
                 qvalue = str(nodeValue)
             elif isinstance(nodeValue, Const):
-                qvalue = nodeValue.value
+                qvalue = str(nodeValue.value)
             elif isinstance(nodeValue, BinOp):
                 qvalue = self.getBinOpValue(nodeValue)
             elif isinstance(nodeValue, Tuple):
@@ -209,18 +207,20 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getGetattrValue(nodeValue)
             elif isinstance(nodeValue, Name):
                 qvalue = self.getNameValue(nodeValue)
+            elif isinstance(nodeValue, Class):
+                qvalue = self.getClassAttr(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if inferedValue is YES:
                     raise InferenceError("YES reached")
-                elif isinstance(inferedValue, Iterable):
+                elif isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
                     qvalue = self.getAssignedTxt(inferedValue[0])
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
             logHere("InferenceError getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         except Exception, e:
-            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:60], filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:100], filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
