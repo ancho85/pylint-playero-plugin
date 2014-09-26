@@ -30,7 +30,7 @@ class XMLRecordHandler(handler.ContentHandler):
         self.name = ""
 
     def startElement(self, name, attrs):
-        if name.lower() not in ("record", "detailrecord", "reportwindow", "routinewindow"):
+        if name.lower() not in ("record", "detailrecord", "reportwindow", "routinewindow", "index", "indexfield"):
             if attrs.has_key("name"):
                 fieldname = str(attrs.get("name",""))
                 fieldtype = str(attrs.get("type"))
