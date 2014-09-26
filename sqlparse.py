@@ -56,7 +56,7 @@ def parseSQL(txt):
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     def force_no_rows(mo):
-        return "%s INNER JOIN mysql.`user` ON FALSE " % mo.group(1) #doing this I make sure never returns any row
+        return "%s INNER JOIN mysql.`user` ON FALSE\n" % mo.group(1) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
