@@ -46,7 +46,7 @@ def buildRecordModule(module):
     for insBuilder in ("bring", "getMasterRecord"):
         module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((xmlfields, attributes, methods)))
 
-    module.locals.update([(attrs, {0:None}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
+    module.locals.update([(attrs, {0:attributes[attrs]}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
 
     if module.name.endswith("Window"): #Window Class
@@ -90,13 +90,12 @@ def baseClassBuilder(module, baseclass):
             records = getRecordsInfo("Transaction", extensions=RECORD)[0]
             xmlfields = records.get("Transaction", {})
             attributes, methods = getClassInfo("Embedded_Report", parent="Embedded_Record")
-            #attributes += records.get("Transaction", {}).keys()
         elif baseclass in routineClasses:
             attributes, methods = getClassInfo("Embedded_Routine", parent="Embedded_Record")
         elif baseclass in otherClasses:
             attributes, methods = getClassInfo("Embedded_Window", parent="Embedded_Record")
         module.locals.update([(method, buildMethod(method)) for method in methods if method not in module.locals])
-        module.locals.update([(attr, {0:None}) for attr in attributes if attr not in module.locals])
+        module.locals.update([(attr, {0:attributes[attr]}) for attr in attributes if attr not in module.locals])
         module.locals["getRecord"] = buildInstantiator(baseclass, "getRecord", hashIt((xmlfields, attributes, methods)))
 
 
@@ -128,8 +127,8 @@ def buildInstantiator(name, instancerName, fieldsMethodsHashed):
     (xmlfields, attributes, methods) = hashIt(fieldsMethodsHashed, unhash=True)
     instantiatorname = "%s_%s" % (name, instancerName)
     fieldTxt = ["%s%s=%s" % ("        self.", x, xmlValue(xmlfields[x])) for x in xmlfields]
-    attrTxt  = ["%s%s=%s" % ("        self.", x,"None") for x in attributes]
-    methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    attrTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
+    methsTxt = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
     fake = AstroidBuilder(MANAGER).string_build('''
 class %s(object):
     def __init__(self, *args):

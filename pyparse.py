@@ -20,25 +20,19 @@ class PyParse(ast.NodeVisitor):
 
     def __init__(self):
         ast.NodeVisitor.__init__(self)
-        self.attributes = set()
+        self.attributes = {}
         self.methods = set()
         self.classes = set()
         self.names = set()
         self.inheritance = {}
-
-    def generic_visit(self, node):
-        #print type(node).__name__
-        ast.NodeVisitor.generic_visit(self, node)
 
     def visit_Module(self, node):
         self.generic_visit(node)
 
     def visit_Name(self, node):
         self.names.add(node.id)
-        #print "name level", node.id
 
     def visit_ClassDef(self, node):
-        #print "class level", node.name
         self.classes.add(node.name)
         baseid = None
         if len(node.bases):
@@ -52,19 +46,33 @@ class PyParse(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.methods.add(node.name)
-        #print "function level", node.name
 
     def visit_Assign(self, node):
         if isinstance(node.targets[0], ast.Name):
-            self.attributes.add(node.targets[0].id)
+            attrname = node.targets[0].id
+            self.attributes[attrname] = None
+            if isinstance(node.value, ast.Num):
+                self.attributes[attrname] = node.value.n
+            elif isinstance(node.value, ast.Str):
+                self.attributes[attrname] = "'%s'" % node.value.s
+            elif isinstance(node.value, ast.List):
+                self.attributes[attrname] = []
+            elif isinstance(node.value, ast.Dict):
+                self.attributes[attrname] = {}
+            elif isinstance(node.value, ast.Call):
+                if hasattr(node.value.func, "id"):
+                    self.attributes[attrname] = node.value.func.id
+                elif hasattr(node.value.func, "attr"):
+                    self.attributes[attrname] = node.value.func.attr
+            elif isinstance(node.value, ast.Name):
+                self.attributes[attrname] = node.value.id
+            elif isinstance(node.value, ast.Tuple):
+                self.attributes[attrname] = ()
         self.generic_visit(node)
-        #print "assign level", node.targets[0].id
 
     def visit_Call(self, node):
         for key, value in ast.iter_fields(node):
             if key == 'func':
-                #print "call FUNCTION", key, "value id:", value.id
-                #self.visit(value)
                 pass
             elif value:
                 if isinstance(value[0],ast.Str):
@@ -79,7 +87,7 @@ class PyParse(ast.NodeVisitor):
                     if item.s != current:
                         self.inheritance[current] = item.s
                 else:
-                    pass # probably ast.Name instance. __file__
+                    pass
 
 @cache.store
 def parseExecLine(txtLine, mode="single"): #eval

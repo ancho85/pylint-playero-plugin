@@ -158,7 +158,7 @@ def getFullPaths(extraDirs):
 
 @cache.store
 def getClassInfo(modulename, parent=""):
-    attributes, methods, inheritance = set(), set(), {}
+    attributes, methods, inheritance = {}, set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
     paths.append(os.path.join(getEmbeddedPath(), "corepy", "embedded"))
@@ -170,13 +170,13 @@ def getClassInfo(modulename, parent=""):
             for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in searchInList]:
                 fullfilepath = os.path.join(path, filename)
                 parse = parseScript(fullfilepath)
-                attributes.update(x for x in parse.attributes)
+                attributes.update(parse.attributes)
                 methods.update(x for x in parse.methods)
                 inheritance = parse.inheritance
     heir = inheritance.get(modulename, inheritance.get(parent, ''))
     if heir:
         heirattr, heirmeths = getClassInfo(heir)
-        attributes.update(x for x in heirattr)
+        attributes.update(heirattr)
         methods.update(x for x in heirmeths)
     if len(methods) == 0 and len(attributes) == 0:
         from tools import filenameFromPath
@@ -185,7 +185,6 @@ def getClassInfo(modulename, parent=""):
         if foundName != modulename:
             attributes, methods = getClassInfo(foundName)
     methods = sorted(methods)
-    attributes = sorted(attributes)
     return (attributes, methods)
 
 def getModName(modname):
