@@ -226,13 +226,14 @@ class QueryChecker(BaseChecker):
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
         try:
             if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
+                nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
                 instanceName = nodeTarget.expr.name
                 if isnew or instanceName not in self.queryTxt:
                     self.queryTxt[instanceName] = ""
-                if not isinstance(nodeTarget.parent.parent, If):
+                if not isinstance(nodeGrandParent, If):
                     self.queryTxt[instanceName] += str(value)
                 else:
-                    if not isinstance(nodeTarget.parent.parent.parent, If): #First if in if-Elif-Else
+                    if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... ElIf and Else will not be included
                         self.queryTxt[instanceName] += str(value)
         except InferenceError, e:
             logHere("InferenceError setUpQueryTxt", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
