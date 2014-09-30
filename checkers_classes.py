@@ -238,9 +238,7 @@ class QueryChecker(BaseChecker):
             logHere("InferenceError setUpQueryTxt", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
 
     def isSqlAssAttr(self, node):
-        if isinstance(node, AssAttr) and node.attrname == "sql":
-            res = True
-        return res
+        return isinstance(node, AssAttr) and node.attrname == "sql"
 
     def visit_assign(self, node):
         if self.isSqlAssAttr(node.targets[0]):
