@@ -179,8 +179,12 @@ class QueryChecker(BaseChecker):
         gvalue = nodeValue.attrname
         inferedValue = nodeValue.expr.infered()[0]
         res = ""
-        if isinstance(inferedValue, Instance) and isinstance(inferedValue.infered()[0], Class):
-            res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+        if isinstance(inferedValue, Instance) :
+            if isinstance(inferedValue.infered()[0], Class):
+                if inferedValue.pytype() == "Query.Query" and nodeValue.expr.name in self.queryTxt:
+                    res = self.queryTxt[nodeValue.expr.name]
+                else:
+                    res = self.getClassAttr(inferedValue.infered()[0], gvalue)
         return {True:res, False:nodeValue.attrname}[bool(res)]
 
     def getClassAttr(self, nodeValue, attrSeek=""):
