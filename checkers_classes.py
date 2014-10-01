@@ -127,9 +127,10 @@ class QueryChecker(BaseChecker):
         else:
             nvalue = self.getFuncParams(nodeValue)
             if not nvalue:
-                inferedValue = nodeValue.infered()[0]
-                if inferedValue is not YES:
-                    nvalue = self.getAssignedTxt(inferedValue)
+                for inferedValue in nodeValue.infered():
+                    if inferedValue is not YES:
+                        nvalue = self.getAssignedTxt(inferedValue)
+                        if nvalue: break
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
