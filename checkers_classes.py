@@ -155,6 +155,8 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue.right, Getattr):
                 getattrval = self.getAssignedTxt(nodeValue.right)
                 if getattrval: newright = '("%s")' % getattrval
+            elif isinstance(nodeValue.right, Const):
+                newright = self.getAssignedTxt(nodeValue.right)
             toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
             try:
                 qvalue = eval(toeval)
