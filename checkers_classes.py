@@ -54,10 +54,24 @@ class QueryChecker(BaseChecker):
         }
     options = ()
 
-    queryTxt = {}
-    funcParams = {}
+    queryTxt = {} # instanceName : parsedSQLtext
+    funcParams = {} # functionName : argumentName : argumentValue
 
     def setUpFuncParams(self, node):
+        """define the funcParams dict based directly on the function"""
+        if not isinstance(node, Function): return
+        funcname = node.name
+        if funcname not in self.funcParams:
+            self.funcParams[funcname] = {}
+        for funcarg in node.args.args:
+            argname = funcarg.name
+            if argname in ("self", "classobj", "cls"): continue
+            argvalue = self.getNameValue(funcarg)
+            self.funcParams[funcname][argname] = self.getAssignedTxt(argvalue)
+
+    def setUpCallFuncParams(self, node):
+        """ define the funcParams dict based of a function call"""
+        if not isinstance(node, CallFunc): return
         if isinstance(node.func, Getattr):
             funcname = node.func.attrname
         elif isinstance(node.func, Name):
@@ -134,7 +148,7 @@ class QueryChecker(BaseChecker):
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
-        self.setUpFuncParams(nodeValue)
+        self.setUpCallFuncParams(nodeValue)
         cfvalue = ""
         lastchild = nodeValue.func.infered()[0].last_child()
         if isinstance(lastchild, Return):
@@ -251,6 +265,7 @@ class QueryChecker(BaseChecker):
 
     def visit_assign(self, node):
         if self.isSqlAssAttr(node.targets[0]):
+            self.setUpFuncParams(node.scope())
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
