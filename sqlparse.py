@@ -39,7 +39,7 @@ def parseSQL(txt):
                                   (?=INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|
                                      WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|
                                      PROCEDURE|INTO\s+OUTFILE|FOR\s+UPDATE|
-                                     LOCK\s+IN\s+SHARE\s+MODE|USE\s+INDEX)      #Start of positive lookahead assertion. Optional syntax
+                                     LOCK\s+IN\s+SHARE\s+MODE)      #Start of positive lookahead assertion. Optional syntax
                                   )                                             #End of non capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
