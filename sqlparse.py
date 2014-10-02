@@ -35,10 +35,11 @@ def parseSQL(txt):
     from_pattern = re.compile(r"""(?<=FROM\s)                                   #Start of positive lookbehind assertion FROM
                                   (.*?)                                         #Any character zero to infinite times
                                   (?:$|                                         #Start of Non capturing group and Anchor to end of line
+                                  \s+                                           #One or more spaces before Optional syntax
                                   (?=INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|
                                      WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|
                                      PROCEDURE|INTO\s+OUTFILE|FOR\s+UPDATE|
-                                     LOCK\s+IN\s+SHARE\s+MODE)                  #Start of positive lookahead assertion NON-Optional syntax
+                                     LOCK\s+IN\s+SHARE\s+MODE|USE\s+INDEX)      #Start of positive lookahead assertion. Optional syntax
                                   )                                             #End of non capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
