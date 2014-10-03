@@ -150,9 +150,17 @@ class QueryChecker(BaseChecker):
     def getCallFuncValue(self, nodeValue):
         self.setUpCallFuncParams(nodeValue)
         cfvalue = ""
-        lastchild = nodeValue.func.infered()[0].last_child()
-        if isinstance(lastchild, Return):
-            cfvalue = self.getAssignedTxt(lastchild.value)
+        try:
+            lastchild = nodeValue.func.infered()[0].last_child()
+        except Exception, e:
+            if nodeValue.func.attrname == "name":
+                if isinstance(nodeValue.func.expr, Name):
+                    parent = nodeValue.func.scope().parent
+                    if isinstance(parent, Class):
+                        cfvalue = parent.name
+        else:
+            if isinstance(lastchild, Return):
+                cfvalue = self.getAssignedTxt(lastchild.value)
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
