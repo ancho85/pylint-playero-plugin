@@ -102,3 +102,14 @@ def xmlValue(xtype):
             "blob": "''"
             }[str(xtype).lower()]
 
+def escapeAnyToString(text):
+    integers = tuple((x, "0%s") for x in ['%d', '%i', '%o', '%u', '%x', '%X'])
+    decimals = tuple((x, "0%s") for x in ['%e', '%E', '%f', '%F', '%g', '%G'])
+    strings  = tuple((x, "%s") for x in ['%c', '%r'])
+    for k, v in integers:
+        text = text.replace(k, v)
+    for k, v in decimals:
+        text = text.replace(k, v)
+    for k, v in strings:
+        text = text.replace(k, v)
+    return text

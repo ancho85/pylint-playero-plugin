@@ -1,6 +1,6 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
-from tools import logHere
+from tools import logHere, escapeAnyToString
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""
@@ -158,7 +158,7 @@ class QueryChecker(BaseChecker):
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
         if nodeValue.op == "%":
-            newleft = '"%s "' % qvalue.replace("%i","0%s").replace("%d", "0%s").replace("%f", "0%s")
+            newleft = '"%s "' % escapeAnyToString(qvalue)
             newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
             if isinstance(nodeValue.right, Tuple):
                 newright = self.getTupleValues(nodeValue.right)
