@@ -158,8 +158,8 @@ class QueryChecker(BaseChecker):
     def getBinOpValue(self, nodeValue):
         qvalue = self.getAssignedTxt(nodeValue.left)
         if nodeValue.op == "%":
-            newleft = '"%s "' % qvalue.replace("%i","%s").replace("%d", "%s")
-            newright = '("%s")' % ('","' * (qvalue.count("%s") - 1))
+            newleft = '"%s "' % qvalue.replace("%i","0%s").replace("%d", "0%s").replace("%f", "0%s")
+            newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
             if isinstance(nodeValue.right, Tuple):
                 newright = self.getTupleValues(nodeValue.right)
             elif isinstance(nodeValue.right, CallFunc):
