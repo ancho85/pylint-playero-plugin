@@ -145,7 +145,12 @@ class QueryChecker(BaseChecker):
                     if inferedValue is not YES:
                         nvalue = self.getAssignedTxt(inferedValue)
                         if nvalue: break
-                if not nvalue: nvalue = "TRUE"
+                if not nvalue:
+                    if nodeValue.name in nodeValue.scope().keys():
+                        for elm in nodeValue.scope().body:
+                            assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                            nvalue = self.getAssignedTxt(assValue)
+                            if nvalue: break
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
