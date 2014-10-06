@@ -90,7 +90,7 @@ def xmlValue(xtype):
     from datetime import datetime
     return {"string": "''",
             "boolean": True,
-            "integer": 666,
+            "integer": 0,
             "value": 666.0,
             "memo": "''",
             "set": "''",
