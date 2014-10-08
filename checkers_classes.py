@@ -118,7 +118,7 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.target, AssName):
                 if nodeName and nodeName == nodeValue.target.name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
-        elif isinstance(nodeValue, If):
+        """elif isinstance(nodeValue, If):
             lookBody = True
             if isinstance(nodeValue.test, Compare):
                 leftval = self.getAssignedTxt(nodeValue.test.left)
@@ -132,7 +132,7 @@ class QueryChecker(BaseChecker):
             if lookBody:
                 for elm in nodeValue.body:
                     assValue = self.getAssNameValue(elm, nodeName)
-                    anvalue += self.getAssignedTxt(assValue)
+                    anvalue += self.getAssignedTxt(assValue)"""
         return anvalue
 
     def getNameValue(self, nodeValue):
