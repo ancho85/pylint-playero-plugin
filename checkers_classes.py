@@ -125,7 +125,10 @@ class QueryChecker(BaseChecker):
                 op = nodeValue.test.ops[0] #a list with 1 tuple
                 rightval = self.getAssignedTxt(op[1])
                 evaluation = "'%s' %s '%s'" % (leftval, op[0], rightval)
-                lookBody = eval(evaluation)
+                try:
+                    lookBody = eval(evaluation)
+                except Exception, e:
+                    logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
             if lookBody:
                 for elm in nodeValue.body:
                     assValue = self.getAssNameValue(elm, nodeName)
