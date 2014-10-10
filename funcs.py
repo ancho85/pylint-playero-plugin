@@ -171,6 +171,7 @@ def getClassInfo(modulename, parent=""):
                 fullfilepath = os.path.join(path, filename)
                 parse = parseScript(fullfilepath)
                 attributes.update(parse.attributes)
+                attributes.update(parse.defaults)
                 methods.update(x for x in parse.methods)
                 inheritance = parse.inheritance
     heir = inheritance.get(modulename, inheritance.get(parent, ''))
@@ -250,7 +251,7 @@ if __name__ == "__main__":
             print at
         for mt in meth:
             print mt"""
-    recPaths, repPaths, rouPaths = buildPaths()
+    recPaths, repPaths, rouPaths, corePaths = buildPaths()
     for mod in sorted(recPaths):
         print mod
         for level in recPaths[mod]:

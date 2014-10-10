@@ -25,6 +25,7 @@ class PyParse(ast.NodeVisitor):
         self.classes = set()
         self.names = set()
         self.inheritance = {}
+        self.defaults = {}
 
     def visit_Name(self, node):
         self.names.add(node.id)
@@ -43,11 +44,27 @@ class PyParse(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.methods.add(node.name)
+        if node.name == "defaults":
+            for elm in node.body:
+                if isinstance(elm, ast.Assign):
+                    target = elm.targets[0]
+                    if isinstance(target, ast.Name):
+                        instname = self.getAstValue(target)
+                        if self.getAstValue(elm.value) == "getRecord":
+                            self.defaults[instname] = {}
+                    elif isinstance(target, ast.Attribute):
+                        instname = self.getAstValue(target.value)
+                        if instname in self.defaults:
+                            self.defaults[instname][target.attr] = self.getAstValue(elm.value)
+            new = {}
+            for insts in self.defaults: #each instantiator name have a dict with attributeName/value pair
+                new.update(self.defaults[insts])
+            self.defaults = new
 
     def visit_Assign(self, node):
         if isinstance(node.targets[0], ast.Name):
             attrname = node.targets[0].id
-            self.attributes[attrname] = self.getAstValue(node)
+            self.attributes[attrname] = self.getAstValue(node.value)
         self.generic_visit(node)
 
     def visit_Call(self, node):
@@ -71,22 +88,22 @@ class PyParse(ast.NodeVisitor):
 
     def getAstValue(self, node):
         res = None
-        if isinstance(node.value, ast.Num):
-            res = node.value.n
-        elif isinstance(node.value, ast.Str):
-            res = "'%s'" % node.value.s
-        elif isinstance(node.value, ast.List):
+        if isinstance(node, ast.Num):
+            res = node.n
+        elif isinstance(node, ast.Str):
+            res = "'%s'" % node.s
+        elif isinstance(node, ast.List):
             res = []
-        elif isinstance(node.value, ast.Dict):
+        elif isinstance(node, ast.Dict):
             res = {}
-        elif isinstance(node.value, ast.Call):
-            if hasattr(node.value.func, "id"):
-                res = node.value.func.id
-            elif hasattr(node.value.func, "attr"):
-                res = node.value.func.attr
-        elif isinstance(node.value, ast.Name):
-            res = node.value.id
-        elif isinstance(node.value, ast.Tuple):
+        elif isinstance(node, ast.Call):
+            if hasattr(node.func, "id"):
+                res = node.func.id
+            elif hasattr(node.func, "attr"):
+                res = node.func.attr
+        elif isinstance(node, ast.Name):
+            res = node.id
+        elif isinstance(node, ast.Tuple):
             res = ()
         return res
 
