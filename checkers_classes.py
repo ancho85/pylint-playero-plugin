@@ -158,6 +158,7 @@ class QueryChecker(BaseChecker):
                 if not nvalue:
                     if nodeValue.name in nodeValue.scope().keys():
                         for elm in nodeValue.scope().body:
+                            if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
                             assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
                             nvalue = self.getAssignedTxt(assValue)
                             if nvalue: break
