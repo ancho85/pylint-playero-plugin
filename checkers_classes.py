@@ -118,21 +118,28 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.target, AssName):
                 if nodeName and nodeName == nodeValue.target.name:
                     anvalue = self.getAssignedTxt(nodeValue.value)
-        """elif isinstance(nodeValue, If):
-            lookBody = True
-            if isinstance(nodeValue.test, Compare):
-                leftval = self.getAssignedTxt(nodeValue.test.left)
-                op = nodeValue.test.ops[0] #a list with 1 tuple
-                rightval = self.getAssignedTxt(op[1])
-                evaluation = "'%s' %s '%s'" % (leftval, op[0], rightval)
-                try:
-                    lookBody = eval(evaluation)
-                except Exception, e:
-                    logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-            if lookBody:
-                for elm in nodeValue.body:
-                    assValue = self.getAssNameValue(elm, nodeName)
-                    anvalue += self.getAssignedTxt(assValue)"""
+        elif isinstance(nodeValue, If):
+            if nodeValue.test.as_string().find(nodeName) > -1:
+                lookBody = True
+                if isinstance(nodeValue.test, Compare):
+                    if nodeName not in nodeValue.parent.scope().keys():
+                        leftval = self.getAssignedTxt(nodeValue.test.left)
+                        op = nodeValue.test.ops[0] #a list with 1 tuple
+                        rightval = self.getAssignedTxt(op[1])
+                        evaluation = "'%s' %s '%s'" % (leftval, op[0], rightval)
+                        try:
+                            lookBody = eval(evaluation)
+                        except Exception, e:
+                            logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                    else:
+                        anvalue = self.getFuncParams(nodeValue.parent)
+                        if anvalue: lookBody = False
+                if lookBody:
+                    for elm in nodeValue.scope().body:
+                        if isinstance(elm, If): continue #prevents infinite loop
+                        assValue = self.getAssNameValue(elm, nodeName)
+                        anvalue += self.getAssignedTxt(assValue)
+                if not anvalue: anvalue = nodeName
         return anvalue
 
     def getNameValue(self, nodeValue):
