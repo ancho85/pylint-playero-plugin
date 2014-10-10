@@ -26,9 +26,6 @@ class PyParse(ast.NodeVisitor):
         self.names = set()
         self.inheritance = {}
 
-    def visit_Module(self, node):
-        self.generic_visit(node)
-
     def visit_Name(self, node):
         self.names.add(node.id)
 
@@ -50,24 +47,7 @@ class PyParse(ast.NodeVisitor):
     def visit_Assign(self, node):
         if isinstance(node.targets[0], ast.Name):
             attrname = node.targets[0].id
-            self.attributes[attrname] = None
-            if isinstance(node.value, ast.Num):
-                self.attributes[attrname] = node.value.n
-            elif isinstance(node.value, ast.Str):
-                self.attributes[attrname] = "'%s'" % node.value.s
-            elif isinstance(node.value, ast.List):
-                self.attributes[attrname] = []
-            elif isinstance(node.value, ast.Dict):
-                self.attributes[attrname] = {}
-            elif isinstance(node.value, ast.Call):
-                if hasattr(node.value.func, "id"):
-                    self.attributes[attrname] = node.value.func.id
-                elif hasattr(node.value.func, "attr"):
-                    self.attributes[attrname] = node.value.func.attr
-            elif isinstance(node.value, ast.Name):
-                self.attributes[attrname] = node.value.id
-            elif isinstance(node.value, ast.Tuple):
-                self.attributes[attrname] = ()
+            self.attributes[attrname] = self.getAstValue(node)
         self.generic_visit(node)
 
     def visit_Call(self, node):
@@ -88,6 +68,27 @@ class PyParse(ast.NodeVisitor):
                         self.inheritance[current] = item.s
                 else:
                     pass
+
+    def getAstValue(self, node):
+        res = None
+        if isinstance(node.value, ast.Num):
+            res = node.value.n
+        elif isinstance(node.value, ast.Str):
+            res = "'%s'" % node.value.s
+        elif isinstance(node.value, ast.List):
+            res = []
+        elif isinstance(node.value, ast.Dict):
+            res = {}
+        elif isinstance(node.value, ast.Call):
+            if hasattr(node.value.func, "id"):
+                res = node.value.func.id
+            elif hasattr(node.value.func, "attr"):
+                res = node.value.func.attr
+        elif isinstance(node.value, ast.Name):
+            res = node.value.id
+        elif isinstance(node.value, ast.Tuple):
+            res = ()
+        return res
 
 @cache.store
 def parseExecLine(txtLine, mode="single"): #eval

@@ -230,12 +230,11 @@ class QueryChecker(BaseChecker):
 
     def getClassAttr(self, nodeValue, attrSeek=""):
         cvalue = ""
-        for func in [funcdef for funcdef in ("__init__", "defaults") if funcdef in nodeValue]:
-            for attr in nodeValue[func].body:
-                if isinstance(attr, Assign):
-                    if isinstance(attr.targets[0], AssAttr):
-                        if attr.targets[0].attrname == attrSeek:
-                            cvalue = self.getAssignedTxt(attr.value)
+        for attr in nodeValue["__init__"].body:
+            if isinstance(attr, Assign):
+                if isinstance(attr.targets[0], AssAttr):
+                    if attr.targets[0].attrname == attrSeek:
+                        cvalue = self.getAssignedTxt(attr.value)
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
