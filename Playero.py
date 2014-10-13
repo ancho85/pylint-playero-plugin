@@ -36,9 +36,7 @@ def buildRecordModule(module):
     xmlfields = records.get(modname, {})
     for fields in xmlfields:
         if records[modname][fields] == "detail":
-            detailname = details[modname][fields]
-            detrecords = getRecordsInfo(detailname, RECORD)[0]
-            module.locals[fields] = buildIterator(modname, fields, detrecords[detailname])
+            module.locals[fields] = buildIterator(modname, fields)
         else:
             module.locals[fields] = records[modname][fields]
     attributes, methods = getClassInfo(modname, getModName(module.parent.name))
@@ -99,44 +97,51 @@ def baseClassBuilder(module, baseclass):
         module.locals["getRecord"] = buildInstantiator(baseclass, "getRecord", hashIt((xmlfields, attributes, methods)))
 
 
-def buildIterator(name, detailfield, fields):
-    itername = "%s_%s" % (name, detailfield)
-    fieldTxt = ["%s%s%s" % ("        self.", x," = None") for x in fields]
-    methods = list(getClassInfo("Record", "Embedded_Record")[1])
-    methsTxt = ["%s%s%s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
-    fake = AstroidBuilder(MANAGER).string_build('''
-class %s(object):
-    def __iter__(self):
-        return self
+def buildIterator(modname, detailfield):
+    fake = AstroidBuilder(MANAGER).string_build(getIteratorString(modname, detailfield))
+    return fake.locals[detailfield]
 
+@cache.store
+def getIteratorString(modname, detailfield):
+    details = getRecordsInfo(modname, RECORD)[1]
+    detailname = details[modname][detailfield]
+    detrecords = getRecordsInfo(detailname, RECORD)[0]
+    fieldTxt  = ["%s%s=%s" % ("        self.", x, xmlValue(detrecords[detailname][x])) for x in detrecords[detailname]]
+    methsTxt = []
+    txt = '''
+class %s(object):
+    def __iter__(self): return self
     def count(): pass
     def remove(int): pass
     def insert(int, *args): pass
     def append(*args): pass
     def clear(*args): pass
-
     def __init__(self, *args):
         self.__fail__ = None
 %s
 %s
-''' % (itername, "\n".join(fieldTxt), "\n".join(methsTxt)))
-    return fake.locals[itername]
+''' % (detailfield, "\n".join(fieldTxt), "\n".join(methsTxt))
+    return txt
 
 @cache.store
 def buildInstantiator(name, instancerName, fieldsMethodsHashed):
     (xmlfields, attributes, methods) = hashIt(fieldsMethodsHashed, unhash=True)
     instantiatorname = "%s_%s" % (name, instancerName)
-    fieldTxt = ["%s%s=%s" % ("        self.", x, xmlValue(xmlfields[x])) for x in xmlfields]
-    attrTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
-    methsTxt = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
-    fake = AstroidBuilder(MANAGER).string_build('''
+    fieldTxt  = ["%s%s=%s" % ("        self.", x, xmlValue(xmlfields[x])) for x in xmlfields if xmlfields[x] != "detail"]
+    fieldTxt += ["%s%s=%s()" % ("        self.", x, x) for x in xmlfields if xmlfields[x] == "detail"]
+    itersTxt  = ["%s" % getIteratorString(name, x) for x in xmlfields if xmlfields[x] == "detail"]
+    attrsTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
+    methsTxt  = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    newClass  = '''
 class %s(object):
     def __init__(self, *args):
         self.__fail__ = None
 %s
 %s
 %s
-''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrTxt), "\n".join(methsTxt)))
+%s
+''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrsTxt), "\n".join(methsTxt), "\n".join(itersTxt))
+    fake = AstroidBuilder(MANAGER).string_build(newClass)
     return fake.locals[instantiatorname]
 
 @cache.store
