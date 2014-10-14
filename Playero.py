@@ -107,7 +107,7 @@ def getIteratorString(modname, detailfield):
     detailname = details[modname][detailfield]
     detrecords = getRecordsInfo(detailname, RECORD)[0]
     fieldTxt  = ["%s%s=%s" % ("        self.", x, xmlValue(detrecords[detailname][x])) for x in detrecords[detailname]]
-    methods = getClassInfo(modname, RECORD)[1]
+    methods = getClassInfo(modname, parent="Record")[1]
     methsTxt  = ["    def %s (self, *args, **kwargs): pass" % (x) for x in methods if x != "__init__"]
     txt = '''
 class %s(object):
