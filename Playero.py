@@ -23,6 +23,8 @@ def classes_transform(module):
         elif pathType == ROUTINE:
             found = buildRoutineModule(module)
         if not found: notFound.add(modname)
+    elif modname.endswith("Doc"):
+        found = buildDocumentModule(module)
     elif modname in allCoreClasses:
         baseClassBuilder(module, modname)
     else:
@@ -59,16 +61,22 @@ def buildReportModule(module):
 def buildRoutineModule(module):
     return genericBuilder(module, "Routine")
 
+def buildDocumentModule(module):
+    return genericBuilder(module, "Document")
+
 def genericBuilder(module, buildIdx):
     res = False
     buildType = {
-                "Report": [REPORT, ".reports."],
-                "Routine": [ROUTINE,".routines."]
+                "Document": [RECORD, ".documents."],
+                "Report"  : [REPORT, ".reports."],
+                "Routine" : [ROUTINE,".routines."]
     }
     if buildIdx not in buildType: return res
     ext = buildType[buildIdx][0]
     cls = buildType[buildIdx][1]
     modname = getModName(module.name)
+    if buildIdx == "Document":
+        modname = modname.split("Doc")[0]
     classtype = module.basenames[0]
     if classtype != buildIdx:
         rootname =  module.bases[0].root().name
