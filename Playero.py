@@ -43,16 +43,11 @@ def buildRecordModule(module):
             module.locals[fields] = records[modname][fields]
     attributes, methods = getClassInfo(modname, getModName(module.parent.name))
 
-    for insBuilder in ("bring", "getMasterRecord", "load"):
+    for insBuilder in ("bring", "getMasterRecord", "load", "getRecord"):
         module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((xmlfields, attributes, methods)))
 
     module.locals.update([(attrs, {0:attributes[attrs]}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
     module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
-
-    if module.name.endswith("Window"): #Window Class
-        methods += list(getClassInfo("Window", "Embedded_Window")[1])
-        module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
-        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((xmlfields, attributes, methods)))
     return True
 
 def buildReportModule(module):
@@ -149,6 +144,7 @@ class %s(object):
 %s
 %s
 ''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrsTxt), "\n".join(methsTxt), "\n".join(itersTxt))
+    #logHere(newClass, filename="%s.log" % (instantiatorname))
     fake = AstroidBuilder(MANAGER).string_build(newClass)
     return fake.locals[instantiatorname]
 
