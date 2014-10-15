@@ -87,7 +87,6 @@ def embeddedImport(modulename):
     return imp.load_source(modulename, os.path.join(HERE, "corepy", "embedded", "%s.py" % modulename))
 
 def xmlValue(xtype):
-    from datetime import datetime
     return {"string": "''",
             "boolean": True,
             "integer": 0,
@@ -96,8 +95,8 @@ def xmlValue(xtype):
             "set": "''",
             "detail": "''",
             "none": None,
-            "date": "'%s'" % datetime.now().date(),
-            "time": "'%s'" % datetime.now().time().strftime("%H:%M:%S"),
+            "date": "date(2000, 01, 01)",
+            "time": "time(1, 0, 0)",
             "internalid": 111,
             "blob": "''"
             }[str(xtype).lower()]

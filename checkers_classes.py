@@ -170,11 +170,17 @@ class QueryChecker(BaseChecker):
         try:
             lastchild = nodeValue.func.infered()[0].last_child()
         except Exception, e:
-            if nodeValue.func.attrname == "name":
-                if isinstance(nodeValue.func.expr, Name):
-                    parent = nodeValue.func.scope().parent
-                    if isinstance(parent, Class):
-                        cfvalue = parent.name
+            if isinstance(nodeValue.func, Getattr):
+                if nodeValue.func.attrname == "name":
+                    if isinstance(nodeValue.func.expr, Name):
+                        parent = nodeValue.func.scope().parent
+                        if isinstance(parent, Class):
+                            cfvalue = parent.name
+            elif isinstance(nodeValue.func, Name):
+                if nodeValue.func.name == "date":
+                    cfvalue = "2000-01-01"
+                elif nodeValue.func.name == "time":
+                    cfvalue = "00:00:00"
         else:
             if isinstance(lastchild, Return):
                 cfvalue = self.getAssignedTxt(lastchild.value)
