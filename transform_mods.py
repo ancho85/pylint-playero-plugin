@@ -90,7 +90,5 @@ def %s(classname, superclassname, filename):
 %s
     return %s()
 ''' % (name, classname, "\n".join(attrsTxt),"\n".join(methsTxt), classname)
-    from funcs import logHere
-    logHere(txt, filename="%s_%s.log" % (classname, parent))
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals[name]
