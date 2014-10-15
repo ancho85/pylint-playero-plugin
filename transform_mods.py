@@ -78,13 +78,19 @@ def buildNewWindowModule(module):
 
 
 def classBuilder(name, classname, parent=""):
-    methods = getClassInfo(classname, parent)[1]
-    methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods]
+    attributes, methods = getClassInfo(classname, parent)
+    methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    attrsTxt = ["%s%s=%s" % ("            self.", x, attributes[x]) for x in sorted(attributes)]
     txt = '''
 def %s(classname, superclassname, filename):
     class %s(object):
+        def __init__(self):
+            self.__failsafe__ = None
+%s
 %s
     return %s()
-''' % (name, classname, "\n".join(methsTxt), classname)
+''' % (name, classname, "\n".join(attrsTxt),"\n".join(methsTxt), classname)
+    from funcs import logHere
+    logHere(txt, filename="%s_%s.log" % (classname, parent))
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals[name]

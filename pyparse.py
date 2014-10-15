@@ -45,26 +45,46 @@ class PyParse(ast.NodeVisitor):
     def visit_FunctionDef(self, node):
         self.methods.add(node.name)
         if node.name == "defaults":
-            for elm in node.body:
-                if isinstance(elm, ast.Assign):
-                    target = elm.targets[0]
-                    if isinstance(target, ast.Name):
-                        instname = self.getAstValue(target)
-                        if self.getAstValue(elm.value) == "getRecord":
-                            self.defaults[instname] = {}
-                    elif isinstance(target, ast.Attribute):
-                        instname = self.getAstValue(target.value)
-                        if instname in self.defaults:
-                            self.defaults[instname][target.attr] = self.getAstValue(elm.value)
-            new = {}
-            for insts in self.defaults: #each instantiator name have a dict with attributeName/value pair
-                new.update(self.defaults[insts])
-            self.defaults = new
+            self.funcDefDefaults(node)
+        elif node.name in ("__init__", "run"):
+            self.funcDefStarters(node)
+
+    def funcDefDefaults(self, node):
+        for elm in node.body:
+            if isinstance(elm, ast.Assign):
+                target = elm.targets[0]
+                if isinstance(target, ast.Name):
+                    instname = self.getAstValue(target)
+                    if self.getAstValue(elm.value) == "getRecord":
+                        self.defaults[instname] = {}
+                elif isinstance(target, ast.Attribute):
+                    instname = self.getAstValue(target.value)
+                    if instname in self.defaults:
+                        self.defaults[instname][target.attr] = self.getAstValue(elm.value)
+        new = {}
+        for insts in self.defaults: #each instantiator name have a dict with attributeName/value pair
+            new.update(self.defaults[insts])
+        self.defaults = new
+
+    def funcDefStarters(self, node):
+        for elm in node.body:
+            if isinstance(elm, ast.Assign):
+                target = elm.targets[0]
+                if isinstance(target, ast.Attribute):
+                    if self.getAstValue(target.value) == "self":
+                        self.attributes[target.attr] = self.getAstValue(elm.value)
 
     def visit_Assign(self, node):
-        if isinstance(node.targets[0], ast.Name):
-            attrname = node.targets[0].id
+        target = node.targets[0]
+        if isinstance(target, ast.Name):
+            attrname = target.id
             self.attributes[attrname] = self.getAstValue(node.value)
+        elif isinstance(target, ast.Attribute):
+            self.attributes[target.attr] = self.getAstValue(node.value)
+        elif isinstance(target, ast.Tuple):
+            self.attributes.update((self.getAstValue(x), self.getAstValue(node.value)) for x in target.elts)
+        elif isinstance(target, ast.Subscript):
+            self.attributes[self.getAstValue(target.value)] = self.getAstValue(node.value)
         self.generic_visit(node)
 
     def visit_Call(self, node):
@@ -72,7 +92,7 @@ class PyParse(ast.NodeVisitor):
             if key == 'func':
                 pass
             elif value:
-                if isinstance(value[0],ast.Str):
+                if isinstance(value[0], ast.Str):
                     currentClass = value[0].s
                     self.inheritance[currentClass] = ""
                     self.subnodeVisit(value, currentClass)
@@ -105,6 +125,8 @@ class PyParse(ast.NodeVisitor):
             res = node.id
         elif isinstance(node, ast.Tuple):
             res = ()
+            for elm in node.elts:
+                res = self.getAstValue(elm)
         return res
 
 @cache.store
