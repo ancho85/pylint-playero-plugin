@@ -322,8 +322,10 @@ class QueryChecker(BaseChecker):
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
                 for x in node.infered():
+                    xrootvalues = x.root().values()
+                    if xrootvalues is YES: continue
                     try:
-                        main = x.root().values()[0].frame()
+                        main = xrootvalues[0].frame()
                         if main.name == "Query":
                             name = node.func.expr.name
                             if name in self.queryTxt:
