@@ -135,17 +135,28 @@ class QueryChecker(BaseChecker):
                         anvalue = self.getFuncParams(nodeValue.parent)
                         if anvalue: lookBody = False
                 if lookBody:
-                    for elm in nodeValue.scope().body:
-                        if isinstance(elm, If): continue #prevents infinite loop
-                        assValue = self.getAssNameValue(elm, nodeName)
-                        anvalue += self.getAssignedTxt(assValue)
+                    anvalue = self.getIfValues(nodeValue, nodeName)
                 if not anvalue: anvalue = nodeName
+            else:
+                anvalue = self.getIfValues(nodeValue, nodeName)
         return anvalue
+
+    def getIfValues(self, nodeValue, nodeName=""):
+        ivalue = ""
+        for elm in nodeValue.body:
+            assValue = self.getAssNameValue(elm, nodeName)
+            ivalue += self.getAssignedTxt(assValue)
+        if not ivalue:
+            for elm2 in nodeValue.orelse:
+                assValue = self.getAssNameValue(elm2, nodeName)
+                ivalue += self.getAssignedTxt(assValue)
+        return ivalue
 
     def getNameValue(self, nodeValue):
         nvalue = ""
         if isinstance(nodeValue.statement(), Return):
             for elm in nodeValue.parent.scope().body:
+                if nodeValue.statement() == elm: continue #Returns are ignored
                 assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
                 nvalue += self.getAssignedTxt(assValue)
         else:
