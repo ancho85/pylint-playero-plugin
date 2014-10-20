@@ -1,6 +1,7 @@
 import ast
 import os
 from cache import cache
+from tools import logHere
 
 @cache.store
 def parseScript(filefullpath):
@@ -79,12 +80,12 @@ class PyParse(ast.NodeVisitor):
         if isinstance(target, ast.Name):
             attrname = target.id
             self.attributes[attrname] = self.getAstValue(node.value)
-        elif isinstance(target, ast.Attribute):
-            self.attributes[target.attr] = self.getAstValue(node.value)
         elif isinstance(target, ast.Tuple):
             self.attributes.update((self.getAstValue(x), self.getAstValue(node.value)) for x in target.elts)
         elif isinstance(target, ast.Subscript):
             self.attributes[self.getAstValue(target.value)] = self.getAstValue(node.value)
+        #elif isinstance(target, ast.Attribute):
+        #    self.attributes[target.attr] = self.getAstValue(node.value)
         self.generic_visit(node)
 
     def visit_Call(self, node):
@@ -127,6 +128,8 @@ class PyParse(ast.NodeVisitor):
             res = ()
             for elm in node.elts:
                 res = self.getAstValue(elm)
+        elif isinstance(node, ast.Attribute):
+            res = self.getAstValue(node.value)
         return res
 
 @cache.store
