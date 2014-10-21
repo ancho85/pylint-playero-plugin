@@ -162,10 +162,16 @@ class QueryChecker(BaseChecker):
         else:
             nvalue = self.getFuncParams(nodeValue)
             if not nvalue:
-                for inferedValue in nodeValue.infered():
-                    if inferedValue is not YES:
-                        nvalue = self.getAssignedTxt(inferedValue)
-                        if nvalue: break
+
+                try:
+                    inferedValue = nodeValue.infered()
+                except InferenceError:
+                    pass
+                else:
+                    for inferedValue in inferedValue:
+                        if inferedValue is not YES:
+                            nvalue = self.getAssignedTxt(inferedValue)
+                            if nvalue: break
                 if not nvalue:
                     if nodeValue.name in nodeValue.scope().keys():
                         for elm in nodeValue.scope().body:
@@ -252,8 +258,9 @@ class QueryChecker(BaseChecker):
             for attr in nodeValue["__init__"].body:
                 if isinstance(attr, Assign):
                     if isinstance(attr.targets[0], AssAttr):
-                        if attr.targets[0].attrname == attrSeek:
+                        if attr.targets[0].attrname == attrSeek or attrSeek == "returnFirst":
                             cvalue = self.getAssignedTxt(attr.value)
+                            if cvalue and attrSeek == "returnFirst": break
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
@@ -275,7 +282,7 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, Name):
                 qvalue = self.getNameValue(nodeValue)
             elif isinstance(nodeValue, Class):
-                qvalue = self.getClassAttr(nodeValue)
+                qvalue = self.getClassAttr(nodeValue, "returnFirst")
             else:
                 inferedValue = nodeValue.infered()
                 if inferedValue is YES:
