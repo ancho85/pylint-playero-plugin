@@ -248,19 +248,21 @@ class QueryChecker(BaseChecker):
 
     def getClassAttr(self, nodeValue, attrSeek=""):
         cvalue = ""
-        for attr in nodeValue["__init__"].body:
-            if isinstance(attr, Assign):
-                if isinstance(attr.targets[0], AssAttr):
-                    if attr.targets[0].attrname == attrSeek:
-                        cvalue = self.getAssignedTxt(attr.value)
+        if "__init__" in nodeValue:
+            for attr in nodeValue["__init__"].body:
+                if isinstance(attr, Assign):
+                    if isinstance(attr.targets[0], AssAttr):
+                        if attr.targets[0].attrname == attrSeek:
+                            cvalue = self.getAssignedTxt(attr.value)
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
+        if type(nodeValue) in (type(None), int, str, float):
+            return str(nodeValue)
         qvalue = ""
         try:
-            if type(nodeValue) in (type(None), int, str, float):
-                qvalue = str(nodeValue)
-            elif isinstance(nodeValue, Const):
+            fname = self.getNodeFileName(nodeValue)
+            if isinstance(nodeValue, Const):
                 qvalue = str(nodeValue.value)
             elif isinstance(nodeValue, BinOp):
                 qvalue = self.getBinOpValue(nodeValue)
@@ -283,9 +285,9 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("InferenceError getAssignedTxt", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            logHere("InferenceError getAssignedTxt", e, filename="%s.log" % fname)
         except Exception, e:
-            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:100], filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -305,6 +307,12 @@ class QueryChecker(BaseChecker):
 
     def isSqlAssAttr(self, node):
         return isinstance(node, AssAttr) and node.attrname == "sql"
+
+    def getNodeFileName(self, node):
+        parsedFileName = filenameFromPath(node.root().file)
+        if not parsedFileName or parsedFileName == "<?>":
+            parsedFileName = "notFound"
+        return parsedFileName
 
     def visit_assign(self, node):
         if self.isSqlAssAttr(node.targets[0]):
