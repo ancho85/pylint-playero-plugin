@@ -321,7 +321,11 @@ class QueryChecker(BaseChecker):
     def visit_callfunc(self, node):
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
-                for x in node.infered():
+                inferedNode = node.infered()
+            except InferenceError, e:
+                pass
+            else:
+                for x in inferedNode:
                     xrootvalues = x.root().values()
                     if xrootvalues is YES: continue
                     try:
@@ -336,5 +340,3 @@ class QueryChecker(BaseChecker):
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
-            except InferenceError, e:
-                logHere("InferenceError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
