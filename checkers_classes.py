@@ -264,11 +264,11 @@ class QueryChecker(BaseChecker):
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
+        fname = self.getNodeFileName(nodeValue)
         if type(nodeValue) in (type(None), int, str, float):
             return str(nodeValue)
         qvalue = ""
         try:
-            fname = self.getNodeFileName(nodeValue)
             if isinstance(nodeValue, Const):
                 qvalue = str(nodeValue.value)
             elif isinstance(nodeValue, BinOp):
@@ -316,9 +316,11 @@ class QueryChecker(BaseChecker):
         return isinstance(node, AssAttr) and node.attrname == "sql"
 
     def getNodeFileName(self, node):
-        parsedFileName = filenameFromPath(node.root().file)
-        if not parsedFileName or parsedFileName == "<?>":
-            parsedFileName = "notFound"
+        parsedFileName = None
+        if hasattr(node, "root"):
+            parsedFileName = filenameFromPath(node.root().file)
+            if not parsedFileName or parsedFileName == "<?>":
+                parsedFileName = "notFound"
         return parsedFileName
 
     def visit_assign(self, node):

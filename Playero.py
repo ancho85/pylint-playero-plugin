@@ -144,7 +144,6 @@ class %s(object):
 %s
 %s
 ''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrsTxt), "\n".join(methsTxt), "\n".join(itersTxt))
-    #logHere(newClass, filename="%s.log" % (instantiatorname))
     fake = AstroidBuilder(MANAGER).string_build(newClass)
     return fake.locals[instantiatorname]
 
