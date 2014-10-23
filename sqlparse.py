@@ -21,9 +21,6 @@ def validateSQL(txt):
         res = apiValidateSQL(txt, config)
     else:
         res = cmdValidateSQL(txt, config)
-    #if res:
-    logHere(txt)
-    logHere(res)
     return res
 
 def parseSQL(txt):
