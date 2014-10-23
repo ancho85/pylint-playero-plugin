@@ -21,6 +21,9 @@ def validateSQL(txt):
         res = apiValidateSQL(txt, config)
     else:
         res = cmdValidateSQL(txt, config)
+    #if res:
+    logHere(txt)
+    logHere(res)
     return res
 
 def parseSQL(txt):
@@ -32,14 +35,25 @@ def parseSQL(txt):
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
     show_pattern = re.compile(r"^SHOW.*STATUS", re.I) #Commands like SHOW INNODB STATUS or SHOW TABLE STATUS
-    from_pattern = re.compile(r"""(?<=FROM\s)                                   #Start of positive lookbehind assertion FROM
+    from_pattern = re.compile(ur"""(?<=FROM\s)                                  #Start of positive lookbehind assertion FROM
                                   (.*?)                                         #Any character zero to infinite times
-                                  (?:$|                                         #Start of Non capturing group and Anchor to end of line
-                                  \s+                                           #One or more spaces before Optional syntax
-                                  (?=INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|
-                                     WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|
-                                     PROCEDURE|INTO\s+OUTFILE|FOR\s+UPDATE|
-                                     LOCK\s+IN\s+SHARE\s+MODE)      #Start of positive lookahead assertion. Optional syntax
+                                  (?:                                           #Start of non-capturing group
+                                    $|                                          #Anchor to end of line
+                                    \s+                                         #One or more spaces before Optional syntax
+                                    (?=                                         #Start of positive lookahead assertion
+                                        INNER\s+JOIN|
+                                        LEFT\s+JOIN|
+                                        RIGHT\s+JOIN|
+                                        WHERE|
+                                        GROUP\s+BY|
+                                        HAVING|
+                                        ORDER\s+BY|
+                                        LIMIT|
+                                        PROCEDURE|
+                                        INTO\s+OUTFILE|
+                                        FOR\s+UPDATE|
+                                        LOCK\s+IN\s+SHARE\s+MODE
+                                    )                                           #End of lookahead assertion. Optional syntax
                                   )                                             #End of non capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
@@ -61,7 +75,7 @@ def parseSQL(txt):
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
-    txt = table_pattern.sub(r"\g<1>`\g<2>`", txt)
+    txt = table_pattern.sub(r"\g<1>`\g<2>` ", txt)
     txt = field_pattern.sub(r"`\g<1>`", txt)
     txt = where_and_pattern.sub(where_and_replacer, txt)
     txt = from_pattern.sub(force_no_rows, txt)
