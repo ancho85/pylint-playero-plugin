@@ -261,6 +261,9 @@ class QueryChecker(BaseChecker):
                         if attr.targets[0].attrname == attrSeek or attrSeek == "returnFirst":
                             cvalue = self.getAssignedTxt(attr.value)
                             if cvalue and attrSeek == "returnFirst": break
+        if not cvalue:
+            if "bring" in nodeValue.locals:
+                cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
