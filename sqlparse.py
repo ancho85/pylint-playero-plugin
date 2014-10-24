@@ -1,19 +1,9 @@
 import re
+from funcs import getConfig
 from tools import logHere
 
-def getMySQLConfig():
-    import os
-    configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config", "mysql.cfg")
-    if not os.path.exists(configLocation): return None
-    f = open(configLocation, "r")
-    import ConfigParser
-    config = ConfigParser.ConfigParser()
-    config.readfp(f) #the configuration file can change, so it must be opened every time
-    f.close()
-    return config
-
 def validateSQL(txt):
-    config = getMySQLConfig()
+    config = getConfig()
     if not config: return ""
     if not int(config.get("mysql", "connect")): return ""
     txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
@@ -109,7 +99,8 @@ def cmdValidateSQL(txt, config):
     """validates sql string using command line"""
     res = ""
     import subprocess
-    mysqlcmd = ["%s/mysql" % config.get("mysql", "path")]
+    import os
+    mysqlcmd = ["%s/mysql" % config.get("mysql", "%spath" % os.name)]
     mysqlcmd.append("-u%s" % config.get('mysql', 'user'))
     mysqlcmd.append("-p%s" % config.get('mysql', 'pass'))
     mysqlcmd.append("-h%s" % config.get('mysql', 'host'))
