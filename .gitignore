@@ -52,8 +52,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# mysql config file
-
-config/mysql.cfg
+# tester results
 
 tester/*.txt
