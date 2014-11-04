@@ -97,7 +97,7 @@ class QueryChecker(BaseChecker):
         nodescope = node.scope()
         try:
             if isinstance(nodescope, Function):
-                if node.name in nodescope.argnames():
+                if hasattr(node, "name") and node.name in nodescope.argnames():
                     funcname = nodescope.name
                     if funcname in self.funcParams:
                         index = 0
