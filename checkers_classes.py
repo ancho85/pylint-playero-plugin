@@ -61,13 +61,16 @@ class QueryChecker(BaseChecker):
         """define the funcParams dict based directly on the function"""
         if not isinstance(node, Function): return
         funcname = node.name
-        if funcname not in self.funcParams:
-            self.funcParams[funcname] = {}
-        for funcarg in node.args.args:
-            argname = funcarg.name
-            if argname in ("self", "classobj", "cls"): continue
-            argvalue = self.getNameValue(funcarg)
-            self.funcParams[funcname][argname] = self.getAssignedTxt(argvalue)
+        try:
+            if funcname not in self.funcParams:
+                self.funcParams[funcname] = {}
+            for funcarg in node.args.args:
+                argname = funcarg.name
+                if argname in ("self", "classobj", "cls"): continue
+                argvalue = self.getNameValue(funcarg)
+                self.funcParams[funcname][argname] = self.getAssignedTxt(argvalue)
+        except Exception, e:
+            logHere("setUpFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
 
     def setUpCallFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -76,109 +79,124 @@ class QueryChecker(BaseChecker):
             funcname = node.func.attrname
         elif isinstance(node.func, Name):
             funcname = node.func.name
-        if funcname not in self.funcParams:
-            self.funcParams[funcname] = {}
-        index = 0
-        for nodearg in node.args:
-            index += 1
-            if isinstance(nodearg, Keyword):
-                self.funcParams[funcname][nodearg.arg] = self.getAssignedTxt(nodearg.value)
-            else:
-                self.funcParams[funcname][index] = self.getAssignedTxt(nodearg)
+        try:
+            if funcname not in self.funcParams:
+                self.funcParams[funcname] = {}
+            index = 0
+            for nodearg in node.args:
+                index += 1
+                if isinstance(nodearg, Keyword):
+                    self.funcParams[funcname][nodearg.arg] = self.getAssignedTxt(nodearg.value)
+                else:
+                    self.funcParams[funcname][index] = self.getAssignedTxt(nodearg)
+        except Exception, e:
+            logHere("setUpCallFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
 
     def getFuncParams(self, node):
         fparam = ""
         nodescope = node.scope()
-        if isinstance(nodescope, Function):
-            if node.name in node.scope().argnames():
-                funcname = node.scope().name
-                if funcname in self.funcParams:
-                    index = 0
-                    for funcarg in nodescope.args.args:
-                        index += 1
-                        if isinstance(funcarg, AssName):
-                            if funcarg.name in ("self", "classobj", "cls") and index == 1:
-                                index -= 1
-                                continue
-                            else:
-                                if node.name == funcarg.name:
-                                    if funcarg.name in self.funcParams[funcname]:
-                                        fparam = self.funcParams[funcname][funcarg.name]
-                                    elif index in self.funcParams[funcname]:
-                                        fparam = self.funcParams[funcname][index]
+        try:
+            if isinstance(nodescope, Function):
+                if node.name in nodescope.argnames():
+                    funcname = nodescope.name
+                    if funcname in self.funcParams:
+                        index = 0
+                        for funcarg in nodescope.args.args:
+                            index += 1
+                            if isinstance(funcarg, AssName):
+                                if funcarg.name in ("self", "classobj", "cls") and index == 1:
+                                    index -= 1
+                                    continue
+                                else:
+                                    if node.name == funcarg.name:
+                                        if funcarg.name in self.funcParams[funcname]:
+                                            fparam = self.funcParams[funcname][funcarg.name]
+                                        elif index in self.funcParams[funcname]:
+                                            fparam = self.funcParams[funcname][index]
+        except Exception, e:
+            logHere("getFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
         return fparam
 
     def getAssNameValue(self, nodeValue, nodeName=""):
         anvalue = ""
-        if isinstance(nodeValue, Assign):
-            if isinstance(nodeValue.targets[0], AssName):
-                if nodeName and nodeName == nodeValue.targets[0].name:
-                    anvalue = self.getAssignedTxt(nodeValue.value)
-        elif isinstance(nodeValue, AugAssign):
-            if isinstance(nodeValue.target, AssName):
-                if nodeName and nodeName == nodeValue.target.name:
-                    anvalue = self.getAssignedTxt(nodeValue.value)
-        elif isinstance(nodeValue, If):
-            if nodeValue.test.as_string().find(nodeName) > -1:
-                lookBody = True
-                if isinstance(nodeValue.test, Compare):
-                    if nodeName not in nodeValue.parent.scope().keys():
-                        leftval = self.getAssignedTxt(nodeValue.test.left)
-                        op = nodeValue.test.ops[0] #a list with 1 tuple
-                        rightval = self.getAssignedTxt(op[1])
-                        evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
-                        try:
-                            lookBody = eval(evaluation)
-                        except Exception, e:
-                            logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-                    else:
-                        anvalue = self.getFuncParams(nodeValue.parent)
-                        if anvalue: lookBody = False
-                if lookBody:
+        try:
+            if isinstance(nodeValue, Assign):
+                if isinstance(nodeValue.targets[0], AssName):
+                    if nodeName and nodeName == nodeValue.targets[0].name:
+                        anvalue = self.getAssignedTxt(nodeValue.value)
+            elif isinstance(nodeValue, AugAssign):
+                if isinstance(nodeValue.target, AssName):
+                    if nodeName and nodeName == nodeValue.target.name:
+                        anvalue = self.getAssignedTxt(nodeValue.value)
+            elif isinstance(nodeValue, If):
+                if nodeValue.test.as_string().find(nodeName) > -1:
+                    lookBody = True
+                    if isinstance(nodeValue.test, Compare):
+                        if nodeName not in nodeValue.parent.scope().keys():
+                            leftval = self.getAssignedTxt(nodeValue.test.left)
+                            op = nodeValue.test.ops[0] #a list with 1 tuple
+                            rightval = self.getAssignedTxt(op[1])
+                            evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
+                            try:
+                                lookBody = eval(evaluation)
+                            except Exception, e:
+                                logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                        else:
+                            anvalue = self.getFuncParams(nodeValue.parent)
+                            if anvalue: lookBody = False
+                    if lookBody:
+                        anvalue = self.getIfValues(nodeValue, nodeName)
+                    if not anvalue: anvalue = nodeName
+                else:
                     anvalue = self.getIfValues(nodeValue, nodeName)
-                if not anvalue: anvalue = nodeName
-            else:
-                anvalue = self.getIfValues(nodeValue, nodeName)
+        except Exception, e:
+            logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return anvalue
 
     def getIfValues(self, nodeValue, nodeName=""):
         ivalue = ""
-        for elm in nodeValue.body:
-            assValue = self.getAssNameValue(elm, nodeName)
-            ivalue += self.getAssignedTxt(assValue)
-        if not ivalue:
-            for elm2 in nodeValue.orelse:
-                assValue = self.getAssNameValue(elm2, nodeName)
+        try:
+            for elm in nodeValue.body:
+                assValue = self.getAssNameValue(elm, nodeName)
                 ivalue += self.getAssignedTxt(assValue)
+            if not ivalue:
+                for elm2 in nodeValue.orelse:
+                    assValue = self.getAssNameValue(elm2, nodeName)
+                    ivalue += self.getAssignedTxt(assValue)
+        except Exception, e:
+            logHere("getIfValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return ivalue
 
     def getNameValue(self, nodeValue):
         nvalue = ""
-        if isinstance(nodeValue.statement(), Return):
-            for elm in nodeValue.parent.scope().body:
-                if nodeValue.statement() == elm: continue #Returns are ignored
-                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
-                nvalue += self.getAssignedTxt(assValue)
-        else:
-            nvalue = self.getFuncParams(nodeValue)
-            if not nvalue:
-
-                try:
-                    inferedValue = nodeValue.infered()
-                except InferenceError:
-                    pass
-                else:
-                    for inferedValue in inferedValue:
-                        if inferedValue is not YES:
-                            nvalue = self.getAssignedTxt(inferedValue)
-                            if nvalue: break
+        try:
+            if isinstance(nodeValue.statement(), Return):
+                for elm in nodeValue.parent.scope().body:
+                    if nodeValue.statement() == elm: continue #Returns are ignored
+                    assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                    nvalue += self.getAssignedTxt(assValue)
+            else:
+                nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
-                    if nodeValue.name in nodeValue.scope().keys():
-                        for elm in nodeValue.scope().body:
-                            if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
-                            assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
-                            nvalue = self.getAssignedTxt(assValue)
-                            if nvalue: break
+
+                    try:
+                        inferedValue = nodeValue.infered()
+                    except InferenceError:
+                        pass
+                    else:
+                        for inferedValue in inferedValue:
+                            if inferedValue is not YES:
+                                nvalue = self.getAssignedTxt(inferedValue)
+                                if nvalue: break
+                    if not nvalue:
+                        if nodeValue.name in nodeValue.scope().keys():
+                            for elm in nodeValue.scope().body:
+                                if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
+                                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                                nvalue = self.getAssignedTxt(assValue)
+                                if nvalue: break
+        except Exception, e:
+            logHere("getNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
@@ -204,66 +222,75 @@ class QueryChecker(BaseChecker):
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
-        qvalue = self.getAssignedTxt(nodeValue.left)
-        if nodeValue.op == "%":
-            newleft = '"%s "' % escapeAnyToString(qvalue)
-            newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
-            if isinstance(nodeValue.right, Tuple):
-                newright = self.getTupleValues(nodeValue.right)
-            elif isinstance(nodeValue.right, CallFunc):
-                callfuncval = self.getCallFuncValue(nodeValue.right)
-                if callfuncval: newright = "(\"%s\")" % callfuncval
-            elif isinstance(nodeValue.right, Name):
-                newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
-            elif isinstance(nodeValue.right, Getattr):
-                getattrval = self.getAssignedTxt(nodeValue.right)
-                if getattrval: newright = '("%s")' % getattrval
-            elif isinstance(nodeValue.right, Const):
-                newright = self.getAssignedTxt(nodeValue.right)
-            else:
-                newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
-            toeval = str("%s %% %s" % (newleft, newright)).replace("\n","NEWLINE")
-            try:
+        try:
+            qvalue = self.getAssignedTxt(nodeValue.left)
+            if nodeValue.op == "%":
+                newleft = '"%s "' % escapeAnyToString(qvalue)
+                newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
+                if isinstance(nodeValue.right, Tuple):
+                    newright = self.getTupleValues(nodeValue.right)
+                elif isinstance(nodeValue.right, CallFunc):
+                    callfuncval = self.getCallFuncValue(nodeValue.right)
+                    if callfuncval: newright = "(\"%s\")" % callfuncval
+                elif isinstance(nodeValue.right, Name):
+                    newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
+                elif isinstance(nodeValue.right, Getattr):
+                    getattrval = self.getAssignedTxt(nodeValue.right)
+                    if getattrval: newright = '("%s")' % getattrval
+                elif isinstance(nodeValue.right, Const):
+                    newright = self.getAssignedTxt(nodeValue.right)
+                else:
+                    newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
+                toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
                 qvalue = eval(toeval)
-                qvalue = qvalue.replace("NEWLINE","\n")
-            except Exception, e:
-                logHere("EvaluationError getBinOpValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-        else:
-            qvalue += self.getAssignedTxt(nodeValue.right)
+                qvalue = qvalue.replace("NEWLINE", "\n")
+            else:
+                qvalue += self.getAssignedTxt(nodeValue.right)
+        except Exception, e:
+            logHere("getBinOpValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def getTupleValues(self, nodeValue):
         tvalues = []
-        for elts in nodeValue.itered():
-            if isinstance(elts, Name):
-                elts = self.getNameValue(elts)
-            tvalues.append(self.getAssignedTxt(elts))
+        try:
+            for elts in nodeValue.itered():
+                if isinstance(elts, Name):
+                    elts = self.getNameValue(elts)
+                tvalues.append(self.getAssignedTxt(elts))
+        except Exception, e:
+            logHere("getTupleValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return '("""%s""")' % '""","""'.join(tvalues)
 
     def getGetattrValue(self, nodeValue):
-        gvalue = nodeValue.attrname
-        inferedValue = nodeValue.expr.infered()[0]
-        res = ""
-        if isinstance(inferedValue, Instance) :
-            if isinstance(inferedValue.infered()[0], Class):
-                if inferedValue.pytype() == "Query.Query" and nodeValue.expr.name in self.queryTxt:
-                    res = self.queryTxt[nodeValue.expr.name]
-                else:
-                    res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+        try:
+            gvalue = nodeValue.attrname
+            inferedValue = nodeValue.expr.infered()[0]
+            res = ""
+            if isinstance(inferedValue, Instance) :
+                if isinstance(inferedValue.infered()[0], Class):
+                    if inferedValue.pytype() == "Query.Query" and nodeValue.expr.name in self.queryTxt:
+                        res = self.queryTxt[nodeValue.expr.name]
+                    else:
+                        res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+        except Exception, e:
+            logHere("getGetattrValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return {True:res, False:nodeValue.attrname}[bool(res)]
 
     def getClassAttr(self, nodeValue, attrSeek=""):
         cvalue = ""
-        if "__init__" in nodeValue:
-            for attr in nodeValue["__init__"].body:
-                if isinstance(attr, Assign):
-                    if isinstance(attr.targets[0], AssAttr):
-                        if attr.targets[0].attrname == attrSeek or attrSeek == "returnFirst":
-                            cvalue = self.getAssignedTxt(attr.value)
-                            if cvalue and attrSeek == "returnFirst": break
-        if not cvalue:
-            if "bring" in nodeValue.locals:
-                cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
+        try:
+            if "__init__" in nodeValue:
+                for attr in nodeValue["__init__"].body:
+                    if isinstance(attr, Assign):
+                        if isinstance(attr.targets[0], AssAttr):
+                            if attr.targets[0].attrname == attrSeek or attrSeek == "returnFirst":
+                                cvalue = self.getAssignedTxt(attr.value)
+                                if cvalue and attrSeek == "returnFirst": break
+            if not cvalue:
+                if "bring" in nodeValue.locals:
+                    cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
+        except Exception, e:
+            logHere("getClassAttrError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
@@ -294,9 +321,9 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("InferenceError getAssignedTxt", e, filename="%s.log" % fname)
+            logHere("getAssignedTxtInferenceError", e, filename="%s.log" % fname)
         except Exception, e:
-            logHere("Exception getAssignedTxt", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
+            logHere("getAssignedTxtError", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -315,7 +342,7 @@ class QueryChecker(BaseChecker):
                 elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... ElIf and Else will not be included
                     addUpQuery(instanceName, value)
         except InferenceError, e:
-            logHere("InferenceError setUpQueryTxt", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
+            logHere("setUpQueryTxtInferenceError", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
 
     def isSqlAssAttr(self, node):
         return isinstance(node, AssAttr) and node.attrname == "sql"
