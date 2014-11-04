@@ -288,10 +288,9 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getClassAttr(nodeValue, "returnFirst")
             else:
                 inferedValue = nodeValue.infered()
-                if inferedValue is YES:
-                    raise InferenceError("YES reached")
-                elif isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
-                    qvalue = self.getAssignedTxt(inferedValue[0])
+                if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
+                    if not inferedValue[0] is YES:
+                        qvalue = self.getAssignedTxt(inferedValue[0])
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
