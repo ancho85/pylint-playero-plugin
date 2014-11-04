@@ -126,7 +126,7 @@ class QueryChecker(BaseChecker):
                         leftval = self.getAssignedTxt(nodeValue.test.left)
                         op = nodeValue.test.ops[0] #a list with 1 tuple
                         rightval = self.getAssignedTxt(op[1])
-                        evaluation = "'%s' %s '%s'" % (leftval, op[0], rightval)
+                        evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
                         try:
                             lookBody = eval(evaluation)
                         except Exception, e:
@@ -238,7 +238,7 @@ class QueryChecker(BaseChecker):
             if isinstance(elts, Name):
                 elts = self.getNameValue(elts)
             tvalues.append(self.getAssignedTxt(elts))
-        return "(\'%s\')" % "','".join(tvalues)
+        return '("""%s""")' % '""","""'.join(tvalues)
 
     def getGetattrValue(self, nodeValue):
         gvalue = nodeValue.attrname
