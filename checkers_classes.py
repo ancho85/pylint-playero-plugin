@@ -301,17 +301,20 @@ class QueryChecker(BaseChecker):
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
+
+        def addUpQuery(instanceName, value):
+            if isnew or instanceName not in self.queryTxt:
+                self.queryTxt[instanceName] = ""
+            self.queryTxt[instanceName] += str(value)
+
         try:
             if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
                 nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
                 instanceName = nodeTarget.expr.name
-                if isnew or instanceName not in self.queryTxt:
-                    self.queryTxt[instanceName] = ""
                 if not isinstance(nodeGrandParent, If):
-                    self.queryTxt[instanceName] += str(value)
-                else:
-                    if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... ElIf and Else will not be included
-                        self.queryTxt[instanceName] += str(value)
+                    addUpQuery(instanceName, value)
+                elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... ElIf and Else will not be included
+                    addUpQuery(instanceName, value)
         except InferenceError, e:
             logHere("InferenceError setUpQueryTxt", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
 
@@ -325,6 +328,9 @@ class QueryChecker(BaseChecker):
             if not parsedFileName or parsedFileName == "<?>":
                 parsedFileName = "notFound"
         return parsedFileName
+
+
+    ####### pylint's redefinitions #######
 
     def visit_assign(self, node):
         if self.isSqlAssAttr(node.targets[0]):
