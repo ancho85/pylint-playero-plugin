@@ -178,7 +178,6 @@ class QueryChecker(BaseChecker):
             else:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
-
                     try:
                         inferedValue = nodeValue.infered()
                     except InferenceError:
@@ -294,9 +293,9 @@ class QueryChecker(BaseChecker):
         return cvalue
 
     def getAssignedTxt(self, nodeValue):
-        fname = self.getNodeFileName(nodeValue)
         if type(nodeValue) in (type(None), int, str, float):
             return str(nodeValue)
+        fname = self.getNodeFileName(nodeValue)
         qvalue = ""
         try:
             if isinstance(nodeValue, Const):
@@ -349,7 +348,7 @@ class QueryChecker(BaseChecker):
 
     def getNodeFileName(self, node):
         parsedFileName = None
-        if hasattr(node, "root"):
+        if hasattr(node, "root") and hasattr(node.root(), "file"):
             parsedFileName = filenameFromPath(node.root().file)
             if not parsedFileName or parsedFileName == "<?>":
                 parsedFileName = "notFound"
