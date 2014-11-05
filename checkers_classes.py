@@ -261,16 +261,18 @@ class QueryChecker(BaseChecker):
         return '("""%s""")' % '""","""'.join(tvalues)
 
     def getGetattrValue(self, nodeValue):
+        res = ""
         try:
             gvalue = nodeValue.attrname
             inferedValue = nodeValue.expr.infered()[0]
-            res = ""
             if isinstance(inferedValue, Instance) :
                 if isinstance(inferedValue.infered()[0], Class):
                     if inferedValue.pytype() == "Query.Query" and nodeValue.expr.name in self.queryTxt:
                         res = self.queryTxt[nodeValue.expr.name]
                     else:
                         res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+        except InferenceError:
+            pass #missing parameters?
         except Exception, e:
             logHere("getGetattrValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return {True:res, False:nodeValue.attrname}[bool(res)]
@@ -320,7 +322,7 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("getAssignedTxtInferenceError", e, filename="%s.log" % fname)
+            logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
         except Exception, e:
             logHere("getAssignedTxtError", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
         return qvalue
