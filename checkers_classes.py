@@ -349,7 +349,9 @@ class QueryChecker(BaseChecker):
     def getNodeFileName(self, node):
         parsedFileName = None
         if hasattr(node, "root") and hasattr(node.root(), "file"):
-            parsedFileName = filenameFromPath(node.root().file)
+            filepath = node.root().file
+            if filepath:
+                parsedFileName = filenameFromPath(filepath)
             if not parsedFileName or parsedFileName == "<?>":
                 parsedFileName = "notFound"
         return parsedFileName
