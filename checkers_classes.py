@@ -346,8 +346,9 @@ class QueryChecker(BaseChecker):
                 instanceName = nodeTarget.expr.name
                 if not isinstance(nodeGrandParent, If):
                     addUpQuery(instanceName, value)
-                elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... ElIf and Else will not be included
-                    addUpQuery(instanceName, value)
+                elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
+                    if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
+                        addUpQuery(instanceName, value)
         except InferenceError, e:
             logHere("setUpQueryTxtInferenceError", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
 
