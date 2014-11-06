@@ -2,7 +2,7 @@ import re
 from funcs import getConfig
 from tools import logHere
 
-def validateSQL(txt):
+def validateSQL(txt, filename=None):
     config = getConfig()
     if not config: return ""
     if not int(config.get("mysql", "connect")): return ""
@@ -11,6 +11,8 @@ def validateSQL(txt):
         res = apiValidateSQL(txt, config)
     else:
         res = cmdValidateSQL(txt, config)
+    if res:
+        logHere(txt, filename={False:"queryError.log",True:filename}[bool(filename)])
     return res
 
 def parseSQL(txt):
