@@ -318,8 +318,6 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getNameValue(nodeValue)
             elif isinstance(nodeValue, Class):
                 qvalue = self.getClassAttr(nodeValue, "returnFirst")
-            elif isinstance(nodeValue, Subscript):
-                qvalue = self.getSubscriptValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
@@ -328,7 +326,10 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
+            if isinstance(nodeValue, Subscript):
+                qvalue = self.getSubscriptValue(nodeValue)
+            else:
+                logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
         except Exception, e:
             logHere("getAssignedTxtError", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
         return qvalue
@@ -395,7 +396,7 @@ class QueryChecker(BaseChecker):
                         if main.name == "Query":
                             name = node.func.expr.name
                             if name in self.queryTxt:
-                                res = validateSQL(self.queryTxt[name])
+                                res = validateSQL(self.queryTxt[name], filename="%sQUERY.log" % filenameFromPath(node.root().file))
                                 if res:
                                     self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
                             else:
