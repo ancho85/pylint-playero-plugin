@@ -415,6 +415,5 @@ class QueryChecker(BaseChecker):
                                     self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
-                            logHere(self.queryTxt)
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
