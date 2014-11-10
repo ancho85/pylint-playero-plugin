@@ -271,6 +271,8 @@ class QueryChecker(BaseChecker):
                         res = self.queryTxt[nodeValue.expr.name]
                     else:
                         res = self.getClassAttr(inferedValue.infered()[0], gvalue)
+            elif isinstance(nodeValue.expr, Subscript):
+                res = self.getSubscriptValue(nodeValue.expr)
         except InferenceError:
             pass #missing parameters?
         except Exception, e:
@@ -296,6 +298,11 @@ class QueryChecker(BaseChecker):
 
     def getSubscriptValue(self, nodeValue):
         svalue = ""
+        if isinstance(nodeValue.parent, Getattr) and nodeValue.parent.attrname == "sql":
+            if isinstance(nodeValue.value, Name):
+                instanceName = nodeValue.value.name
+                if instanceName in self.queryTxt:
+                    svalue = self.queryTxt[instanceName]
         return svalue
 
     def getAssignedTxt(self, nodeValue):
@@ -342,9 +349,16 @@ class QueryChecker(BaseChecker):
             self.queryTxt[instanceName] += str(value)
 
         try:
-            if nodeTarget.expr.infered()[0].pytype() == "Query.Query":
+            instanceName = None
+            inferedValue = nodeTarget.expr.infered()[0]
+            if inferedValue is YES:
+                if isinstance(nodeTarget, AssAttr) and isinstance(nodeTarget.expr, Subscript) and nodeTarget.attrname == "sql":
+                    if isinstance(nodeTarget.expr.value, Name):
+                        instanceName = nodeTarget.expr.value.name
+            if inferedValue.pytype() == "Query.Query" or instanceName:
                 nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
-                instanceName = nodeTarget.expr.name
+                if not instanceName:
+                    instanceName = nodeTarget.expr.name
                 if not isinstance(nodeGrandParent, If):
                     addUpQuery(instanceName, value)
                 elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
@@ -401,5 +415,6 @@ class QueryChecker(BaseChecker):
                                     self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
                             else:
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
+                            logHere(self.queryTxt)
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
