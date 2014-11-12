@@ -176,7 +176,7 @@ class QueryChecker(BaseChecker):
                     if nodeValue.statement() == elm: continue #Returns are ignored
                     assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
                     nvalue += self.getAssignedTxt(assValue)
-            else:
+            if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
                     try:
