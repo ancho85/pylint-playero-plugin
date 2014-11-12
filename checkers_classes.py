@@ -117,9 +117,10 @@ class QueryChecker(BaseChecker):
             logHere("getFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
         return fparam
 
-    def getAssNameValue(self, nodeValue, nodeName=""):
+    def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         anvalue = ""
         try:
+            if nodeValue.lineno > tolineno: return anvalue
             if isinstance(nodeValue, Assign):
                 if isinstance(nodeValue.targets[0], AssName):
                     if nodeName and nodeName == nodeValue.targets[0].name:
@@ -145,23 +146,23 @@ class QueryChecker(BaseChecker):
                             anvalue = self.getFuncParams(nodeValue.parent)
                             if anvalue: lookBody = False
                     if lookBody:
-                        anvalue = self.getIfValues(nodeValue, nodeName)
+                        anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
                     if not anvalue: anvalue = nodeName
                 else:
-                    anvalue = self.getIfValues(nodeValue, nodeName)
+                    anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return anvalue
 
-    def getIfValues(self, nodeValue, nodeName=""):
+    def getIfValues(self, nodeValue, nodeName="", tolineno=999999):
         ivalue = ""
         try:
             for elm in nodeValue.body:
-                assValue = self.getAssNameValue(elm, nodeName)
+                assValue = self.getAssNameValue(elm, nodeName, tolineno)
                 ivalue += self.getAssignedTxt(assValue)
             if not ivalue:
                 for elm2 in nodeValue.orelse:
-                    assValue = self.getAssNameValue(elm2, nodeName)
+                    assValue = self.getAssNameValue(elm2, nodeName, tolineno)
                     ivalue += self.getAssignedTxt(assValue)
         except Exception, e:
             logHere("getIfValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
@@ -173,7 +174,7 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.statement(), Return):
                 for elm in nodeValue.parent.scope().body:
                     if nodeValue.statement() == elm: continue #Returns are ignored
-                    assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                    assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
                     nvalue += self.getAssignedTxt(assValue)
             else:
                 nvalue = self.getFuncParams(nodeValue)
@@ -191,7 +192,7 @@ class QueryChecker(BaseChecker):
                         if nodeValue.name in nodeValue.scope().keys():
                             for elm in nodeValue.scope().body:
                                 if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
-                                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name)
+                                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                                 nvalue = self.getAssignedTxt(assValue)
                                 if nvalue: break
         except Exception, e:
