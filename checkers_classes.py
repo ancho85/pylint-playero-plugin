@@ -147,7 +147,7 @@ class QueryChecker(BaseChecker):
                             if anvalue: lookBody = False
                     if lookBody:
                         anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
-                    if not anvalue: anvalue = nodeName
+                    anvalue = anvalue or nodeName
                 else:
                     anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
         except Exception, e:
@@ -179,22 +179,22 @@ class QueryChecker(BaseChecker):
             if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
-                    try:
-                        inferedValue = nodeValue.infered()
-                    except InferenceError:
-                        pass
-                    else:
-                        for inferedValue in inferedValue:
-                            if inferedValue is not YES:
-                                nvalue = self.getAssignedTxt(inferedValue)
-                                if nvalue: break
+                    if nodeValue.name in nodeValue.scope().keys():
+                        for elm in nodeValue.scope().body:
+                            if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
+                            assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
+                            nvalue = self.getAssignedTxt(assValue)
+                            if nvalue: break
                     if not nvalue:
-                        if nodeValue.name in nodeValue.scope().keys():
-                            for elm in nodeValue.scope().body:
-                                if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
-                                assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
-                                nvalue = self.getAssignedTxt(assValue)
-                                if nvalue: break
+                        try:
+                            inferedValue = nodeValue.infered()
+                        except InferenceError:
+                            pass
+                        else:
+                            for inferedValue in inferedValue:
+                                if inferedValue is not YES:
+                                    nvalue = self.getAssignedTxt(inferedValue)
+                                    if nvalue: break
         except Exception, e:
             logHere("getNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return nvalue
