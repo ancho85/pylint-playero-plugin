@@ -358,8 +358,7 @@ class QueryChecker(BaseChecker):
                         instanceName = nodeTarget.expr.value.name
             if inferedValue.pytype() == "Query.Query" or instanceName:
                 nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
-                if not instanceName:
-                    instanceName = nodeTarget.expr.name
+                instanceName = instanceName or nodeTarget.expr.name
                 if not isinstance(nodeGrandParent, If):
                     addUpQuery(instanceName, value)
                 elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
