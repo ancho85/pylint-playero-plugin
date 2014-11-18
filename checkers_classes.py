@@ -343,12 +343,6 @@ class QueryChecker(BaseChecker):
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
-
-        def addUpQuery(instanceName, value):
-            if isnew or instanceName not in self.queryTxt:
-                self.queryTxt[instanceName] = ""
-            self.queryTxt[instanceName] += str(value)
-
         try:
             instanceName = None
             inferedValue = nodeTarget.expr.infered()[0]
@@ -360,12 +354,24 @@ class QueryChecker(BaseChecker):
                 nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
                 instanceName = instanceName or nodeTarget.expr.name
                 if not isinstance(nodeGrandParent, If):
-                    addUpQuery(instanceName, value)
-                elif nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
-                    if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
-                        addUpQuery(instanceName, value)
+                    self.appendQuery(instanceName, value, isnew)
+                else:
+                    self.preprocessQueryIfs(nodeTarget, instanceName, value, isnew)
         except InferenceError, e:
             logHere("setUpQueryTxtInferenceError", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
+
+    def appendQuery(self, instanceName, value, isnew):
+        if isnew or instanceName not in self.queryTxt:
+            self.queryTxt[instanceName] = ""
+        self.queryTxt[instanceName] += str(value)
+
+    def preprocessQueryIfs(self, nodeTarget, instanceName, value, isnew):
+        nodeGrandParent = nodeTarget.parent.parent
+        if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
+            if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
+                self.appendQuery(instanceName, value, isnew)
+            else:
+                self.preprocessQueryIfs(nodeTarget.parent, instanceName, value, isnew)
 
     def isSqlAssAttr(self, node):
         return isinstance(node, AssAttr) and node.attrname == "sql"
