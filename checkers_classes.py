@@ -30,7 +30,7 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
-                                    Keyword, Compare, Subscript
+                                    Keyword, Compare, Subscript, For
 from astroid.scoped_nodes import Function, Class
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -150,6 +150,8 @@ class QueryChecker(BaseChecker):
                     anvalue = anvalue or nodeName
                 else:
                     anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
+            elif isinstance(nodeValue, For):
+                anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return anvalue
