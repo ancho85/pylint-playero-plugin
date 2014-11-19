@@ -159,15 +159,12 @@ class QueryChecker(BaseChecker):
     def getIfValues(self, nodeValue, nodeName="", tolineno=999999):
         ivalue = ""
         try:
-            for elm in nodeValue.body:
-                if elm.lineno >= tolineno: return ivalue
+            bodyOrElse = nodeValue.body
+            bodyOrElse.extend(nodeValue.orelse)
+            for elm in bodyOrElse:
+                if elm.lineno >= tolineno or ivalue: break
                 assValue = self.getAssNameValue(elm, nodeName, tolineno)
                 ivalue = self.getAssignedTxt(assValue)
-            if not ivalue:
-                for elm2 in nodeValue.orelse:
-                    if elm2.lineno >= tolineno: return ivalue
-                    assValue = self.getAssNameValue(elm2, nodeName, tolineno)
-                    ivalue = self.getAssignedTxt(assValue)
         except Exception, e:
             logHere("getIfValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return ivalue
