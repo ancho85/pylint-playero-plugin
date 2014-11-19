@@ -129,6 +129,8 @@ class QueryChecker(BaseChecker):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
+            elif isinstance(nodeValue, For):
+                anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
             elif isinstance(nodeValue, If):
                 if nodeValue.test.as_string().find(nodeName) > -1:
                     lookBody = True
@@ -150,8 +152,6 @@ class QueryChecker(BaseChecker):
                     anvalue = anvalue or nodeName
                 else:
                     anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
-            elif isinstance(nodeValue, For):
-                anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return anvalue
@@ -160,12 +160,14 @@ class QueryChecker(BaseChecker):
         ivalue = ""
         try:
             for elm in nodeValue.body:
+                if elm.lineno >= tolineno: return ivalue
                 assValue = self.getAssNameValue(elm, nodeName, tolineno)
-                ivalue += self.getAssignedTxt(assValue)
+                ivalue = self.getAssignedTxt(assValue)
             if not ivalue:
                 for elm2 in nodeValue.orelse:
+                    if elm2.lineno >= tolineno: return ivalue
                     assValue = self.getAssNameValue(elm2, nodeName, tolineno)
-                    ivalue += self.getAssignedTxt(assValue)
+                    ivalue = self.getAssignedTxt(assValue)
         except Exception, e:
             logHere("getIfValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return ivalue
