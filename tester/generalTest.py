@@ -59,4 +59,8 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print "USAGE: python generalTest.py PATHTOCHECK"
     else:
-        doTest()
+        import multiprocessing
+        pool = multiprocessing.Pool(processes=None) #cpu_count()
+        r = pool.apply_async(func=doTest)
+        r.wait()
+        #doTest()
