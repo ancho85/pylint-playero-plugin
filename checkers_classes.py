@@ -191,7 +191,6 @@ class QueryChecker(BaseChecker):
                         for elm in nodeValue.scope().body:
                             if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                             (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
-                            logHere(nodeValue.name, elm.lineno, elm, assValue, assFound)
                             if assFound:
                                 nvalue += self.getAssignedTxt(assValue)
                                 tryinference = False
