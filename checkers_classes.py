@@ -128,10 +128,11 @@ class QueryChecker(BaseChecker):
             for atr in attr:
                 currentIteration = getattr(node, atr)
                 for elm in currentIteration:
-                    if elm.lineno >= tolineno: break #or bvalue or bfound: break
+                    if elm.lineno >= tolineno: break
                     (assValue, assfound) = self.getAssNameValue(elm, nodeName, tolineno)
                     if assfound:
-                        bvalue = self.getAssignedTxt(assValue)
+                        assVal = self.getAssignedTxt(assValue)
+                        bvalue = {False:assVal, True:bvalue+assVal}[isinstance(elm, AugAssign)]
                         bfound = assfound
             return (bvalue, bfound)
 
@@ -188,10 +189,11 @@ class QueryChecker(BaseChecker):
                     tryinference = True
                     if nodeValue.name in nodeValue.scope().keys():
                         for elm in nodeValue.scope().body:
-                            if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
+                            if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                             (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
+                            logHere(nodeValue.name, elm.lineno, elm, assValue, assFound)
                             if assFound:
-                                nvalue = self.getAssignedTxt(assValue)
+                                nvalue += self.getAssignedTxt(assValue)
                                 tryinference = False
                     if not nvalue and tryinference:
                         try:
