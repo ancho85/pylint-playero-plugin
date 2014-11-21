@@ -119,18 +119,36 @@ class QueryChecker(BaseChecker):
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         anvalue = ""
+        anfound = False
+
+        def searchBody(node):
+            bvalue = ""
+            bfound = False
+            attr = ("body", "orelse")
+            for atr in attr:
+                currentIteration = getattr(node, atr)
+                for elm in currentIteration:
+                    if elm.lineno >= tolineno: break #or bvalue or bfound: break
+                    (assValue, assfound) = self.getAssNameValue(elm, nodeName, tolineno)
+                    if assfound:
+                        bvalue = self.getAssignedTxt(assValue)
+                        bfound = assfound
+            return (bvalue, bfound)
+
         try:
-            if nodeValue.lineno > tolineno: return anvalue
+            if nodeValue.lineno > tolineno: return (anvalue, anfound)
             if isinstance(nodeValue, Assign):
                 if isinstance(nodeValue.targets[0], AssName):
                     if nodeName and nodeName == nodeValue.targets[0].name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
+                        anfound = True
             elif isinstance(nodeValue, AugAssign):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
+                        anfound = True
             elif isinstance(nodeValue, For):
-                anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
+                anvalue, anfound = searchBody(nodeValue)
             elif isinstance(nodeValue, If):
                 if nodeValue.test.as_string().find(nodeName) > -1:
                     lookBody = True
@@ -148,29 +166,12 @@ class QueryChecker(BaseChecker):
                             anvalue = self.getFuncParams(nodeValue.parent)
                             if anvalue: lookBody = False
                     if lookBody:
-                        anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
-                    anvalue = anvalue or nodeName
+                        anvalue, anfound = searchBody(nodeValue)
                 else:
-                    anvalue = self.getIfValues(nodeValue, nodeName, tolineno=tolineno)
+                    anvalue, anfound = searchBody(nodeValue)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-        return anvalue
-
-    def getIfValues(self, nodeValue, nodeName="", tolineno=999999):
-        ivalue = ""
-        try:
-            for elm in nodeValue.body:
-                if elm.lineno >= tolineno or ivalue: break
-                assValue = self.getAssNameValue(elm, nodeName, tolineno)
-                ivalue = self.getAssignedTxt(assValue)
-            if not ivalue:
-                for elm2 in nodeValue.orelse:
-                    if elm2.lineno >= tolineno or ivalue: break
-                    assValue = self.getAssNameValue(elm2, nodeName, tolineno)
-                    ivalue = self.getAssignedTxt(assValue)
-        except Exception, e:
-            logHere("getIfValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-        return ivalue
+        return (anvalue, anfound)
 
     def getNameValue(self, nodeValue):
         nvalue = ""
@@ -178,18 +179,21 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.statement(), Return):
                 for elm in nodeValue.parent.scope().body:
                     if nodeValue.statement() == elm: continue #Returns are ignored
-                    assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
-                    nvalue += self.getAssignedTxt(assValue)
+                    (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
+                    if assFound:
+                        nvalue += self.getAssignedTxt(assValue)
             if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
+                    tryinference = True
                     if nodeValue.name in nodeValue.scope().keys():
                         for elm in nodeValue.scope().body:
                             if elm.lineno > nodeValue.lineno: break #finding values if element's line is previous to node's line
-                            assValue = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
-                            nvalue = self.getAssignedTxt(assValue)
-                            if nvalue: break
-                    if not nvalue:
+                            (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
+                            if assFound:
+                                nvalue = self.getAssignedTxt(assValue)
+                                tryinference = False
+                    if not nvalue and tryinference:
                         try:
                             inferedValue = nodeValue.infered()
                         except InferenceError:
