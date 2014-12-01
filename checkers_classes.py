@@ -117,6 +117,10 @@ class QueryChecker(BaseChecker):
             logHere("getFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
         return fparam
 
+    def concatOrReplace(self, node, previousValue, newValue):
+        newVal = self.getAssignedTxt(newValue)
+        return {False:newVal, True:previousValue+newVal}[isinstance(node, AugAssign)]
+
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         anvalue = ""
         anfound = False
@@ -131,8 +135,7 @@ class QueryChecker(BaseChecker):
                     if elm.lineno >= tolineno: break
                     (assValue, assfound) = self.getAssNameValue(elm, nodeName, tolineno)
                     if assfound:
-                        assVal = self.getAssignedTxt(assValue)
-                        bvalue = {False:assVal, True:bvalue+assVal}[isinstance(elm, AugAssign)]
+                        bvalue = self.concatOrReplace(elm, bvalue, assValue)
                         bfound = assfound
             return (bvalue, bfound)
 
@@ -192,7 +195,7 @@ class QueryChecker(BaseChecker):
                             if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                             (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                             if assFound:
-                                nvalue += self.getAssignedTxt(assValue)
+                                nvalue = self.concatOrReplace(elm, nvalue, assValue)
                                 tryinference = False
                     if not nvalue and tryinference:
                         try:
@@ -394,7 +397,6 @@ class QueryChecker(BaseChecker):
             if not parsedFileName or parsedFileName == "<?>":
                 parsedFileName = "notFound"
         return parsedFileName
-
 
     ####### pylint's redefinitions #######
 
