@@ -125,18 +125,11 @@ class QueryChecker(BaseChecker):
         anvalue = ""
         anfound = False
 
-        def searchBody(node):
-            bvalue = ""
-            bfound = False
-            attr = ("body", "orelse")
-            for atr in attr:
-                currentIteration = getattr(node, atr)
-                for elm in currentIteration:
-                    if elm.lineno >= tolineno: break
-                    (assValue, assfound) = self.getAssNameValue(elm, nodeName, tolineno)
-                    if assfound:
-                        bvalue = self.concatOrReplace(elm, bvalue, assValue)
-                        bfound = assfound
+        def searchBody(node, bvalue="", bfound=False):
+            for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
+                (assValue, bfound) = self.getAssNameValue(elm, nodeName, tolineno)
+                if bfound:
+                    bvalue = self.concatOrReplace(elm, bvalue, assValue)
             return (bvalue, bfound)
 
         try:
