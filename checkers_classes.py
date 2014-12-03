@@ -119,7 +119,12 @@ class QueryChecker(BaseChecker):
 
     def concatOrReplace(self, node, previousValue, newValue):
         newVal = self.getAssignedTxt(newValue)
-        return {False:newVal, True:previousValue+newVal}[isinstance(node, AugAssign)]
+        if isinstance(node, AugAssign):
+            newVal = previousValue+newVal
+        elif isinstance(node, If):
+            for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                newVal = self.concatOrReplace(elm, previousValue, newValue)
+        return newVal
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         anvalue = ""
@@ -147,13 +152,13 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, For):
                 anvalue, anfound = searchBody(nodeValue)
             elif isinstance(nodeValue, If):
+                lookBody = True
                 if nodeValue.test.as_string().find(nodeName) > -1:
-                    lookBody = True
                     if isinstance(nodeValue.test, Compare):
                         if nodeName not in nodeValue.parent.scope().keys():
                             leftval = self.getAssignedTxt(nodeValue.test.left)
                             op = nodeValue.test.ops[0] #a list with 1 tuple
-                            rightval = self.getAssignedTxt(op[1])
+                            rightval = self.getAsgetAssNameValuesignedTxt(op[1])
                             evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
                             try:
                                 lookBody = eval(evaluation)
@@ -162,9 +167,7 @@ class QueryChecker(BaseChecker):
                         else:
                             anvalue = self.getFuncParams(nodeValue.parent)
                             if anvalue: lookBody = False
-                    if lookBody:
-                        anvalue, anfound = searchBody(nodeValue)
-                else:
+                if lookBody:
                     anvalue, anfound = searchBody(nodeValue)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
