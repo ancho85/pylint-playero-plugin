@@ -131,10 +131,11 @@ class QueryChecker(BaseChecker):
         anfound = False
 
         def searchBody(node, bvalue="", bfound=False):
-            for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
-                (assValue, bfound) = self.getAssNameValue(elm, nodeName, tolineno)
-                if bfound:
-                    bvalue = self.concatOrReplace(elm, bvalue, assValue)
+            for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
+                if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
+                    (assValue, bfound) = self.getAssNameValue(elm, nodeName, tolineno)
+                    if bfound:
+                        bvalue = self.concatOrReplace(elm, bvalue, assValue)
             return (bvalue, bfound)
 
         try:
@@ -181,7 +182,7 @@ class QueryChecker(BaseChecker):
                     if nodeValue.statement() == elm: continue #Returns are ignored
                     (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
                     if assFound:
-                        nvalue += self.getAssignedTxt(assValue)
+                        nvalue = self.concatOrReplace(elm, nvalue, assValue)
             if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
