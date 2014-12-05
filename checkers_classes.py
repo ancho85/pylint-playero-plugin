@@ -159,7 +159,7 @@ class QueryChecker(BaseChecker):
                         if nodeName not in nodeValue.parent.scope().keys():
                             leftval = self.getAssignedTxt(nodeValue.test.left)
                             op = nodeValue.test.ops[0] #a list with 1 tuple
-                            rightval = self.getAsgetAssNameValuesignedTxt(op[1])
+                            rightval = self.getAssignedTxt(op[1])
                             evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
                             try:
                                 lookBody = eval(evaluation)
