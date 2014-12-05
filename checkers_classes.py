@@ -117,14 +117,21 @@ class QueryChecker(BaseChecker):
             logHere("getFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
         return fparam
 
-    def concatOrReplace(self, node, previousValue, newValue):
+    def concatOrReplace(self, node, nodeName, previousValue, newValue):
+        logHere("startconcat", nodeName, previousValue, "-->", newValue, "<--")
+        res = previousValue
         newVal = self.getAssignedTxt(newValue)
         if isinstance(node, AugAssign):
-            newVal = previousValue+newVal
+            if nodeName and nodeName == node.target.name:
+                res = previousValue+newVal
+        elif isinstance(node, Assign):
+            if nodeName and nodeName == nodeValue.targets[0].name:
+                res = previousValue
         elif isinstance(node, If):
             for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr)]:
-                newVal = self.concatOrReplace(elm, previousValue, newValue)
-        return newVal
+                res = self.concatOrReplace(elm, nodeName, res, newVal)
+        logHere("endconcat", nodeName, newVal, "<--")
+        return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         anvalue = ""
@@ -133,9 +140,10 @@ class QueryChecker(BaseChecker):
         def searchBody(node, bvalue="", bfound=False):
             for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
-                    (assValue, bfound) = self.getAssNameValue(elm, nodeName, tolineno)
-                    if bfound:
-                        bvalue = self.concatOrReplace(elm, bvalue, assValue)
+                    (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
+                    if afound:
+                        bvalue = self.concatOrReplace(elm, nodeName, bvalue, assValue)
+                        bfound = afound
             return (bvalue, bfound)
 
         try:
@@ -180,9 +188,11 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.statement(), Return):
                 for elm in nodeValue.parent.scope().body:
                     if nodeValue.statement() == elm: continue #Returns are ignored
+                    logHere("PREVIOUS", nvalue)
                     (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
                     if assFound:
-                        nvalue = self.concatOrReplace(elm, nvalue, assValue)
+                        nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
+                    logHere("AFTER", nvalue, "ASSFOUND", assFound)
             if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
@@ -192,7 +202,7 @@ class QueryChecker(BaseChecker):
                             if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                             (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                             if assFound:
-                                nvalue = self.concatOrReplace(elm, nvalue, assValue)
+                                nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
                                 tryinference = False
                     if not nvalue and tryinference:
                         try:
