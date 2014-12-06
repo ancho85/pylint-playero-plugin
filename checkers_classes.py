@@ -118,19 +118,17 @@ class QueryChecker(BaseChecker):
         return fparam
 
     def concatOrReplace(self, node, nodeName, previousValue, newValue):
-        logHere("startconcat", nodeName, previousValue, "-->", newValue, "<--")
         res = previousValue
         newVal = self.getAssignedTxt(newValue)
         if isinstance(node, AugAssign):
-            if nodeName and nodeName == node.target.name:
+            if nodeName == node.target.name:
                 res = previousValue+newVal
         elif isinstance(node, Assign):
-            if nodeName and nodeName == nodeValue.targets[0].name:
-                res = previousValue
+            if nodeName == node.targets[0].name:
+                res = newVal
         elif isinstance(node, If):
             for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr)]:
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
-        logHere("endconcat", nodeName, newVal, "<--")
         return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
@@ -188,11 +186,9 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.statement(), Return):
                 for elm in nodeValue.parent.scope().body:
                     if nodeValue.statement() == elm: continue #Returns are ignored
-                    logHere("PREVIOUS", nvalue)
                     (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
                     if assFound:
                         nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
-                    logHere("AFTER", nvalue, "ASSFOUND", assFound)
             if not nvalue:
                 nvalue = self.getFuncParams(nodeValue)
                 if not nvalue:
