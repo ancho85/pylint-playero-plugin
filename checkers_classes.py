@@ -121,11 +121,13 @@ class QueryChecker(BaseChecker):
         res = previousValue
         newVal = self.getAssignedTxt(newValue)
         if isinstance(node, AugAssign):
-            if nodeName == node.target.name:
-                res = previousValue+newVal
+            if isinstance(node.target, AssName):
+                if nodeName == node.target.name:
+                    res = previousValue+newVal
         elif isinstance(node, Assign):
-            if nodeName == node.targets[0].name:
-                res = newVal
+            if isinstance(node.targets[0], AssName):
+                if nodeName == node.targets[0].name:
+                    res = newVal
         elif isinstance(node, If):
             for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr)]:
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
