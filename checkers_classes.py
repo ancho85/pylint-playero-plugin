@@ -271,8 +271,6 @@ class QueryChecker(BaseChecker):
         tvalues = []
         try:
             for elts in nodeValue.itered():
-                if isinstance(elts, Name):
-                    elts = self.getNameValue(elts)
                 tvalues.append(self.getAssignedTxt(elts))
         except Exception, e:
             logHere("getTupleValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
@@ -341,6 +339,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getGetattrValue(nodeValue)
             elif isinstance(nodeValue, Name):
                 qvalue = self.getNameValue(nodeValue)
+            elif isinstance(nodeValue, Subscript):
+                qvalue = self.getSubscriptValue(nodeValue)
             elif isinstance(nodeValue, Class):
                 qvalue = self.getClassAttr(nodeValue, "returnFirst")
             else:
