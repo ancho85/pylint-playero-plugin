@@ -129,7 +129,9 @@ class QueryChecker(BaseChecker):
                 if nodeName == node.targets[0].name:
                     res = newVal
         elif isinstance(node, If):
-            for elm in [elm for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+            for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                if res == newVal: continue
+                elif previousValue and atr == "orelse": continue
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
         return res
 
