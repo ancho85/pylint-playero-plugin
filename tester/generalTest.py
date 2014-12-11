@@ -31,7 +31,7 @@ def doTest():
         if not currRoot or root != currRoot:
             currRoot = root
             print root
-        for filename in fnmatch.filter(filenames, '*.py'):
+        for filename in fnmatch.filter(sorted(filenames), '*.py'):
             print "Processing", filename
             pylintcmd = ["python"]
             pylintcmd.append(lintpath)
