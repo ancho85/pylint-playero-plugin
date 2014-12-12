@@ -30,7 +30,8 @@ class CacheStatisticWriter(BaseChecker):
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
-                                    Keyword, Compare, Subscript, For
+                                    Keyword, Compare, Subscript, For, \
+                                    Dict
 from astroid.scoped_nodes import Function, Class
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -258,6 +259,9 @@ class QueryChecker(BaseChecker):
                     if getattrval: newright = '("%s")' % getattrval
                 elif isinstance(nodeValue.right, Const):
                     newright = self.getAssignedTxt(nodeValue.right)
+                elif isinstance(nodeValue.right, Dict):
+                    tupleDictator = lambda (x, y): "'%s':'%s'" % (self.getAssignedTxt(x), self.getAssignedTxt(y))
+                    newright = '{%s}' % ",".join(map(tupleDictator, nodeValue.right.items))
                 else:
                     newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
                 toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
