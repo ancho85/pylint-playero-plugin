@@ -223,7 +223,7 @@ class QueryChecker(BaseChecker):
         self.setUpCallFuncParams(nodeValue)
         cfvalue = ""
         try:
-            lastchild = nodeValue.func.infered()[0].last_child()
+            returns = [x for x in nodeValue.func.infered()[0].nodes_of_class(Return)]
         except Exception, e:
             if isinstance(nodeValue.func, Getattr):
                 if nodeValue.func.attrname == "name":
@@ -237,8 +237,17 @@ class QueryChecker(BaseChecker):
                 elif nodeValue.func.name == "time":
                     cfvalue = "00:00:00"
         else:
-            if isinstance(lastchild, Return):
-                cfvalue = self.getAssignedTxt(lastchild.value)
+            for retNode in returns:
+                if isinstance(retNode.parent, If):
+                    try:
+                        if eval(self.getAssignedTxt(retNode.parent.test)):
+                            cfvalue = self.getAssignedTxt(retNode.value)
+                            break
+                    except Exception:
+                        pass
+                else:
+                    cfvalue = self.getAssignedTxt(retNode.value)
+                    break
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
