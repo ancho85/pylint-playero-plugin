@@ -112,3 +112,12 @@ def escapeAnyToString(text):
     for k, v in strings:
         text = text.replace(k, v)
     return text
+
+def isNumber(text):
+    try:
+        float(text)
+        return True
+    except TypeError:
+        return False
+    except ValueError:
+        return False

@@ -1,6 +1,6 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
-from tools import logHere, escapeAnyToString
+from tools import logHere, escapeAnyToString, isNumber
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""
@@ -129,6 +129,8 @@ class QueryChecker(BaseChecker):
             if isinstance(node.targets[0], AssName):
                 if nodeName == node.targets[0].name:
                     res = newVal
+                    if not isNumber(newVal) and isNumber(previousValue):
+                        res = previousValue
         elif isinstance(node, If):
             for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
                 if res == newVal: continue
@@ -140,14 +142,15 @@ class QueryChecker(BaseChecker):
         anvalue = ""
         anfound = False
 
-        def searchBody(node, bvalue="", bfound=False):
+        def searchBody(node, bvalue=None, bfound=False):
+            getBVal = lambda x: "" if x is None else x
             for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
                     (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
-                    if afound:
-                        bvalue = self.concatOrReplace(elm, nodeName, bvalue, assValue)
+                    if afound and assValue != bvalue:
+                        bvalue = self.concatOrReplace(elm, nodeName, getBVal(bvalue), assValue)
                         bfound = afound
-            return (bvalue, bfound)
+            return (getBVal(bvalue), bfound)
 
         try:
             if nodeValue.lineno > tolineno: return (anvalue, anfound)
