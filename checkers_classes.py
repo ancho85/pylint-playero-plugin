@@ -31,7 +31,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
-                                    Dict
+                                    Dict, List, Index
 from astroid.scoped_nodes import Function, Class
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -342,7 +342,22 @@ class QueryChecker(BaseChecker):
                 instanceName = nodeValue.value.name
                 if instanceName in self.queryTxt:
                     svalue = self.queryTxt[instanceName]
+        else:
+            if isinstance(nodeValue.value, Name):
+                if nodeValue.value.name in nodeValue.parent.scope().keys():
+                    nvalue = self.getNameValue(nodeValue.value)
+                    idx = ""
+                    if isinstance(nodeValue.slice, Index):
+                        idx = self.getAssignedTxt(nodeValue.slice.value)
+                    if nvalue and idx:
+                        try:
+                            svalue = eval("%s[%s]" % (nvalue, idx))
+                        except Exception, e:
+                            logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return svalue
+
+    def getListValue(self, nodeValue):
+        return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
 
     def getAssignedTxt(self, nodeValue):
         if type(nodeValue) in (type(None), int, str, float):
@@ -366,6 +381,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getSubscriptValue(nodeValue)
             elif isinstance(nodeValue, Class):
                 qvalue = self.getClassAttr(nodeValue, "returnFirst")
+            elif isinstance(nodeValue, List):
+                qvalue = self.getListValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
