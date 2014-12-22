@@ -169,24 +169,29 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, If):
                 lookBody = True
                 if nodeValue.test.as_string().find(nodeName) > -1:
-                    if isinstance(nodeValue.test, Compare):
-                        if nodeName not in nodeValue.parent.scope().keys():
-                            leftval = self.getAssignedTxt(nodeValue.test.left)
-                            op = nodeValue.test.ops[0] #a list with 1 tuple
-                            rightval = self.getAssignedTxt(op[1])
-                            evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
-                            try:
-                                lookBody = eval(evaluation)
-                            except Exception, e:
-                                logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-                        else:
-                            anvalue = self.getFuncParams(nodeValue.parent)
-                            if anvalue: lookBody = False
+                    lookBody = self.doCompareValue(nodeValue, nodeName)
                 if lookBody:
                     anvalue, anfound = searchBody(nodeValue)
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return (anvalue, anfound)
+
+    def doCompareValue(self, nodeValue, nodeName):
+        evalResult = True
+        if isinstance(nodeValue.test, Compare):
+            if nodeName not in nodeValue.parent.scope().keys():
+                leftval = self.getAssignedTxt(nodeValue.test.left)
+                op = nodeValue.test.ops[0] #a list with 1 tuple
+                rightval = self.getAssignedTxt(op[1])
+                evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
+                try:
+                    evalResult = eval(evaluation)
+                except Exception, e:
+                    logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            else:
+                anvalue = self.getFuncParams(nodeValue.parent)
+                if anvalue: evalResult = False
+        return evalResult
 
     def getNameValue(self, nodeValue):
         nvalue = ""
@@ -243,7 +248,7 @@ class QueryChecker(BaseChecker):
             for retNode in returns:
                 if isinstance(retNode.parent, If):
                     try:
-                        if eval(self.getAssignedTxt(retNode.parent.test)):
+                        if self.doCompareValue(retNode.parent, nodeName=""):
                             cfvalue = self.getAssignedTxt(retNode.value)
                             break
                     except Exception:
@@ -369,10 +374,7 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            if isinstance(nodeValue, Subscript):
-                qvalue = self.getSubscriptValue(nodeValue)
-            else:
-                logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
+            logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
         except Exception, e:
             logHere("getAssignedTxtError", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
         return qvalue
