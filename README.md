@@ -40,3 +40,5 @@ pylint --load-plugins Playero [..other options..]
 
 * pyparsing-2.0.2
 * MySQL-python-1.2.5
+
+[![status](https://sourcegraph.com/api/repos/github.com/ancho85/pylint-playero-plugin/.badges/status.png)](https://sourcegraph.com/github.com/ancho85/pylint-playero-plugin)
