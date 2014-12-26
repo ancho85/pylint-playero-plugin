@@ -183,11 +183,12 @@ class QueryChecker(BaseChecker):
             leftval = self.getAssignedTxt(nodeValue.test.left)
             op = nodeValue.test.ops[0] #a list with 1 tuple
             rightval = self.getAssignedTxt(op[1])
-            evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
+            if op[0] != "in": rightval = '"""%s"""' % rightval
+            evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
             try:
                 evalResult = eval(evaluation)
             except Exception, e:
-                logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                logHere("EvaluationError doCompareValue %s" % evaluation, e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
             anvalue = self.getFuncParams(nodeValue.parent)
             if anvalue: evalResult = False
         return evalResult
@@ -238,6 +239,8 @@ class QueryChecker(BaseChecker):
                         parent = nodeValue.func.scope().parent
                         if isinstance(parent, Class):
                             cfvalue = parent.name
+                elif nodeValue.func.attrname == "keys":
+                    cfvalue = "['']"
             elif isinstance(nodeValue.func, Name):
                 if nodeValue.func.name == "date":
                     cfvalue = "2000-01-01"
