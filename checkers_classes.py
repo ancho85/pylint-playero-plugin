@@ -142,9 +142,10 @@ class QueryChecker(BaseChecker):
         anvalue = ""
         anfound = False
 
-        def searchBody(node, bvalue=None, bfound=False):
+        def searchBody(node, attrs):
+            bvalue, bfound = None, False
             getBVal = lambda x: "" if x is None else x
-            for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr) if elm.lineno < tolineno]:
+            for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(node, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
                     (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
                     if afound and assValue != bvalue:
@@ -165,13 +166,13 @@ class QueryChecker(BaseChecker):
                         anvalue = self.getAssignedTxt(nodeValue.value)
                         anfound = True
             elif isinstance(nodeValue, For):
-                anvalue, anfound = searchBody(nodeValue)
+                anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
-                lookBody = True
-                if nodeValue.test.as_string().find(nodeName) > -1:
-                    lookBody = self.doCompareValue(nodeValue, nodeName)
+                lookBody = self.doCompareValue(nodeValue, nodeName)
                 if lookBody:
-                    anvalue, anfound = searchBody(nodeValue)
+                    anvalue, anfound = searchBody(nodeValue, attrs=["body"])
+                else:
+                    anvalue, anfound = searchBody(nodeValue, attrs=["orelse"])
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return (anvalue, anfound)
@@ -179,18 +180,16 @@ class QueryChecker(BaseChecker):
     def doCompareValue(self, nodeValue, nodeName):
         evalResult = True
         if isinstance(nodeValue.test, Compare):
-            if nodeName not in nodeValue.parent.scope().keys():
-                leftval = self.getAssignedTxt(nodeValue.test.left)
-                op = nodeValue.test.ops[0] #a list with 1 tuple
-                rightval = self.getAssignedTxt(op[1])
-                evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
-                try:
-                    evalResult = eval(evaluation)
-                except Exception, e:
-                    logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-            else:
-                anvalue = self.getFuncParams(nodeValue.parent)
-                if anvalue: evalResult = False
+            leftval = self.getAssignedTxt(nodeValue.test.left)
+            op = nodeValue.test.ops[0] #a list with 1 tuple
+            rightval = self.getAssignedTxt(op[1])
+            evaluation = '"""%s""" %s """%s"""' % (leftval, op[0], rightval)
+            try:
+                evalResult = eval(evaluation)
+            except Exception, e:
+                logHere("EvaluationError getAssNameValue", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            anvalue = self.getFuncParams(nodeValue.parent)
+            if anvalue: evalResult = False
         return evalResult
 
     def getNameValue(self, nodeValue):
