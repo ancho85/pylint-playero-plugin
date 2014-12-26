@@ -32,7 +32,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Index
-from astroid.scoped_nodes import Function, Class
+from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
@@ -361,6 +361,9 @@ class QueryChecker(BaseChecker):
     def getListValue(self, nodeValue):
         return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
 
+    def getListCompValue(self, nodeValue):
+        return "['']"
+
     def getAssignedTxt(self, nodeValue):
         if type(nodeValue) in (type(None), int, str, float):
             return str(nodeValue)
@@ -385,6 +388,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getClassAttr(nodeValue, "returnFirst")
             elif isinstance(nodeValue, List):
                 qvalue = self.getListValue(nodeValue)
+            elif isinstance(nodeValue, ListComp):
+                qvalue = self.getListCompValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
