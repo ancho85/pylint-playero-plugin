@@ -166,7 +166,6 @@ class QueryChecker(BaseChecker):
                         anvalue = self.getAssignedTxt(nodeValue.value)
                         anfound = True
             elif isinstance(nodeValue, For):
-                #logHere(nodeValue.lineno, nodeValue, "for", nodeName)
                 anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
                 lookBody = self.doCompareValue(nodeValue, nodeName)
@@ -361,7 +360,6 @@ class QueryChecker(BaseChecker):
         return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
 
     def getListCompValue(self, nodeValue):
-        logHere(nodeValue.lineno, nodeValue.repr_tree(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return "['']"
 
     def getAssignedTxt(self, nodeValue):
