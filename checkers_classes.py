@@ -31,7 +31,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
-                                    Dict, List, Index
+                                    Dict, List, Index, Slice
 from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -166,6 +166,7 @@ class QueryChecker(BaseChecker):
                         anvalue = self.getAssignedTxt(nodeValue.value)
                         anfound = True
             elif isinstance(nodeValue, For):
+                #logHere(nodeValue.lineno, nodeValue, "for", nodeName)
                 anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
                 lookBody = self.doCompareValue(nodeValue, nodeName)
@@ -196,33 +197,25 @@ class QueryChecker(BaseChecker):
     def getNameValue(self, nodeValue):
         nvalue = ""
         try:
-            if isinstance(nodeValue.statement(), Return):
-                for elm in nodeValue.parent.scope().body:
-                    if nodeValue.statement() == elm: continue #Returns are ignored
-                    (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.statement().lineno)
+            nvalue = self.getFuncParams(nodeValue)
+            if not nvalue:
+                tryinference = True
+                for elm in nodeValue.scope().body:
+                    if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
+                    (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                     if assFound:
                         nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
-            if not nvalue:
-                nvalue = self.getFuncParams(nodeValue)
-                if not nvalue:
-                    tryinference = True
-                    if nodeValue.name in nodeValue.scope().keys():
-                        for elm in nodeValue.scope().body:
-                            if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
-                            (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
-                            if assFound:
-                                nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
-                                tryinference = False
-                    if not nvalue and tryinference:
-                        try:
-                            inferedValue = nodeValue.infered()
-                        except InferenceError:
-                            pass
-                        else:
-                            for inferedValue in inferedValue:
-                                if inferedValue is not YES:
-                                    nvalue = self.getAssignedTxt(inferedValue)
-                                    if nvalue: break
+                        tryinference = False
+                if not nvalue and tryinference:
+                    try:
+                        inferedValue = nodeValue.infered()
+                    except InferenceError:
+                        pass
+                    else:
+                        for inferedValue in inferedValue:
+                            if inferedValue is not YES:
+                                nvalue = self.getAssignedTxt(inferedValue)
+                                if nvalue: break
         except Exception, e:
             logHere("getNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return nvalue
@@ -351,6 +344,12 @@ class QueryChecker(BaseChecker):
                     idx = ""
                     if isinstance(nodeValue.slice, Index):
                         idx = self.getAssignedTxt(nodeValue.slice.value)
+                    elif isinstance(nodeValue.slice, Slice):
+                        low = self.getAssignedTxt(nodeValue.slice.lower)
+                        up = self.getAssignedTxt(nodeValue.slice.upper)
+                        if not low or low == "None": low = 0
+                        if not up or up == "None": up = int(low) + 1
+                        idx = "%s:%s" % (low, up)
                     if nvalue and idx:
                         try:
                             svalue = eval("%s[%s]" % (nvalue, idx))
@@ -362,6 +361,7 @@ class QueryChecker(BaseChecker):
         return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
 
     def getListCompValue(self, nodeValue):
+        logHere(nodeValue.lineno, nodeValue.repr_tree(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return "['']"
 
     def getAssignedTxt(self, nodeValue):
