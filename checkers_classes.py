@@ -31,7 +31,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
-                                    Dict, List, Index, Slice
+                                    Dict, List, Index, Slice, Comprehension
 from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -166,7 +166,12 @@ class QueryChecker(BaseChecker):
                         anvalue = self.getAssignedTxt(nodeValue.value)
                         anfound = True
             elif isinstance(nodeValue, For):
-                anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
+                if isinstance(nodeValue.target, AssName):
+                    if nodeName and nodeName == nodeValue.target.name:
+                        anvalue = self.getAssignedTxt(nodeValue.iter)
+                        anfound = True
+                if not anfound:
+                    anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
                 lookBody = self.doCompareValue(nodeValue, nodeName)
                 if lookBody:
@@ -360,10 +365,26 @@ class QueryChecker(BaseChecker):
         return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
 
     def getListCompValue(self, nodeValue):
-        return "['']"
+        lvalue = "['%(inA)s']"
+        elements = ""
+        if isinstance(nodeValue.elt, CallFunc):
+            if isinstance(nodeValue.elt.func, Getattr):
+                pass
+        targets = []
+        fgen = nodeValue.generators[0]
+        if isinstance(fgen, Comprehension):
+            if isinstance(fgen.iter, CallFunc):
+                pass
+                #logHere(nodeValue.repr_tree())
+                #logHere(self.getAssignedTxt(fgen.iter.func.expr), "namevalue of func expr", filename="a.log")
+                #logHere(fgen.iter.func.attrname, "attrname to be called", filename="a.log")
+                #logHere(self.getAssignedTxt(fgen.iter.args[0]), "argument", filename="a.log")
+                #callie = getattr(self.getNameValue(fgen.iter.func.expr), fgen.iter.func.attrname)
+                #vallie = callie(self.getNameValue(f.gen.iter.args))
+        return lvalue
 
     def getAssignedTxt(self, nodeValue):
-        if type(nodeValue) in (type(None), int, str, float):
+        if type(nodeValue) in (type(None), int, str, float, list):
             return str(nodeValue)
         fname = self.getNodeFileName(nodeValue)
         qvalue = ""
