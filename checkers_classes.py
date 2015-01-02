@@ -259,6 +259,10 @@ class QueryChecker(BaseChecker):
                 else:
                     cfvalue = self.getAssignedTxt(retNode.value)
                     break
+            if not cfvalue:
+                if isinstance(nodeValue.func, Name):
+                    if nodeValue.func.name == "len":
+                        cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -356,11 +360,11 @@ class QueryChecker(BaseChecker):
                         low = self.getAssignedTxt(nodeValue.slice.lower)
                         up = self.getAssignedTxt(nodeValue.slice.upper)
                         if not low or low == "None": low = 0
-                        if not up or up == "None": up = int(low) + 1
+                        if not up or up == "None": up = "" #int(low) + 1
                         idx = "%s:%s" % (low, up)
                     if nvalue and idx:
                         try:
-                            svalue = eval("%s[%s]" % (nvalue, idx))
+                            svalue = eval("'%s'[%s]" % (nvalue, idx))
                         except Exception, e:
                             logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return svalue
