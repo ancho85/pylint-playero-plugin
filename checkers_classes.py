@@ -31,7 +31,8 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
-                                    Dict, List, Index, Slice, Comprehension
+                                    Dict, List, Index, Slice, Comprehension, \
+                                    Discard
 from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -137,7 +138,7 @@ class QueryChecker(BaseChecker):
                 if res == newVal: continue
                 elif previousValue and atr == "orelse": continue
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
-        elif isinstance(node, For):
+        elif isinstance(node, (For, Discard)):
             res = newVal
         return res
 
@@ -182,6 +183,14 @@ class QueryChecker(BaseChecker):
                     anvalue, anfound = searchBody(nodeValue, attrs=["body"])
                 else:
                     anvalue, anfound = searchBody(nodeValue, attrs=["orelse"])
+            elif isinstance(nodeValue, Discard):
+                if isinstance(nodeValue.value, CallFunc):
+                    nvf = nodeValue.value.func
+                    if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name):
+                        if nodeName == nvf.expr.name:
+                            if nvf.attrname in ("append", "extend"):
+                                anvalue = self.getAssignedTxt(nodeValue.value.args[0])
+                                anfound = True
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return (anvalue, anfound)
@@ -231,10 +240,31 @@ class QueryChecker(BaseChecker):
     def getCallFuncValue(self, nodeValue):
         self.setUpCallFuncParams(nodeValue)
         cfvalue = ""
+        returns  = []
         try:
             returns = [x for x in nodeValue.func.infered()[0].nodes_of_class(Return)]
-        except Exception, e:
-            if isinstance(nodeValue.func, Getattr):
+        except InferenceError, e:
+            pass
+        for retNode in returns:
+            if isinstance(retNode.parent, If):
+                try:
+                    if self.doCompareValue(retNode.parent, nodeName=""):
+                        cfvalue = self.getAssignedTxt(retNode.value)
+                        break
+                except Exception:
+                    pass
+            else:
+                cfvalue = self.getAssignedTxt(retNode.value)
+                break
+        if not cfvalue:
+            if isinstance(nodeValue.func, Name):
+                if nodeValue.func.name == "date":
+                    cfvalue = "2000-01-01"
+                elif nodeValue.func.name == "time":
+                    cfvalue = "00:00:00"
+                elif nodeValue.func.name == "len":
+                    cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
+            elif isinstance(nodeValue.func, Getattr):
                 if nodeValue.func.attrname == "name":
                     if isinstance(nodeValue.func.expr, Name):
                         parent = nodeValue.func.scope().parent
@@ -242,27 +272,11 @@ class QueryChecker(BaseChecker):
                             cfvalue = parent.name
                 elif nodeValue.func.attrname == "keys":
                     cfvalue = "['']"
-            elif isinstance(nodeValue.func, Name):
-                if nodeValue.func.name == "date":
-                    cfvalue = "2000-01-01"
-                elif nodeValue.func.name == "time":
-                    cfvalue = "00:00:00"
-        else:
-            for retNode in returns:
-                if isinstance(retNode.parent, If):
-                    try:
-                        if self.doCompareValue(retNode.parent, nodeName=""):
-                            cfvalue = self.getAssignedTxt(retNode.value)
-                            break
-                    except Exception:
-                        pass
-                else:
-                    cfvalue = self.getAssignedTxt(retNode.value)
-                    break
-            if not cfvalue:
-                if isinstance(nodeValue.func, Name):
-                    if nodeValue.func.name == "len":
-                        cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
+                elif nodeValue.func.attrname == "join":
+                    expr = self.getAssignedTxt(nodeValue.func.expr)
+                    args = self.getAssignedTxt(nodeValue.args[0])
+                    #logHere(expr, args)
+                    cfvalue = ""
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -360,7 +374,7 @@ class QueryChecker(BaseChecker):
                         low = self.getAssignedTxt(nodeValue.slice.lower)
                         up = self.getAssignedTxt(nodeValue.slice.upper)
                         if not low or low == "None": low = 0
-                        if not up or up == "None": up = "" #int(low) + 1
+                        if not up or up == "None": up = ""
                         idx = "%s:%s" % (low, up)
                     if nvalue and idx:
                         try:
@@ -383,6 +397,8 @@ class QueryChecker(BaseChecker):
                     targets = eval(evaluation)
                 except Exception, e:
                     logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            else:
+                targets = self.getAssignedTxt(fgen.iter)
         elements = []
         if isinstance(nodeValue.elt, CallFunc):
             if isinstance(nodeValue.elt.func, Getattr):
@@ -390,6 +406,8 @@ class QueryChecker(BaseChecker):
                     elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
                     logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            #else:
+            #    logHere("lala")
         if elements:
             lvalue = lvalue % {'inA': "','".join(elements)}
         elif targets:
