@@ -40,6 +40,7 @@ from pylint.checkers.utils import check_messages
 from tools import filenameFromPath
 from sqlparse import validateSQL
 from collections import Iterable
+import ast
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -136,6 +137,8 @@ class QueryChecker(BaseChecker):
                 if res == newVal: continue
                 elif previousValue and atr == "orelse": continue
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
+        elif isinstance(node, For):
+            res = newVal
         return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
@@ -170,6 +173,7 @@ class QueryChecker(BaseChecker):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
                         anfound = True
+                        anvalue = ast.literal_eval(anvalue)[0]
                 if not anfound:
                     anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
@@ -366,21 +370,26 @@ class QueryChecker(BaseChecker):
 
     def getListCompValue(self, nodeValue):
         lvalue = "['%(inA)s']"
-        elements = ""
-        if isinstance(nodeValue.elt, CallFunc):
-            if isinstance(nodeValue.elt.func, Getattr):
-                pass
         targets = []
         fgen = nodeValue.generators[0]
         if isinstance(fgen, Comprehension):
             if isinstance(fgen.iter, CallFunc):
-                pass
-                #logHere(nodeValue.repr_tree())
-                #logHere(self.getAssignedTxt(fgen.iter.func.expr), "namevalue of func expr", filename="a.log")
-                #logHere(fgen.iter.func.attrname, "attrname to be called", filename="a.log")
-                #logHere(self.getAssignedTxt(fgen.iter.args[0]), "argument", filename="a.log")
-                #callie = getattr(self.getNameValue(fgen.iter.func.expr), fgen.iter.func.attrname)
-                #vallie = callie(self.getNameValue(f.gen.iter.args))
+                evaluation = "'%s'.%s('%s')" % (self.getAssignedTxt(fgen.iter.func.expr), fgen.iter.func.attrname, self.getAssignedTxt(fgen.iter.args[0]))
+                try:
+                    targets = eval(evaluation)
+                except Exception, e:
+                    logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        elements = []
+        if isinstance(nodeValue.elt, CallFunc):
+            if isinstance(nodeValue.elt.func, Getattr):
+                try:
+                    elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
+                except Exception, e:
+                    logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        if elements:
+            lvalue = lvalue % {'inA': "','".join(elements)}
+        elif targets:
+            lvalue = lvalue % {'inA': "','".join(targets)}
         return lvalue
 
     def getAssignedTxt(self, nodeValue):
