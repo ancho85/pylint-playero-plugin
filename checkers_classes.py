@@ -281,7 +281,8 @@ class QueryChecker(BaseChecker):
                 elif nodeValue.func.attrname == "join":
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
-                    cfvalue = eval("'%s'.join(%s)" % (expr, args))
+                    if args:
+                        cfvalue = eval("'%s'.join(%s)" % (expr, args))
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
