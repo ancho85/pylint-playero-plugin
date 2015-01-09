@@ -275,8 +275,7 @@ class QueryChecker(BaseChecker):
                 elif nodeValue.func.attrname == "join":
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
-                    #logHere(expr, args)
-                    cfvalue = ""
+                    cfvalue = eval("'%s'.join(%s)" % (expr, args))
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -384,10 +383,10 @@ class QueryChecker(BaseChecker):
         return svalue
 
     def getListValue(self, nodeValue):
-        return "['%s']" % "', '".join(map(self.getAssignedTxt, nodeValue.elts))
+        return [self.getAssignedTxt(x) for x in nodeValue.elts]
 
     def getListCompValue(self, nodeValue):
-        lvalue = "['%(inA)s']"
+        lvalue = "['']"
         targets = []
         fgen = nodeValue.generators[0]
         if isinstance(fgen, Comprehension):
@@ -405,13 +404,18 @@ class QueryChecker(BaseChecker):
                 try:
                     elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
-                    logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-            #else:
-            #    logHere("lala")
+                    logHere("getListCompValueEval1Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        elif isinstance(nodeValue.elt, BinOp):
+            try:
+                elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in targets]
+            except Exception, e:
+                logHere("getListCompValueEval2Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+        else:
+            elements = [self.getAssignedTxt(nodeValue.elt)]
         if elements:
-            lvalue = lvalue % {'inA': "','".join(elements)}
+            lvalue = str(elements)
         elif targets:
-            lvalue = lvalue % {'inA': "','".join(targets)}
+            lvalue = str(targets)
         return lvalue
 
     def getAssignedTxt(self, nodeValue):
