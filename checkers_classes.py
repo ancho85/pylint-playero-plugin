@@ -138,11 +138,17 @@ class QueryChecker(BaseChecker):
                 if res == newVal: continue
                 elif previousValue and atr == "orelse": continue
                 res = self.concatOrReplace(elm, nodeName, res, newVal)
-        elif isinstance(node, (For, Discard)):
-            res = newVal
+        elif isinstance(node, For):
+            if isinstance(node.target, AssName) and nodeName == node.target.name:
+                res = newVal
+        elif isinstance(node, Discard):
+            if isinstance(node.value, CallFunc) and isinstance(node.value.func.expr, Name):
+                if nodeName == node.value.func.expr.name:
+                    res = newVal
         return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
+        if not tolineno: tolineno=999999
         anvalue = ""
         anfound = False
 
