@@ -31,7 +31,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
-                                    Dict, List, Index, Slice, Comprehension, \
+                                    Dict, List, Slice, Comprehension, \
                                     Discard
 from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
@@ -391,16 +391,14 @@ class QueryChecker(BaseChecker):
                 if nodeValue.value.name in nodeValue.parent.scope().keys():
                     nvalue = self.getNameValue(nodeValue.value)
                     if not nvalue.startswith("["): nvalue = "'%s'" % nvalue
-                    idx = ""
-                    if isinstance(nodeValue.slice, Index):
-                        idx = self.getAssignedTxt(nodeValue.slice.value)
-                    elif isinstance(nodeValue.slice, Slice):
+                    idx = "0"
+                    if isinstance(nodeValue.slice, Slice):
                         low = self.getAssignedTxt(nodeValue.slice.lower)
                         up = self.getAssignedTxt(nodeValue.slice.upper)
                         if not low or low == "None": low = 0
                         if not up or up == "None": up = ""
                         idx = "%s:%s" % (low, up)
-                    if len(nvalue)>2 and idx:
+                    if len(nvalue)>2:
                         evaluation = "%s[%s]" % (nvalue, idx)
                         try:
                             svalue = eval(evaluation)
