@@ -269,12 +269,17 @@ class QueryChecker(BaseChecker):
                 break
         if not cfvalue:
             if isinstance(nodeValue.func, Name):
-                if nodeValue.func.name == "date":
+                funcname = nodeValue.func.name
+                if funcname == "date":
                     cfvalue = "2000-01-01"
-                elif nodeValue.func.name == "time":
+                elif funcname == "time":
                     cfvalue = "00:00:00"
-                elif nodeValue.func.name == "len":
+                elif funcname == "len":
                     cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
+                elif funcname == "map":
+                    pass
+                elif funcname == "filter":
+                    pass
             elif isinstance(nodeValue.func, Getattr):
                 attrname = nodeValue.func.attrname
                 if attrname == "name":
@@ -291,6 +296,10 @@ class QueryChecker(BaseChecker):
                         cfvalue = eval("'%s'.join(%s)" % (expr, args))
                 elif attrname in ("append", "extend"):
                     cfvalue = self.getAssignedTxt(nodeValue.args[0])
+                elif attrname == "split":
+                    expr = self.getAssignedTxt(nodeValue.func.expr)
+                    args = self.getAssignedTxt(nodeValue.args[0])
+                    cfvalue = "[%s]" % args.join(["'%s'" % str(x) for x in expr.split(args)])
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
