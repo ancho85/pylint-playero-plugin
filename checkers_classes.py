@@ -250,7 +250,9 @@ class QueryChecker(BaseChecker):
         try:
             returns = [x for x in nodeValue.func.infered()[0].nodes_of_class(Return)]
         except InferenceError, e:
-            pass
+            pass #cannot be infered
+        except TypeError, e:
+            pass #cannot be itered. _Yes object?
         for retNode in returns:
             if isinstance(retNode.parent, If):
                 try:
@@ -373,6 +375,7 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.value, Name):
                 if nodeValue.value.name in nodeValue.parent.scope().keys():
                     nvalue = self.getNameValue(nodeValue.value)
+                    if not nvalue.startswith("["): nvalue = "'%s'" % nvalue
                     idx = ""
                     if isinstance(nodeValue.slice, Index):
                         idx = self.getAssignedTxt(nodeValue.slice.value)
@@ -384,7 +387,7 @@ class QueryChecker(BaseChecker):
                         idx = "%s:%s" % (low, up)
                     if nvalue and idx:
                         try:
-                            svalue = eval("'%s'[%s]" % (nvalue, idx))
+                            svalue = eval("%s[%s]" % (nvalue, idx))
                         except Exception, e:
                             logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return svalue
