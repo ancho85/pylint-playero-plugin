@@ -180,7 +180,11 @@ class QueryChecker(BaseChecker):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
                         anfound = True
-                        anvalue = ast.literal_eval(anvalue)[0]
+                        try:
+                            if anvalue:
+                                anvalue = ast.literal_eval(anvalue)[0]
+                        except Exception, e:
+                            logHere("getAssNameValueError literal_eval", e, nodeValue.as_string(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
                 if not anfound:
                     anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
@@ -194,9 +198,8 @@ class QueryChecker(BaseChecker):
                     nvf = nodeValue.value.func
                     if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name):
                         if nodeName == nvf.expr.name:
-                            if nvf.attrname in ("append", "extend"):
-                                anvalue = self.getAssignedTxt(nodeValue.value.args[0])
-                                anfound = True
+                            anvalue = self.getCallFuncValue(nodeValue.value)
+                            anfound = True
         except Exception, e:
             logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return (anvalue, anfound)
@@ -273,18 +276,21 @@ class QueryChecker(BaseChecker):
                 elif nodeValue.func.name == "len":
                     cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
             elif isinstance(nodeValue.func, Getattr):
-                if nodeValue.func.attrname == "name":
+                attrname = nodeValue.func.attrname
+                if attrname == "name":
                     if isinstance(nodeValue.func.expr, Name):
                         parent = nodeValue.func.scope().parent
                         if isinstance(parent, Class):
                             cfvalue = parent.name
-                elif nodeValue.func.attrname == "keys":
+                elif attrname == "keys":
                     cfvalue = "['']"
-                elif nodeValue.func.attrname == "join":
+                elif attrname == "join":
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
                     if args:
                         cfvalue = eval("'%s'.join(%s)" % (expr, args))
+                elif attrname in ("append", "extend"):
+                    cfvalue = self.getAssignedTxt(nodeValue.args[0])
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -385,9 +391,10 @@ class QueryChecker(BaseChecker):
                         if not low or low == "None": low = 0
                         if not up or up == "None": up = ""
                         idx = "%s:%s" % (low, up)
-                    if nvalue and idx:
+                    if len(nvalue)>2 and idx:
+                        evaluation = "%s[%s]" % (nvalue, idx)
                         try:
-                            svalue = eval("%s[%s]" % (nvalue, idx))
+                            svalue = eval(evaluation)
                         except Exception, e:
                             logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return svalue
