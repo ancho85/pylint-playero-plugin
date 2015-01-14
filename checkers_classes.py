@@ -179,10 +179,10 @@ class QueryChecker(BaseChecker):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
+                        if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
                         anfound = True
                         try:
-                            if anvalue:
-                                anvalue = ast.literal_eval(anvalue)[0]
+                            anvalue = ast.literal_eval(anvalue)[0]
                         except Exception, e:
                             logHere("getAssNameValueError literal_eval", e, nodeValue.as_string(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
                 if not anfound:
