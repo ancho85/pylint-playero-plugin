@@ -293,7 +293,8 @@ class QueryChecker(BaseChecker):
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
                     if args:
-                        cfvalue = "%s" % expr.join(["%s" % str(x) for x in ast.literal_eval(args)])
+                        if not args.startswith(("[", "'")): args = "'%s'" % args
+                        cfvalue = "%s" % expr.join(["%s" % x for x in ast.literal_eval(args)])
                 elif attrname in ("append", "extend"):
                     cfvalue = self.getAssignedTxt(nodeValue.args[0])
                 elif attrname == "split":
@@ -306,7 +307,7 @@ class QueryChecker(BaseChecker):
         try:
             qvalue = self.getAssignedTxt(nodeValue.left)
             if nodeValue.op == "%":
-                newleft = '"%s "' % escapeAnyToString(qvalue)
+                newleft = '"""%s """' % escapeAnyToString(qvalue)
                 newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
                 if isinstance(nodeValue.right, Tuple):
                     newright = self.getTupleValues(nodeValue.right)
@@ -331,7 +332,7 @@ class QueryChecker(BaseChecker):
             else:
                 qvalue += self.getAssignedTxt(nodeValue.right)
         except Exception, e:
-            logHere("getBinOpValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            logHere("getBinOpValueError", e, nodeValue.lineno, nodeValue.as_string(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -390,7 +391,7 @@ class QueryChecker(BaseChecker):
             if isinstance(nodeValue.value, Name):
                 if nodeValue.value.name in nodeValue.parent.scope().keys():
                     nvalue = self.getNameValue(nodeValue.value)
-                    if not nvalue.startswith("["): nvalue = "'%s'" % nvalue
+                    if not nvalue.startswith(("[", "'")): nvalue = "'%s'" % nvalue
                     idx = "0"
                     if isinstance(nodeValue.slice, Slice):
                         low = self.getAssignedTxt(nodeValue.slice.lower)
@@ -407,7 +408,7 @@ class QueryChecker(BaseChecker):
         return svalue
 
     def getListValue(self, nodeValue):
-        return [self.getAssignedTxt(x) for x in nodeValue.elts]
+        return "['%s']" % "','".join([self.getAssignedTxt(x) for x in nodeValue.elts])
 
     def getListCompValue(self, nodeValue):
         lvalue = "['']"
@@ -421,7 +422,7 @@ class QueryChecker(BaseChecker):
                 except Exception, e:
                     logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
             else:
-                targets = self.getAssignedTxt(fgen.iter)
+                targets = ast.literal_eval(self.getAssignedTxt(fgen.iter))
         elements = []
         if isinstance(nodeValue.elt, CallFunc):
             if isinstance(nodeValue.elt.func, Getattr):
