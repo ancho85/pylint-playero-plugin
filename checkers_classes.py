@@ -388,23 +388,26 @@ class QueryChecker(BaseChecker):
                 if instanceName in self.queryTxt:
                     svalue = self.queryTxt[instanceName]
         else:
+            nvalue = ""
             if isinstance(nodeValue.value, Name):
                 if nodeValue.value.name in nodeValue.parent.scope().keys():
                     nvalue = self.getNameValue(nodeValue.value)
-                    if not nvalue.startswith(("[", "'")): nvalue = "'%s'" % nvalue
-                    idx = "0"
-                    if isinstance(nodeValue.slice, Slice):
-                        low = self.getAssignedTxt(nodeValue.slice.lower)
-                        up = self.getAssignedTxt(nodeValue.slice.upper)
-                        if not low or low == "None": low = 0
-                        if not up or up == "None": up = ""
-                        idx = "%s:%s" % (low, up)
-                    if len(nvalue)>2:
-                        evaluation = "%s[%s]" % (nvalue, idx)
-                        try:
-                            svalue = eval(evaluation)
-                        except Exception, e:
-                            logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            elif isinstance(nodeValue.value, List):
+                nvalue = self.getListValue(nodeValue.value)
+            if not nvalue.startswith(("[", "'")): nvalue = "'%s'" % nvalue
+            idx = "0"
+            if isinstance(nodeValue.slice, Slice):
+                low = self.getAssignedTxt(nodeValue.slice.lower)
+                up = self.getAssignedTxt(nodeValue.slice.upper)
+                if not low or low == "None": low = 0
+                if not up or up == "None": up = ""
+                idx = "%s:%s" % (low, up)
+            if len(nvalue)>2:
+                evaluation = "%s[%s]" % (nvalue, idx)
+                try:
+                    svalue = eval(evaluation)
+                except Exception, e:
+                    logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         return svalue
 
     def getListValue(self, nodeValue):
