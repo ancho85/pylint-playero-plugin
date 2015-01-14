@@ -424,6 +424,8 @@ class QueryChecker(BaseChecker):
                     targets = eval(evaluation)
                 except Exception, e:
                     logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            elif isinstance(fgen.iter, Name):
+                targets = self.getNameValue(fgen.iter)
             else:
                 targets = ast.literal_eval(self.getAssignedTxt(fgen.iter))
         elements = []
@@ -435,7 +437,7 @@ class QueryChecker(BaseChecker):
                     logHere("getListCompValueEval1Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         elif isinstance(nodeValue.elt, BinOp):
             try:
-                elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in targets]
+                elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
             except Exception, e:
                 logHere("getListCompValueEval2Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
         else:
