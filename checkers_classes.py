@@ -277,7 +277,14 @@ class QueryChecker(BaseChecker):
                 elif funcname == "len":
                     cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
                 elif funcname == "map":
-                    pass
+                    mapto = nodeValue.args[0]
+                    target = self.getAssignedTxt(nodeValue.args[1])
+                    if not target: target="['0','0']"
+                    evaluation = "map(%s, %s)" % (mapto.as_string(), target)
+                    try:
+                        cfvalue = str(eval(evaluation))
+                    except Exception, e:
+                        self.logError("getCallFuncValueMapEvalError", nodeValue, e)
                 elif funcname == "filter":
                     pass
             elif isinstance(nodeValue.func, Getattr):
@@ -288,7 +295,7 @@ class QueryChecker(BaseChecker):
                         if isinstance(parent, Class):
                             cfvalue = parent.name
                 elif attrname == "keys":
-                    cfvalue = "['']"
+                    cfvalue = "['0','0']"
                 elif attrname == "join":
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
@@ -530,6 +537,11 @@ class QueryChecker(BaseChecker):
             if not parsedFileName or parsedFileName == "<?>":
                 parsedFileName = "notFound"
         return parsedFileName
+
+    def logError(self, msg, node, e=""):
+        nodeString = ""
+        if hasattr(node, "as_string"): nodeString = node.as_string()
+        logHere(msg, e, node.lineno, nodeString, filename="%s.log" % filenameFromPath(node.root().file))
 
     ####### pylint's redefinitions #######
 
