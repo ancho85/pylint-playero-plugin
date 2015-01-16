@@ -73,7 +73,7 @@ class QueryChecker(BaseChecker):
                 argvalue = self.getNameValue(funcarg)
                 self.funcParams[funcname][argname] = self.getAssignedTxt(argvalue)
         except Exception, e:
-            logHere("setUpFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
+            self.logError("setUpFuncParamsError", node, e)
 
     def setUpCallFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -93,7 +93,7 @@ class QueryChecker(BaseChecker):
                 else:
                     self.funcParams[funcname][index] = self.getAssignedTxt(nodearg)
         except Exception, e:
-            logHere("setUpCallFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
+            self.logError("setUpCallFuncParamsError", node, e)
 
     def getFuncParams(self, node):
         fparam = ""
@@ -117,7 +117,7 @@ class QueryChecker(BaseChecker):
                                         elif index in self.funcParams[funcname]:
                                             fparam = self.funcParams[funcname][index]
         except Exception, e:
-            logHere("getFuncParamsError", e, filename="%s.log" % filenameFromPath(node.root().file))
+            self.logError("getFuncParamsError", node, e)
         return fparam
 
     def concatOrReplace(self, node, nodeName, previousValue, newValue):
@@ -184,7 +184,7 @@ class QueryChecker(BaseChecker):
                         try:
                             anvalue = ast.literal_eval(anvalue)[0]
                         except Exception, e:
-                            logHere("getAssNameValueError literal_eval", e, nodeValue.as_string(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                            self.logError("getAssNameValueError literal_eval", nodeValue, e)
                 if not anfound:
                     anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
             elif isinstance(nodeValue, If):
@@ -201,7 +201,7 @@ class QueryChecker(BaseChecker):
                             anvalue = self.getCallFuncValue(nodeValue.value)
                             anfound = True
         except Exception, e:
-            logHere("getAssNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            self.logError("getAssNameValueError", nodeValue, e)
         return (anvalue, anfound)
 
     def doCompareValue(self, nodeValue, nodeName):
@@ -215,7 +215,7 @@ class QueryChecker(BaseChecker):
             try:
                 evalResult = eval(evaluation)
             except Exception, e:
-                logHere("EvaluationError doCompareValue %s" % evaluation, e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
             anvalue = self.getFuncParams(nodeValue.parent)
             if anvalue: evalResult = False
         return evalResult
@@ -243,7 +243,7 @@ class QueryChecker(BaseChecker):
                                 nvalue = self.getAssignedTxt(inferedValue)
                                 if nvalue: break
         except Exception, e:
-            logHere("getNameValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            self.logError("getNameValueError", nodeValue, e)
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
@@ -339,7 +339,7 @@ class QueryChecker(BaseChecker):
             else:
                 qvalue += self.getAssignedTxt(nodeValue.right)
         except Exception, e:
-            logHere("getBinOpValueError", e, nodeValue.lineno, nodeValue.as_string(), filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            self.logError("getBinOpValueError", nodeValue, e)
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -348,7 +348,7 @@ class QueryChecker(BaseChecker):
             for elts in nodeValue.itered():
                 tvalues.append(self.getAssignedTxt(elts))
         except Exception, e:
-            logHere("getTupleValuesError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            self.logError("getTupleValuesError", nodeValue, e)
         return '("""%s""")' % '""","""'.join(tvalues)
 
     def getGetattrValue(self, nodeValue):
@@ -367,8 +367,8 @@ class QueryChecker(BaseChecker):
         except InferenceError:
             pass #missing parameters?
         except Exception, e:
-            logHere("getGetattrValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
-        return {True:res, False:nodeValue.attrname}[bool(res)]
+            self.logError("getGetattrValueError", nodeValue, e)
+        return [nodeValue.attrname, res][bool(res)]
 
     def getClassAttr(self, nodeValue, attrSeek=""):
         cvalue = ""
@@ -384,7 +384,7 @@ class QueryChecker(BaseChecker):
                 if "bring" in nodeValue.locals:
                     cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
         except Exception, e:
-            logHere("getClassAttrError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+            self.logError("getClassAttrError", nodeValue, e)
         return cvalue
 
     def getSubscriptValue(self, nodeValue):
@@ -414,7 +414,7 @@ class QueryChecker(BaseChecker):
                 try:
                     svalue = eval(evaluation)
                 except Exception, e:
-                    logHere("getSubscriptValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                    self.logError("getSubscriptValueError", nodeValue, e)
         return svalue
 
     def getListValue(self, nodeValue):
@@ -430,7 +430,7 @@ class QueryChecker(BaseChecker):
                 try:
                     targets = eval(evaluation)
                 except Exception, e:
-                    logHere("getListCompValueError", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                    self.logError("getListCompValueError", nodeValue, e)
             elif isinstance(fgen.iter, Name):
                 targets = self.getNameValue(fgen.iter)
             else:
@@ -441,12 +441,12 @@ class QueryChecker(BaseChecker):
                 try:
                     elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
-                    logHere("getListCompValueEval1Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                    self.logError("getListCompValueEval1Error", nodeValue, e)
         elif isinstance(nodeValue.elt, BinOp):
             try:
                 elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
             except Exception, e:
-                logHere("getListCompValueEval2Error", e, filename="%s.log" % filenameFromPath(nodeValue.root().file))
+                self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
             elements = [self.getAssignedTxt(nodeValue.elt)]
         if elements:
@@ -489,9 +489,9 @@ class QueryChecker(BaseChecker):
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
         except InferenceError, e:
-            logHere("getAssignedTxtInferenceError", e, nodeValue, nodeValue.as_string(), filename="%s.log" % fname)
+            self.logError("getAssignedTxtInferenceError", nodeValue, e)
         except Exception, e:
-            logHere("getAssignedTxtError", e, nodeValue.as_string()[:100], filename="%s.log" % fname)
+            self.logError("getAssignedTxtError", nodeValue, e)
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
@@ -510,7 +510,7 @@ class QueryChecker(BaseChecker):
                 else:
                     self.preprocessQueryIfs(nodeTarget, instanceName, value, isnew)
         except InferenceError, e:
-            logHere("setUpQueryTxtInferenceError", e, filename="%s.log" % filenameFromPath(nodeTarget.root().file))
+            self.logError("setUpQueryTxtInferenceError", nodeTarget, e)
 
     def appendQuery(self, instanceName, value, isnew):
         if isnew or instanceName not in self.queryTxt:
@@ -541,7 +541,7 @@ class QueryChecker(BaseChecker):
     def logError(self, msg, node, e=""):
         nodeString = ""
         if hasattr(node, "as_string"): nodeString = node.as_string()
-        logHere(msg, e, node.lineno, nodeString, filename="%s.log" % filenameFromPath(node.root().file))
+        logHere(msg, e, node.lineno, nodeString, filename="%s.log" % self.getNodeFileName(node))
 
     ####### pylint's redefinitions #######
 
