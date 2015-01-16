@@ -14,7 +14,7 @@ def validateSQL(txt, filename=None):
     else:
         res = cmdValidateSQL(txt, config)
     if res:
-        logHere(txt, filename={False:"queryError.log",True:filename}[bool(filename)])
+        logHere(txt, filename=["queryError.log", filename][bool(filename)])
     return res
 
 def parseSQL(txt):
@@ -48,13 +48,6 @@ def parseSQL(txt):
                                   )                                             #End of non capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
-    global k
-    k = 0
-    def where_and_replacer(mo):
-        global k
-        k += 1
-        if k == 1: return "WHERE"
-        return "AND"
     def value_replacer(mo):
         return "'%s'" % mo.group(1).replace("[","\\[").replace("{", "\\{")
     def integer_value_replacer(mo):
@@ -68,7 +61,10 @@ def parseSQL(txt):
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
     txt = table_pattern.sub(r"\g<1>`\g<2>` ", txt)
     txt = field_pattern.sub(r"`\g<1>`", txt)
-    txt = where_and_pattern.sub(where_and_replacer, txt)
+    mo = where_and_pattern.search(txt)
+    if mo:
+        txt = "%sWHERE%s" % (txt[:mo.start()], txt[mo.end():])
+        txt = where_and_pattern.sub("AND", txt)
     txt = from_pattern.sub(force_no_rows, txt)
     txt = txt.replace(";", " ")
     txt = txt.replace("\\[", "[").replace("\\{", "{")
