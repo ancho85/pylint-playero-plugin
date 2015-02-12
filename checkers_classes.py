@@ -20,7 +20,7 @@ class CacheStatisticWriter(BaseChecker):
         super(CacheStatisticWriter, self).__init__(linter)
         self.cache = cacheobj
 
-    def process_module(self, node):
+    def process_module(self, node): # TODO: should redefine this method to "close"
         """write the cache statistics after plugin usage"""
         logHere(self.cache.getStatistics(), filename='stats.log')
         lastline = sum(1 for line in node.file_stream)
@@ -148,7 +148,7 @@ class QueryChecker(BaseChecker):
         return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
-        if not tolineno: tolineno=999999
+        if not tolineno: tolineno = 999999
         anvalue = ""
         anfound = False
 
@@ -279,7 +279,7 @@ class QueryChecker(BaseChecker):
                 elif funcname == "map":
                     mapto = nodeValue.args[0]
                     target = self.getAssignedTxt(nodeValue.args[1])
-                    if not target: target="['0','0']"
+                    if not target: target = "['0','0']"
                     evaluation = "map(%s, %s)" % (mapto.as_string(), target)
                     try:
                         cfvalue = str(eval(evaluation))
