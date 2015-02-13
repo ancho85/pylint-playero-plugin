@@ -59,6 +59,7 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {} # instanceName : parsedSQLtext
     funcParams = {} # functionName : argumentName : argumentValue
+    disableErrorLog = False
 
     def setUpFuncParams(self, node):
         """define the funcParams dict based directly on the function"""
@@ -67,11 +68,10 @@ class QueryChecker(BaseChecker):
         try:
             if funcname not in self.funcParams:
                 self.funcParams[funcname] = {}
-            for funcarg in node.args.args:
-                argname = funcarg.name
-                if argname in ("self", "classobj", "cls"): continue
-                argvalue = self.getNameValue(funcarg)
-                self.funcParams[funcname][argname] = self.getAssignedTxt(argvalue)
+            for idx, funcarg in enumerate(node.args.args, start=1):
+                if funcarg.name in ("self", "classobj", "cls"): continue
+                if idx in self.funcParams[funcname]: continue
+                self.funcParams[funcname][idx] = self.getAssignedTxt(funcarg)
         except Exception, e:
             self.logError("setUpFuncParamsError", node, e)
 
@@ -85,13 +85,10 @@ class QueryChecker(BaseChecker):
         try:
             if funcname not in self.funcParams:
                 self.funcParams[funcname] = {}
-            index = 0
-            for nodearg in node.args:
-                index += 1
-                if isinstance(nodearg, Keyword):
-                    self.funcParams[funcname][nodearg.arg] = self.getAssignedTxt(nodearg.value)
-                else:
-                    self.funcParams[funcname][index] = self.getAssignedTxt(nodearg)
+            for idx, nodearg in enumerate(node.args, start=1):
+                if idx in self.funcParams: continue
+                if isinstance(nodearg, Keyword): nodearg = nodearg.value
+                self.funcParams[funcname][idx] = self.getAssignedTxt(nodearg)
         except Exception, e:
             self.logError("setUpCallFuncParamsError", node, e)
 
@@ -112,9 +109,7 @@ class QueryChecker(BaseChecker):
                                     continue
                                 else:
                                     if node.name == funcarg.name:
-                                        if funcarg.name in self.funcParams[funcname]:
-                                            fparam = self.funcParams[funcname][funcarg.name]
-                                        elif index in self.funcParams[funcname]:
+                                        if index in self.funcParams[funcname]:
                                             fparam = self.funcParams[funcname][index]
         except Exception, e:
             self.logError("getFuncParamsError", node, e)
@@ -251,7 +246,10 @@ class QueryChecker(BaseChecker):
         cfvalue = ""
         returns  = []
         try:
-            returns = [x for x in nodeValue.func.infered()[0].nodes_of_class(Return)]
+            inferedFunc = nodeValue.func.infered()[0]
+            returns = [x for x in inferedFunc.nodes_of_class(Return)]
+            if nodeValue.root() != inferedFunc.root():
+                self.visit_module(inferedFunc.root()) #setting again funcParams
         except InferenceError, e:
             pass #cannot be infered
         except TypeError, e:
@@ -539,6 +537,7 @@ class QueryChecker(BaseChecker):
         return parsedFileName
 
     def logError(self, msg, node, e=""):
+        if self.disableErrorLog: return
         nodeString = ""
         if hasattr(node, "as_string"): nodeString = node.as_string()
         logHere(msg, e, node.lineno, nodeString, filename="%s.log" % self.getNodeFileName(node))
@@ -547,7 +546,6 @@ class QueryChecker(BaseChecker):
 
     def visit_assign(self, node):
         if self.isSqlAssAttr(node.targets[0]):
-            self.setUpFuncParams(node.scope())
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
@@ -579,3 +577,21 @@ class QueryChecker(BaseChecker):
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
+
+    def visit_module(self, node):
+        self.disableErrorLog = True
+
+        def nodeIsGetattr(child):
+            """ creates the main Func dictionary for all CallFunc's Getattr, before other visits"""
+            if isinstance(child, CallFunc) and isinstance(child.func, Getattr):
+                self.setUpCallFuncParams(child)
+            elif isinstance(child, Function):
+                self.setUpFuncParams(child)
+            else:
+                for child_node in child.get_children():
+                    nodeIsGetattr(child_node)
+
+        for child_node in node.get_children():
+            nodeIsGetattr(child_node)
+
+        self.disableErrorLog = False
