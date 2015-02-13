@@ -68,9 +68,9 @@ class QueryChecker(BaseChecker):
         try:
             if funcname not in self.funcParams:
                 self.funcParams[funcname] = {}
-            for idx, funcarg in enumerate(node.args.args, start=1):
-                if funcarg.name in ("self", "classobj", "cls"): continue
-                if idx in self.funcParams[funcname]: continue
+            funcargs = [x for x in node.args.args if x.name not in ("self", "classobj", "cls")]
+            for idx, funcarg in enumerate(funcargs, start=1):
+                if self.funcParams[funcname].get(idx, ""): continue
                 self.funcParams[funcname][idx] = self.getAssignedTxt(funcarg)
         except Exception, e:
             self.logError("setUpFuncParamsError", node, e)
@@ -86,7 +86,7 @@ class QueryChecker(BaseChecker):
             if funcname not in self.funcParams:
                 self.funcParams[funcname] = {}
             for idx, nodearg in enumerate(node.args, start=1):
-                if idx in self.funcParams: continue
+                if self.funcParams[funcname].get(idx, ""): continue
                 if isinstance(nodearg, Keyword): nodearg = nodearg.value
                 self.funcParams[funcname][idx] = self.getAssignedTxt(nodearg)
         except Exception, e:
@@ -100,17 +100,11 @@ class QueryChecker(BaseChecker):
                 if hasattr(node, "name") and node.name in nodescope.argnames():
                     funcname = nodescope.name
                     if funcname in self.funcParams:
-                        index = 0
-                        for funcarg in nodescope.args.args:
-                            index += 1
-                            if isinstance(funcarg, AssName):
-                                if funcarg.name in ("self", "classobj", "cls") and index == 1:
-                                    index -= 1
-                                    continue
-                                else:
-                                    if node.name == funcarg.name:
-                                        if index in self.funcParams[funcname]:
-                                            fparam = self.funcParams[funcname][index]
+                        funcargs = [x for x in nodescope.args.args if x.name not in ("self", "classobj", "cls")]
+                        for idx, funcarg in enumerate(funcargs, start=1):
+                            if node.name == funcarg.name:
+                                if idx in self.funcParams[funcname]:
+                                    fparam = self.funcParams[funcname][idx]
         except Exception, e:
             self.logError("getFuncParamsError", node, e)
         return fparam
@@ -579,6 +573,7 @@ class QueryChecker(BaseChecker):
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
 
     def visit_module(self, node):
+        if node.name in ("__builtin__",): return
         self.disableErrorLog = True
 
         def nodeIsGetattr(child):
