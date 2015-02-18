@@ -59,21 +59,6 @@ class QueryChecker(BaseChecker):
 
     queryTxt = {} # instanceName : parsedSQLtext
     funcParams = {} # functionName : argumentName : argumentValue
-    disableErrorLog = False
-
-    def setUpFuncParams(self, node):
-        """define the funcParams dict based directly on the function"""
-        if not isinstance(node, Function): return
-        funcname = node.name
-        try:
-            if funcname not in self.funcParams:
-                self.funcParams[funcname] = {}
-            funcargs = [x for x in node.args.args if x.name not in ("self", "classobj", "cls")]
-            for idx, funcarg in enumerate(funcargs, start=1):
-                if self.funcParams[funcname].get(idx, ""): continue
-                self.funcParams[funcname][idx] = self.getAssignedTxt(funcarg)
-        except Exception, e:
-            self.logError("setUpFuncParamsError", node, e)
 
     def setUpCallFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -92,7 +77,7 @@ class QueryChecker(BaseChecker):
         except Exception, e:
             self.logError("setUpCallFuncParamsError", node, e)
 
-    def getFuncParams(self, node):
+    def getFuncParams(self, node, forceSearch=True):
         fparam = ""
         nodescope = node.scope()
         try:
@@ -105,6 +90,9 @@ class QueryChecker(BaseChecker):
                             if node.name == funcarg.name:
                                 if idx in self.funcParams[funcname]:
                                     fparam = self.funcParams[funcname][idx]
+                    elif forceSearch: #funcname wasn't created
+                        self.searchNode(nodescope.root(), funcname)
+                        fparam = self.getFuncParams(node, forceSearch=False) #forceSearch=False to prevent infinite loop
         except Exception, e:
             self.logError("getFuncParamsError", node, e)
         return fparam
@@ -242,8 +230,6 @@ class QueryChecker(BaseChecker):
         try:
             inferedFunc = nodeValue.func.infered()[0]
             returns = [x for x in inferedFunc.nodes_of_class(Return)]
-            if nodeValue.root() != inferedFunc.root():
-                self.visit_module(inferedFunc.root()) #setting again funcParams
         except InferenceError, e:
             pass #cannot be infered
         except TypeError, e:
@@ -572,21 +558,31 @@ class QueryChecker(BaseChecker):
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
 
-    def visit_module(self, node):
-        if node.name in ("__builtin__",): return
-        self.disableErrorLog = True
+    def searchNode(self, node, searchName="", _done=None):
+        """ creates the main Func dictionary for the CallFunc's Getattr of 'searchName' in 'node' """
 
-        def nodeIsGetattr(child):
-            """ creates the main Func dictionary for all CallFunc's Getattr, before other visits"""
-            if isinstance(child, CallFunc) and isinstance(child.func, Getattr):
-                self.setUpCallFuncParams(child)
-            elif isinstance(child, Function):
-                self.setUpFuncParams(child)
+        if _done is None: _done = set()
+        if node in _done: return
+        if not hasattr(node, '_astroid_fields'): return
+        _done.add(node)
+
+        def match():
+            if isinstance(node, CallFunc) and isinstance(node.func, Getattr):
+                if node.func.attrname == searchName:
+                    self.setUpCallFuncParams(node)
+                    return True
+            return False
+
+        for field in node._astroid_fields:
+            value = getattr(node, field)
+            if isinstance(value, (list, tuple)):
+                for child in value:
+                    if isinstance(child, (list, tuple)):
+                        self.searchNode(child[0], searchName, _done)
+                        self.searchNode(child[1], searchName, _done)
+                    else:
+                        if match(): break
+                        self.searchNode(child, searchName, _done)
             else:
-                for child_node in child.get_children():
-                    nodeIsGetattr(child_node)
-
-        for child_node in node.get_children():
-            nodeIsGetattr(child_node)
-
-        self.disableErrorLog = False
+                if match(): break
+                self.searchNode(value, searchName, _done)
