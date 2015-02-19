@@ -58,7 +58,7 @@ class QueryChecker(BaseChecker):
     options = ()
 
     queryTxt = {} # instanceName : parsedSQLtext
-    funcParams = {} # functionName : argumentName : argumentValue
+    funcParams = {} # functionName : argumentIndex : argumentValue
 
     def setUpCallFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -516,6 +516,35 @@ class QueryChecker(BaseChecker):
                 parsedFileName = "notFound"
         return parsedFileName
 
+    def searchNode(self, node, searchName="", _done=None):
+        """ creates the main Func dictionary for the CallFunc's Getattr of 'searchName' in 'node' """
+
+        if _done is None: _done = set()
+        if node in _done: return
+        if not hasattr(node, '_astroid_fields'): return
+        _done.add(node)
+
+        def match():
+            if isinstance(node, CallFunc) and isinstance(node.func, Getattr):
+                if node.func.attrname == searchName:
+                    self.setUpCallFuncParams(node)
+                    return True
+            return False
+
+        for field in node._astroid_fields:
+            value = getattr(node, field)
+            if isinstance(value, (list, tuple)):
+                for child in value:
+                    if isinstance(child, (list, tuple)):
+                        self.searchNode(child[0], searchName, _done)
+                        self.searchNode(child[1], searchName, _done)
+                    else:
+                        if match(): break
+                        self.searchNode(child, searchName, _done)
+            else:
+                if match(): break
+                self.searchNode(value, searchName, _done)
+
     def logError(self, msg, node, e=""):
         if self.disableErrorLog: return
         nodeString = ""
@@ -557,32 +586,3 @@ class QueryChecker(BaseChecker):
                                 self.add_message("W6602", line=node.lineno, node=node, args=name)
                     except TypeError, e:
                         logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
-
-    def searchNode(self, node, searchName="", _done=None):
-        """ creates the main Func dictionary for the CallFunc's Getattr of 'searchName' in 'node' """
-
-        if _done is None: _done = set()
-        if node in _done: return
-        if not hasattr(node, '_astroid_fields'): return
-        _done.add(node)
-
-        def match():
-            if isinstance(node, CallFunc) and isinstance(node.func, Getattr):
-                if node.func.attrname == searchName:
-                    self.setUpCallFuncParams(node)
-                    return True
-            return False
-
-        for field in node._astroid_fields:
-            value = getattr(node, field)
-            if isinstance(value, (list, tuple)):
-                for child in value:
-                    if isinstance(child, (list, tuple)):
-                        self.searchNode(child[0], searchName, _done)
-                        self.searchNode(child[1], searchName, _done)
-                    else:
-                        if match(): break
-                        self.searchNode(child, searchName, _done)
-            else:
-                if match(): break
-                self.searchNode(value, searchName, _done)
