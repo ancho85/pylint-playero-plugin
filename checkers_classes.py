@@ -60,7 +60,7 @@ class QueryChecker(BaseChecker):
     queryTxt = {} # instanceName : parsedSQLtext
     funcParams = {} # functionName : argumentIndex : argumentValue
 
-    def setUpCallFuncParams(self, node):
+    def setFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
         if not isinstance(node, CallFunc): return
         if isinstance(node.func, Getattr):
@@ -74,7 +74,7 @@ class QueryChecker(BaseChecker):
                     idx, nodearg = nodearg.arg, nodearg.value #redefining index and value
                 self.funcParams[funcname][idx] = self.getAssignedTxt(nodearg)
         except Exception, e:
-            self.logError("setUpCallFuncParamsError", node, e)
+            self.logError("setFuncParams", node, e)
 
     def getFuncParams(self, node, forceSearch=True):
         fparam = ""
@@ -223,7 +223,7 @@ class QueryChecker(BaseChecker):
         return nvalue
 
     def getCallFuncValue(self, nodeValue):
-        self.setUpCallFuncParams(nodeValue)
+        self.setFuncParams(nodeValue)
         cfvalue = ""
         returns  = []
         try:
@@ -526,7 +526,7 @@ class QueryChecker(BaseChecker):
         def match():
             if isinstance(node, CallFunc) and isinstance(node.func, Getattr):
                 if node.func.attrname == searchName:
-                    self.setUpCallFuncParams(node)
+                    self.setFuncParams(node)
                     return True
             return False
 
