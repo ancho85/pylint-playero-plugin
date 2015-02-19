@@ -68,11 +68,10 @@ class QueryChecker(BaseChecker):
         elif isinstance(node.func, Name):
             funcname = node.func.name
         try:
-            if funcname not in self.funcParams:
-                self.funcParams[funcname] = {}
-            for idx, nodearg in enumerate(node.args, start=1):
-                if self.funcParams[funcname].get(idx, ""): continue
-                if isinstance(nodearg, Keyword): nodearg = nodearg.value
+            self.funcParams[funcname] = {}
+            for idx, nodearg in enumerate(node.args):
+                if isinstance(nodearg, Keyword):
+                    idx, nodearg = nodearg.arg, nodearg.value #redefining index and value
                 self.funcParams[funcname][idx] = self.getAssignedTxt(nodearg)
         except Exception, e:
             self.logError("setUpCallFuncParamsError", node, e)
@@ -85,11 +84,11 @@ class QueryChecker(BaseChecker):
                 if hasattr(node, "name") and node.name in nodescope.argnames():
                     funcname = nodescope.name
                     if funcname in self.funcParams:
+                        fp = self.funcParams[funcname]
                         funcargs = [x for x in nodescope.args.args if x.name not in ("self", "classobj", "cls")]
-                        for idx, funcarg in enumerate(funcargs, start=1):
+                        for idx, funcarg in enumerate(funcargs):
                             if node.name == funcarg.name:
-                                if idx in self.funcParams[funcname]:
-                                    fparam = self.funcParams[funcname][idx]
+                                fparam = fp.get(funcarg.name, fp.get(idx, "")) #get by name and then, by index
                     elif forceSearch: #funcname wasn't created
                         self.searchNode(nodescope.root(), funcname)
                         fparam = self.getFuncParams(node, forceSearch=False) #forceSearch=False to prevent infinite loop
