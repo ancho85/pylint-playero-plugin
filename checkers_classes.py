@@ -292,7 +292,9 @@ class QueryChecker(BaseChecker):
             qvalue = self.getAssignedTxt(nodeValue.left)
             if nodeValue.op == "%":
                 newleft = '"""%s """' % escapeAnyToString(qvalue)
-                newright = '("%s")' % ('","' * (newleft.count("%s") - 1))
+                strFlagQty = newleft.count("%s")
+                if not strFlagQty: return newleft
+                newright = '("%s")' % ('","' * (strFlagQty - 1))
                 if isinstance(nodeValue.right, Tuple):
                     newright = self.getTupleValues(nodeValue.right)
                 elif isinstance(nodeValue.right, CallFunc):
