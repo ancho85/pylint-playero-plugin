@@ -98,29 +98,33 @@ class QueryChecker(BaseChecker):
 
     def concatOrReplace(self, node, nodeName, previousValue, newValue):
         res = previousValue
-        newVal = self.getAssignedTxt(newValue)
-        if isinstance(node, AugAssign):
-            if isinstance(node.target, AssName):
-                if nodeName == node.target.name:
-                    res = previousValue+newVal
-        elif isinstance(node, Assign):
-            if isinstance(node.targets[0], AssName):
-                if nodeName == node.targets[0].name:
+        try:
+            newVal = self.getAssignedTxt(newValue)
+            if isinstance(node, AugAssign):
+                if isinstance(node.target, AssName):
+                    if nodeName == node.target.name:
+                        res = previousValue+newVal
+            elif isinstance(node, Assign):
+                if isinstance(node.targets[0], AssName):
+                    if nodeName == node.targets[0].name:
+                        res = newVal
+                        if not isNumber(newVal) and isNumber(previousValue):
+                            res = previousValue
+            elif isinstance(node, If):
+                for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                    if res == newVal: continue
+                    elif previousValue and atr == "orelse": continue
+                    res = self.concatOrReplace(elm, nodeName, res, newVal)
+            elif isinstance(node, For):
+                if isinstance(node.target, AssName) and nodeName == node.target.name:
                     res = newVal
-                    if not isNumber(newVal) and isNumber(previousValue):
-                        res = previousValue
-        elif isinstance(node, If):
-            for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
-                if res == newVal: continue
-                elif previousValue and atr == "orelse": continue
-                res = self.concatOrReplace(elm, nodeName, res, newVal)
-        elif isinstance(node, For):
-            if isinstance(node.target, AssName) and nodeName == node.target.name:
-                res = newVal
-        elif isinstance(node, Discard):
-            if isinstance(node.value, CallFunc) and isinstance(node.value.func.expr, Name):
-                if nodeName == node.value.func.expr.name:
-                    res = newVal
+            elif isinstance(node, Discard):
+                if isinstance(node.value, CallFunc):
+                    if hasattr(node.value.func, "expr") and isinstance(node.value.func.expr, Name):
+                        if nodeName == node.value.func.expr.name:
+                            res = newVal
+        except Exception, e:
+            self.logError("concatOrReplaceError", node, e)
         return res
 
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
