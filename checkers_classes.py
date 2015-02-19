@@ -546,7 +546,6 @@ class QueryChecker(BaseChecker):
                 self.searchNode(value, searchName, _done)
 
     def logError(self, msg, node, e=""):
-        if self.disableErrorLog: return
         nodeString = ""
         if hasattr(node, "as_string"): nodeString = node.as_string()
         logHere(msg, e, node.lineno, nodeString, filename="%s.log" % self.getNodeFileName(node))
