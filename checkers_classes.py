@@ -356,16 +356,23 @@ class QueryChecker(BaseChecker):
             self.logError("getGetattrValueError", nodeValue, e)
         return [nodeValue.attrname, res][bool(res)]
 
-    def getClassAttr(self, nodeValue, attrSeek=""):
+    def getClassAttr(self, nodeValue, attrSeek=None):
         cvalue = ""
         try:
-            if "__init__" in nodeValue:
-                for attr in nodeValue["__init__"].body:
-                    if isinstance(attr, Assign):
-                        if isinstance(attr.targets[0], AssAttr):
-                            if attr.targets[0].attrname == attrSeek or attrSeek == "returnFirst":
-                                cvalue = self.getAssignedTxt(attr.value)
-                                if cvalue and attrSeek == "returnFirst": break
+            for ofuncs in nodeValue.get_children():
+                if isinstance(ofuncs, Assign):
+                    if isinstance(ofuncs.targets[0], AssName):
+                        if ofuncs.targets[0].name == attrSeek:
+                            cvalue = self.getAssignedTxt(ofuncs.value)
+                elif isinstance(ofuncs, Function):
+                    if attrSeek == "sql": return cvalue #hotfix for maximum recursion
+                    for attr in nodeValue[ofuncs.name].body:
+                        if isinstance(attr, Assign):
+                            if isinstance(attr.targets[0], AssAttr):
+                                if attr.targets[0].attrname == attrSeek or attrSeek is None:
+                                    cvalue = self.getAssignedTxt(attr.value)
+                        if cvalue: break
+                if cvalue: break
             if not cvalue:
                 if "bring" in nodeValue.locals:
                     cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
@@ -462,7 +469,7 @@ class QueryChecker(BaseChecker):
             elif isinstance(nodeValue, Subscript):
                 qvalue = self.getSubscriptValue(nodeValue)
             elif isinstance(nodeValue, Class):
-                qvalue = self.getClassAttr(nodeValue, "returnFirst")
+                qvalue = self.getClassAttr(nodeValue, attrSeek=None)
             elif isinstance(nodeValue, List):
                 qvalue = self.getListValue(nodeValue)
             elif isinstance(nodeValue, ListComp):
