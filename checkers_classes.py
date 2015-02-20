@@ -284,6 +284,7 @@ class QueryChecker(BaseChecker):
                     if args:
                         if not args.startswith(("[", "'")): args = "'%s'" % args
                         cfvalue = "%s" % expr.join(["%s" % x for x in ast.literal_eval(args)])
+                        if not cfvalue: cfvalue = "%s" % expr.join(['666'])
                 elif attrname in ("append", "extend"):
                     cfvalue = self.getAssignedTxt(nodeValue.args[0])
                 elif attrname == "split":
