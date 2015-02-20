@@ -42,6 +42,7 @@ from tools import filenameFromPath
 from sqlparse import validateSQL
 from collections import Iterable
 import ast
+import re
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
@@ -296,7 +297,8 @@ class QueryChecker(BaseChecker):
             qvalue = self.getAssignedTxt(nodeValue.left)
             if nodeValue.op == "%":
                 newleft = '"""%s """' % escapeAnyToString(qvalue)
-                strFlagQty = newleft.count("%s")
+                regex = re.compile(r"%(\(.+\))?s") #matches '%s' and '%(text)s'
+                strFlagQty = len(regex.findall(newleft))
                 if not strFlagQty: return newleft
                 newright = '("%s")' % ('","' * (strFlagQty - 1))
                 if isinstance(nodeValue.right, Tuple):
