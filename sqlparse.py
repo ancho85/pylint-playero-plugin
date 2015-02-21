@@ -126,6 +126,10 @@ def cmdValidateSQL(txt, config):
                 res = m2.group(1)
         elif found == 1054: #Unknown column
             pass
+        elif found == 1045: #Wrong password
+            res = m.group(0)
+        else: #Other errors
+            res = m.group(0)
     return res
 
 
