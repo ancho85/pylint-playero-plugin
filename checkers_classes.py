@@ -315,8 +315,7 @@ class QueryChecker(BaseChecker):
                 elif isinstance(nodeValue.right, Const):
                     newright = self.getAssignedTxt(nodeValue.right)
                 elif isinstance(nodeValue.right, Dict):
-                    tupleDictator = lambda (x, y): "'%s':'%s'" % (self.getAssignedTxt(x), self.getAssignedTxt(y))
-                    newright = '{%s}' % ",".join(map(tupleDictator, nodeValue.right.items))
+                    newright = self.getDictValue(nodeValue.right)
                 else:
                     newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
                 toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
@@ -413,6 +412,10 @@ class QueryChecker(BaseChecker):
     def getListValue(self, nodeValue):
         return "['%s']" % "','".join([self.getAssignedTxt(x) for x in nodeValue.elts])
 
+    def getDictValue(self, nodeValue):
+        tupleDictator = lambda (x, y): "'%s':'%s'" % (self.getAssignedTxt(x), self.getAssignedTxt(y))
+        return '{%s}' % ",".join(map(tupleDictator, nodeValue.items))
+
     def getListCompValue(self, nodeValue):
         lvalue = "['']"
         targets = []
@@ -449,7 +452,7 @@ class QueryChecker(BaseChecker):
         return lvalue
 
     def getAssignedTxt(self, nodeValue):
-        if type(nodeValue) in (type(None), int, str, float, list):
+        if type(nodeValue) in (type(None), int, str, float, list, dict):
             return str(nodeValue)
         fname = self.getNodeFileName(nodeValue)
         qvalue = ""
@@ -474,6 +477,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getListValue(nodeValue)
             elif isinstance(nodeValue, ListComp):
                 qvalue = self.getListCompValue(nodeValue)
+            elif isinstance(nodeValue, Dict):
+                qvalue = self.getDictValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
