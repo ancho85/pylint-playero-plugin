@@ -119,6 +119,11 @@ class QueryChecker(BaseChecker):
             elif isinstance(node, For):
                 if isinstance(node.target, AssName) and nodeName == node.target.name:
                     res = newVal
+                else:
+                    for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                        if res == newVal: continue
+                        elif previousValue and atr == "orelse": continue
+                        res = self.concatOrReplace(elm, nodeName, res, newVal)
             elif isinstance(node, Discard):
                 if isinstance(node.value, CallFunc):
                     if hasattr(node.value.func, "expr") and isinstance(node.value.func.expr, Name):
@@ -133,10 +138,10 @@ class QueryChecker(BaseChecker):
         anvalue = ""
         anfound = False
 
-        def searchBody(node, attrs):
+        def searchBody(attrs):
             bvalue, bfound = None, False
             getBVal = lambda x: "" if x is None else x
-            for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(node, atr) if elm.lineno < tolineno]:
+            for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(nodeValue, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
                     (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
                     if afound and assValue != bvalue:
@@ -167,13 +172,13 @@ class QueryChecker(BaseChecker):
                         except Exception, e:
                             self.logError("getAssNameValueError literal_eval", nodeValue, e)
                 if not anfound:
-                    anvalue, anfound = searchBody(nodeValue, attrs=["body", "orelse"])
+                    anvalue, anfound = searchBody(["body", "orelse"])
             elif isinstance(nodeValue, If):
                 lookBody = self.doCompareValue(nodeValue, nodeName)
                 if lookBody:
-                    anvalue, anfound = searchBody(nodeValue, attrs=["body"])
+                    anvalue, anfound = searchBody(["body"])
                 else:
-                    anvalue, anfound = searchBody(nodeValue, attrs=["orelse"])
+                    anvalue, anfound = searchBody(["orelse"])
             elif isinstance(nodeValue, Discard):
                 if isinstance(nodeValue.value, CallFunc):
                     nvf = nodeValue.value.func
