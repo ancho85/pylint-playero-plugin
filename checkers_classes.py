@@ -32,7 +32,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Slice, Comprehension, \
-                                    Discard
+                                    Discard, Index
 from astroid.scoped_nodes import Function, Class, ListComp
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -398,7 +398,7 @@ class QueryChecker(BaseChecker):
                     nvalue = self.getNameValue(nodeValue.value)
             elif isinstance(nodeValue.value, List):
                 nvalue = self.getListValue(nodeValue.value)
-            if not nvalue.startswith(("[", "'")): nvalue = "'%s'" % nvalue
+            if not nvalue.startswith(("[", "'", "{")): nvalue = "'%s'" % nvalue
             idx = "0"
             if isinstance(nodeValue.slice, Slice):
                 low = self.getAssignedTxt(nodeValue.slice.lower)
@@ -406,10 +406,17 @@ class QueryChecker(BaseChecker):
                 if not low or low == "None": low = 0
                 if not up or up == "None": up = ""
                 idx = "%s:%s" % (low, up)
+            elif isinstance(nodeValue.slice, Index):
+                idx = self.getAssignedTxt(nodeValue.slice.value)
+                if not idx: idx = "0"
             if len(nvalue)>2:
-                evaluation = "%s[%s]" % (nvalue, idx)
+                evaluation = '%s[%s]' % (nvalue, idx)
+                if nvalue.startswith("{"):
+                    evaluation = '%s.get("%s", None)' % (nvalue, idx)
                 try:
                     svalue = eval(evaluation)
+                except IndexError:
+                    svalue = eval('%s[0]' % nvalue)
                 except Exception, e:
                     self.logError("getSubscriptValueError", nodeValue, e)
         return svalue
