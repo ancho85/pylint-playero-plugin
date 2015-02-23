@@ -55,7 +55,7 @@ def parseSQL(txt):
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     def force_no_rows(mo):
-        return "%s INNER JOIN mysql.`user` ON FALSE\n" % mo.group(1) #doing this I make sure never returns any row
+        return "%s INNER JOIN mysql.`host` ON FALSE\n" % mo.group(1) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
@@ -128,8 +128,8 @@ def cmdValidateSQL(txt, config):
             pass
         elif found == 1045: #Wrong password
             res = m.group(0)
-        else: #Other errors
-            res = m.group(0)
+        #else: #Other errors
+        #    res = m.group(0)
     return res
 
 
