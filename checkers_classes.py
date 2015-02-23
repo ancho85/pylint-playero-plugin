@@ -197,6 +197,7 @@ class QueryChecker(BaseChecker):
             op = nodeValue.test.ops[0] #a list with 1 tuple
             rightval = self.getAssignedTxt(op[1])
             if op[0] != "in": rightval = '"""%s"""' % rightval
+            elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
             try:
                 evalResult = eval(evaluation)
