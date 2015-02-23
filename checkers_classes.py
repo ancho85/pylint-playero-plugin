@@ -266,7 +266,7 @@ class QueryChecker(BaseChecker):
                 elif funcname == "map":
                     mapto = nodeValue.args[0]
                     target = self.getAssignedTxt(nodeValue.args[1])
-                    if not target: target = "['0','0']"
+                    if target in ("", "0"): target = "['0','0']"
                     evaluation = "map(%s, %s)" % (mapto.as_string(), target)
                     try:
                         cfvalue = str(eval(evaluation))
