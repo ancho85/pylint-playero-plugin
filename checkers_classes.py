@@ -370,7 +370,6 @@ class QueryChecker(BaseChecker):
                         if ofuncs.targets[0].name == attrSeek:
                             cvalue = self.getAssignedTxt(ofuncs.value)
                 elif isinstance(ofuncs, Function):
-                    if attrSeek == "sql": return cvalue #hotfix for maximum recursion
                     for attr in nodeValue[ofuncs.name].body:
                         if isinstance(attr, Assign):
                             if isinstance(attr.targets[0], AssAttr):
