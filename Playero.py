@@ -73,14 +73,11 @@ def genericBuilder(module, buildIdx):
     if buildIdx == "Document":
         modname = modname.split("Doc")[0]
     classtype = module.basenames[0]
-    if classtype != buildIdx:
-        rootname =  module.bases[0].root().name
-        if rootname.find(cls)>-1: classtype = buildIdx
-    if classtype == buildIdx:
-        records = getRecordsInfo(modname, extensions=ext)[0]
-        xmlfields = records.get(modname, {})
-        attributes, methods = getClassInfo(modname, parent=classtype)
-        module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((xmlfields, attributes, methods)))
+    records = getRecordsInfo(modname, extensions=ext)[0]
+    xmlfields = records.get(modname, {})
+    attributes, methods = getClassInfo(modname, parent=classtype)
+    module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((xmlfields, attributes, methods)))
+    if any([xmlfields, attributes, methods]):
         res = True
     return res
 
