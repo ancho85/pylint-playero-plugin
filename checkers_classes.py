@@ -211,24 +211,23 @@ class QueryChecker(BaseChecker):
         nvalue = ""
         try:
             nvalue = self.getFuncParams(nodeValue)
-            if not nvalue:
-                tryinference = True
-                for elm in nodeValue.scope().body:
-                    if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
-                    (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
-                    if assFound:
-                        nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
-                        tryinference = False
-                if not nvalue and tryinference:
-                    try:
-                        inferedValue = nodeValue.infered()
-                    except InferenceError:
-                        pass
-                    else:
-                        for inferedValue in inferedValue:
-                            if inferedValue is not YES:
-                                nvalue = self.getAssignedTxt(inferedValue)
-                                if nvalue: break
+            tryinference = True
+            for elm in nodeValue.scope().body:
+                if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
+                (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
+                if assFound:
+                    nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
+                    tryinference = False
+            if not nvalue and tryinference:
+                try:
+                    inferedValue = nodeValue.infered()
+                except InferenceError:
+                    pass
+                else:
+                    for inferedValue in inferedValue:
+                        if inferedValue is not YES:
+                            nvalue = self.getAssignedTxt(inferedValue)
+                            if nvalue: break
         except Exception, e:
             self.logError("getNameValueError", nodeValue, e)
         return nvalue
@@ -240,10 +239,8 @@ class QueryChecker(BaseChecker):
         try:
             inferedFunc = nodeValue.func.infered()[0]
             returns = [x for x in inferedFunc.nodes_of_class(Return)]
-        except InferenceError, e:
-            pass #cannot be infered
-        except TypeError, e:
-            pass #cannot be itered. _Yes object?
+        except (InferenceError, TypeError) as e:
+            pass #cannot be infered | cannot be itered. _Yes object?
         for retNode in returns:
             if isinstance(retNode.parent, If):
                 try:
@@ -297,6 +294,10 @@ class QueryChecker(BaseChecker):
                     expr = self.getAssignedTxt(nodeValue.func.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
                     cfvalue = "[%s]" % args.join(["'%s'" % str(x) for x in expr.split(args)])
+                elif attrname == "replace":
+                    arg1 = self.getAssignedTxt(nodeValue.args[0])
+                    arg2 = self.getAssignedTxt(nodeValue.args[1])
+                    cfvalue = self.getNameValue(nodeValue.func.expr).replace(arg1, arg2)
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
