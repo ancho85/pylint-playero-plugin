@@ -14,6 +14,7 @@ Ensure `pylint-playero-plugin` is installed and on your path, and then run pylin
 ```
 pylint --load-plugins Playero [..other options..]
 ```
+[Read the wiki for usage with SublimeText](https://github.com/ancho85/pylint-playero-plugin/wiki/Configuration-with-SublimeText)
 
 # Features
 
