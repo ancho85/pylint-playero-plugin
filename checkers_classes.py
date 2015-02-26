@@ -285,7 +285,7 @@ class QueryChecker(BaseChecker):
                                 if methodParent.value.func.name == "getattr":
                                     args = methodParent.value.args
                                     if isinstance(args[0], Name) and args[0].name == "self":
-                                        methodname = self.getAssignedTxt(args[1]).strip()
+                                        methodname = self.getAssignedTxt(args[1]).strip() #the for must be analysed here
                                         if methodname in nodeScope.parent.locals:
                                             realmethod = nodeScope.parent.locals[methodname][0]
                                             cfvalue = self.getFunctionReturnValue(realmethod)
@@ -315,6 +315,21 @@ class QueryChecker(BaseChecker):
                     arg1 = self.getAssignedTxt(nodeValue.args[0])
                     arg2 = self.getAssignedTxt(nodeValue.args[1])
                     cfvalue = self.getNameValue(nodeValue.func.expr).replace(arg1, arg2)
+                elif attrname == "fieldNames": #if reachs here, then the inference did not work
+                    if isinstance(nodeValue.func.expr, Getattr) and isinstance(nodeValue.func.expr.expr, Name):
+                        if nodeValue.func.expr.expr.name == "self":
+                            prevSi = nodeValue.previous_sibling()
+                            while prevSi is not None:
+                                if isinstance(prevSi, Assign):
+                                    if isinstance(prevSi.targets[0], AssAttr) and prevSi.targets[0].expr.name == "self": #falta specs
+                                        if isinstance(prevSi.value, CallFunc):
+                                            inst = prevSi.value.infered()[0]
+                                            if isinstance(inst, Instance):
+                                                if attrname in inst.locals:
+                                                    cfvalue = self.getFunctionReturnValue(inst.locals[attrname][0])
+                                                    logHere("fieldNames found", cfvalue)
+                                                    break
+                                prevSi = prevSi.previous_sibling()
         return cfvalue
 
     def getBinOpValue(self, nodeValue):
@@ -372,7 +387,6 @@ class QueryChecker(BaseChecker):
                             if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
                                 heirClass = node.scope().parent.bases[0].infered()[0]
                                 heirCall = heirClass.locals[prevSi.value.func.attrname][0]
-
                                 #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
                                 for ass in heirCall.body:
                                     if isinstance(ass, Assign):
