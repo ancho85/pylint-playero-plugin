@@ -131,7 +131,8 @@ def buildInstantiator(name, instancerName, fieldsMethodsHashed):
     fieldTxt += ["%s%s=%s()" % ("        self.", x, x) for x in xmlfields if xmlfields[x] == "detail"]
     itersTxt  = ["%s" % getIteratorString(name, x) for x in xmlfields if xmlfields[x] == "detail"]
     attrsTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
-    methsTxt  = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    methsTxt  = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x not in ("__init__", "fieldNames")]
+    methsTxt += ["%s" % ("    def fieldNames(self, *args, **kwarg): return ['%s']" % "','".join(xmlfields))]
     newClass  = '''
 class %s(object):
     def __init__(self, *args):
