@@ -179,7 +179,7 @@ def getClassInfo(modulename, parent=""):
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(heirattr)
         methods.update(x for x in heirmeths)
-    if len(methods) == 0 and len(attributes) == 0:
+    if not all([methods, attributes]): #not methods nor attributes for modulename
         from tools import filenameFromPath
         foundPath, foundName = findPaths(modulename)
         foundName = filenameFromPath(foundPath.get(0,"")).split(RECORD)[0]
