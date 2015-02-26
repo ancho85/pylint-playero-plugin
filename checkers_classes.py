@@ -232,26 +232,30 @@ class QueryChecker(BaseChecker):
             self.logError("getNameValueError", nodeValue, e)
         return nvalue
 
-    def getCallFuncValue(self, nodeValue):
-        self.setFuncParams(nodeValue)
-        cfvalue = ""
-        returns  = []
-        try:
-            inferedFunc = nodeValue.func.infered()[0]
-            returns = [x for x in inferedFunc.nodes_of_class(Return)]
-        except (InferenceError, TypeError) as e:
-            pass #cannot be infered | cannot be itered. _Yes object?
+    def getFunctionReturnValue(self, funcNode):
+        retVal = ""
+        returns = [x for x in funcNode.nodes_of_class(Return)]
         for retNode in returns:
             if isinstance(retNode.parent, If):
                 try:
                     if self.doCompareValue(retNode.parent, nodeName=""):
-                        cfvalue = self.getAssignedTxt(retNode.value)
+                        retVal = self.getAssignedTxt(retNode.value)
                         break
                 except Exception:
                     pass
             else:
-                cfvalue = self.getAssignedTxt(retNode.value)
+                retVal = self.getAssignedTxt(retNode.value)
                 break
+        return retVal
+
+    def getCallFuncValue(self, nodeValue):
+        self.setFuncParams(nodeValue)
+        cfvalue = ""
+        try:
+            inferedFunc = nodeValue.func.infered()[0]
+            cfvalue = self.getFunctionReturnValue(inferedFunc)
+        except (InferenceError, TypeError) as e:
+            pass #cannot be infered | cannot be itered. _Yes object?
         if not cfvalue:
             if isinstance(nodeValue.func, Name):
                 funcname = nodeValue.func.name
@@ -272,6 +276,19 @@ class QueryChecker(BaseChecker):
                         self.logError("getCallFuncValueMapEvalError", nodeValue, e)
                 elif funcname == "filter":
                     pass
+                else: #method may be locally defined
+                    nodeScope = nodeValue.scope()
+                    if funcname in nodeScope.locals:
+                        methodParent = nodeScope.locals[funcname][0].parent
+                        if isinstance(methodParent, Assign):
+                            if isinstance(methodParent.value, CallFunc) and isinstance(methodParent.value.func, Name):
+                                if methodParent.value.func.name == "getattr":
+                                    args = methodParent.value.args
+                                    if isinstance(args[0], Name) and args[0].name == "self":
+                                        methodname = self.getAssignedTxt(args[1]).strip()
+                                        if methodname in nodeScope.parent.locals:
+                                            realmethod = nodeScope.parent.locals[methodname][0]
+                                            cfvalue = self.getFunctionReturnValue(realmethod)
             elif isinstance(nodeValue.func, Getattr):
                 attrname = nodeValue.func.attrname
                 if attrname == "name":
