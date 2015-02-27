@@ -150,6 +150,9 @@ def buildMethod(method):
     fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % method)
     return  {0:fake[method]}
 
+def buildStringModule(text):
+    return AstroidBuilder(MANAGER).string_build(text)
+
 
 ###plugin's default methods###
 

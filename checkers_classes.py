@@ -294,17 +294,29 @@ class QueryChecker(BaseChecker):
                                             #backwards name locator
                                             try:
                                                 sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
+                                                forText = args[1].as_string().replace(sname.name, '"""forText"""')
+                                                assignText = ""
                                                 prevSi = nodeValue.previous_sibling()
                                                 if prevSi is None: prevSi = nodeValue.parent
                                                 while nodeValue.scope() == prevSi.scope(): #cannot go beyond this
                                                     if isinstance(prevSi, Assign):
                                                         if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
                                                             sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
+                                                            assignText = prevSi.value.as_string().replace(sname.name, '"""assignText"""')
                                                     elif isinstance(prevSi, For):
                                                         if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
                                                             value = self.getAssignedTxt(prevSi.iter)
                                                             for methodname in ast.literal_eval(value):
-                                                                #XXX if Assign was first processed, what value is the result?
+                                                                logHere("for", methodname)
+                                                                from Playero import buildStringModule
+                                                                assignText = assignText.replace("assignText", methodname)
+                                                                newnode = buildStringModule(assignText)
+                                                                assignText = self.getAssignedTxt(newnode.body[0].value)
+                                                                forText = forText.replace("forText", assignText)
+                                                                newnode = buildStringModule(forText)
+                                                                logHere("trying to get text form", newnode.body[0].value.as_string())
+                                                                methodname = self.getAssignedTxt(newnode.body[0].value)
+                                                                logHere("transformed for", methodname)
                                                                 if methodname in nodeScope.parent.locals:
                                                                     realmethod = nodeScope.parent.locals[methodname][0]
                                                                     cfvalue = self.getFunctionReturnValue(realmethod)
@@ -485,6 +497,8 @@ class QueryChecker(BaseChecker):
                     nvalue = self.getNameValue(nodeValue.value)
             elif isinstance(nodeValue.value, List):
                 nvalue = self.getListValue(nodeValue.value)
+            elif isinstance(nodeValue.value, Const):
+                nvalue = self.getAssignedTxt(nodeValue.value)
             if not nvalue.startswith(("[", "'", "{")): nvalue = "'%s'" % nvalue
             idx = "0"
             if isinstance(nodeValue.slice, Slice):
