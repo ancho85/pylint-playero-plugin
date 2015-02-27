@@ -290,6 +290,30 @@ class QueryChecker(BaseChecker):
                                         if methodname in nodeScope.parent.locals:
                                             realmethod = nodeScope.parent.locals[methodname][0]
                                             cfvalue = self.getFunctionReturnValue(realmethod)
+                                        else:
+                                            #backwards name locator
+                                            try:
+                                                sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
+                                                prevSi = nodeValue.previous_sibling()
+                                                if prevSi is None: prevSi = nodeValue.parent
+                                                while nodeValue.scope() == prevSi.scope(): #cannot go beyond this
+                                                    if isinstance(prevSi, Assign):
+                                                        if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
+                                                            sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
+                                                    elif isinstance(prevSi, For):
+                                                        if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
+                                                            value = self.getAssignedTxt(prevSi.iter)
+                                                            for methodname in ast.literal_eval(value):
+                                                                #XXX if Assign was first processed, what value is the result?
+                                                                if methodname in nodeScope.parent.locals:
+                                                                    realmethod = nodeScope.parent.locals[methodname][0]
+                                                                    cfvalue = self.getFunctionReturnValue(realmethod)
+                                                                    break
+                                                    prevParent = prevSi.parent
+                                                    prevSi = prevSi.previous_sibling()
+                                                    if not prevSi: prevSi = prevParent
+                                            except Exception, e:
+                                                self.logError("backwards locator error", nodeValue, e)
             elif isinstance(nodefn, Getattr):
                 attrname = nodefn.attrname
                 if attrname == "name":
