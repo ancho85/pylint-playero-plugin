@@ -251,14 +251,15 @@ class QueryChecker(BaseChecker):
     def getCallFuncValue(self, nodeValue):
         self.setFuncParams(nodeValue)
         cfvalue = ""
+        nodefn = nodeValue.func
         try:
-            inferedFunc = nodeValue.func.infered()[0]
+            inferedFunc = nodefn.infered()[0]
             cfvalue = self.getFunctionReturnValue(inferedFunc)
         except (InferenceError, TypeError) as e:
             pass #cannot be infered | cannot be itered. _Yes object?
         if not cfvalue:
-            if isinstance(nodeValue.func, Name):
-                funcname = nodeValue.func.name
+            if isinstance(nodefn, Name):
+                funcname = nodefn.name
                 if funcname == "date":
                     cfvalue = "2000-01-01"
                 elif funcname == "time":
@@ -289,17 +290,17 @@ class QueryChecker(BaseChecker):
                                         if methodname in nodeScope.parent.locals:
                                             realmethod = nodeScope.parent.locals[methodname][0]
                                             cfvalue = self.getFunctionReturnValue(realmethod)
-            elif isinstance(nodeValue.func, Getattr):
-                attrname = nodeValue.func.attrname
+            elif isinstance(nodefn, Getattr):
+                attrname = nodefn.attrname
                 if attrname == "name":
-                    if isinstance(nodeValue.func.expr, Name):
-                        parent = nodeValue.func.scope().parent
+                    if isinstance(nodefn.expr, Name):
+                        parent = nodefn.scope().parent
                         if isinstance(parent, Class):
                             cfvalue = parent.name
                 elif attrname == "keys":
                     cfvalue = "['0','0']"
                 elif attrname == "join":
-                    expr = self.getAssignedTxt(nodeValue.func.expr)
+                    expr = self.getAssignedTxt(nodefn.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
                     if args:
                         if not args.startswith(("[", "'")): args = "'%s'" % args
@@ -308,27 +309,30 @@ class QueryChecker(BaseChecker):
                 elif attrname in ("append", "extend"):
                     cfvalue = self.getAssignedTxt(nodeValue.args[0])
                 elif attrname == "split":
-                    expr = self.getAssignedTxt(nodeValue.func.expr)
+                    expr = self.getAssignedTxt(nodefn.expr)
                     args = self.getAssignedTxt(nodeValue.args[0])
                     cfvalue = "[%s]" % args.join(["'%s'" % str(x) for x in expr.split(args)])
                 elif attrname == "replace":
                     arg1 = self.getAssignedTxt(nodeValue.args[0])
                     arg2 = self.getAssignedTxt(nodeValue.args[1])
-                    cfvalue = self.getNameValue(nodeValue.func.expr).replace(arg1, arg2)
-                elif attrname == "fieldNames": #if reachs here, then the inference did not work
-                    if isinstance(nodeValue.func.expr, Getattr) and isinstance(nodeValue.func.expr.expr, Name):
-                        if nodeValue.func.expr.expr.name == "self":
+                    cfvalue = self.getNameValue(nodefn.expr).replace(arg1, arg2)
+                else:
+                    # if reachs here, then the inference did not work
+                    if isinstance(nodefn.expr, Getattr):
+                        if isinstance(nodefn.expr.expr, Name) and nodefn.expr.expr.name == "self":
+                            instAttrName = nodefn.expr.attrname
                             prevSi = nodeValue.previous_sibling()
                             while prevSi is not None:
                                 if isinstance(prevSi, Assign):
-                                    if isinstance(prevSi.targets[0], AssAttr) and prevSi.targets[0].expr.name == "self": #falta specs
-                                        if isinstance(prevSi.value, CallFunc):
-                                            inst = prevSi.value.infered()[0]
-                                            if isinstance(inst, Instance):
-                                                if attrname in inst.locals:
-                                                    cfvalue = self.getFunctionReturnValue(inst.locals[attrname][0])
-                                                    logHere("fieldNames found", cfvalue)
-                                                    break
+                                    target = prevSi.targets[0]
+                                    if isinstance(target, AssAttr):
+                                        if target.expr.name == "self" and target.attrname == instAttrName:
+                                            if isinstance(prevSi.value, CallFunc):
+                                                inst = prevSi.value.infered()[0]
+                                                if isinstance(inst, Instance):
+                                                    if attrname in inst.locals:
+                                                        cfvalue = self.getFunctionReturnValue(inst.locals[attrname][0])
+                                                        break
                                 prevSi = prevSi.previous_sibling()
         return cfvalue
 
