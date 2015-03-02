@@ -161,6 +161,7 @@ def register(linter):
     config = getConfig()
     if config:
         if int(config.get("optionals", "collect_cache_stats")):
+            cache.collectStats = True
             from checkers_classes import CacheStatisticWriter
             linter.register_checker(CacheStatisticWriter(linter, cache))
         if int(config.get("mysql", "connect")):
