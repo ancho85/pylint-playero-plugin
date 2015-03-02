@@ -27,7 +27,7 @@ pylint --load-plugins Playero [..other options..]
 * built-in methods, functions and attributes accepted.  (Now fully supported)
 * SuperClass generation.
 * NewRecord, NewReport, NewWindow generation.
-* TODO: Query parsing and checking for syntax (milestone v0.3.0)
+* Query parsing and checking for syntax
 
 # License
 
@@ -35,8 +35,6 @@ pylint --load-plugins Playero [..other options..]
 
 # Required
 
-* logilab-common-0.61.0
-* astroid-1.1.1
 * pylint-1.0.0
 
 # Required to check mysql syntax:
