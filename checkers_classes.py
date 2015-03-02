@@ -294,29 +294,26 @@ class QueryChecker(BaseChecker):
                                             #backwards name locator
                                             try:
                                                 sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
-                                                forText = args[1].as_string().replace(sname.name, '"""forText"""')
-                                                assignText = ""
+                                                forText1 = args[1].as_string().replace(sname.name, '"""forText"""')
+                                                assignText1 = ""
                                                 prevSi = nodeValue.previous_sibling()
                                                 if prevSi is None: prevSi = nodeValue.parent
                                                 while nodeValue.scope() == prevSi.scope(): #cannot go beyond this
                                                     if isinstance(prevSi, Assign):
                                                         if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
                                                             sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
-                                                            assignText = prevSi.value.as_string().replace(sname.name, '"""assignText"""')
+                                                            assignText1 = prevSi.value.as_string().replace(sname.name, '"""assignText1"""')
                                                     elif isinstance(prevSi, For):
                                                         if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
                                                             value = self.getAssignedTxt(prevSi.iter)
                                                             for methodname in ast.literal_eval(value):
-                                                                logHere("for", methodname)
                                                                 from Playero import buildStringModule
-                                                                assignText = assignText.replace("assignText", methodname)
-                                                                newnode = buildStringModule(assignText)
-                                                                assignText = self.getAssignedTxt(newnode.body[0].value)
-                                                                forText = forText.replace("forText", assignText)
-                                                                newnode = buildStringModule(forText)
-                                                                logHere("trying to get text form", newnode.body[0].value.as_string())
-                                                                methodname = self.getAssignedTxt(newnode.body[0].value)
-                                                                logHere("transformed for", methodname)
+                                                                assignText2 = assignText1.replace("assignText1", methodname)
+                                                                newnode = buildStringModule(assignText2)
+                                                                assignText2 = self.getAssignedTxt(newnode.body[0].value)
+                                                                forText2 = forText1.replace("forText", assignText2)
+                                                                newnode = buildStringModule(forText2)
+                                                                methodname = self.getAssignedTxt(newnode.body[0].value).strip()
                                                                 if methodname in nodeScope.parent.locals:
                                                                     realmethod = nodeScope.parent.locals[methodname][0]
                                                                     cfvalue = self.getFunctionReturnValue(realmethod)
@@ -391,8 +388,6 @@ class QueryChecker(BaseChecker):
                 elif isinstance(nodeValue.right, Getattr):
                     getattrval = self.getAssignedTxt(nodeValue.right)
                     if getattrval: newright = '("%s")' % getattrval
-                elif isinstance(nodeValue.right, Const):
-                    newright = self.getAssignedTxt(nodeValue.right)
                 elif isinstance(nodeValue.right, Dict):
                     newright = self.getDictValue(nodeValue.right)
                 else:
