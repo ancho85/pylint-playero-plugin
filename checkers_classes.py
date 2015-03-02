@@ -278,51 +278,7 @@ class QueryChecker(BaseChecker):
                 elif funcname == "filter":
                     pass
                 else: #method may be locally defined
-                    nodeScope = nodeValue.scope()
-                    if funcname in nodeScope.locals:
-                        methodParent = nodeScope.locals[funcname][0].parent
-                        if isinstance(methodParent, Assign):
-                            if isinstance(methodParent.value, CallFunc) and isinstance(methodParent.value.func, Name):
-                                if methodParent.value.func.name == "getattr":
-                                    args = methodParent.value.args
-                                    if isinstance(args[0], Name) and args[0].name == "self":
-                                        methodname = self.getAssignedTxt(args[1]).strip() #the for must be analysed here
-                                        if methodname in nodeScope.parent.locals:
-                                            realmethod = nodeScope.parent.locals[methodname][0]
-                                            cfvalue = self.getFunctionReturnValue(realmethod)
-                                        else:
-                                            #backwards name locator
-                                            try:
-                                                sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
-                                                forText1 = args[1].as_string().replace(sname.name, '"""forText"""')
-                                                assignText1 = ""
-                                                prevSi = nodeValue.previous_sibling()
-                                                if prevSi is None: prevSi = nodeValue.parent
-                                                while nodeValue.scope() == prevSi.scope(): #cannot go beyond this
-                                                    if isinstance(prevSi, Assign):
-                                                        if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
-                                                            sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
-                                                            assignText1 = prevSi.value.as_string().replace(sname.name, '"""assignText1"""')
-                                                    elif isinstance(prevSi, For):
-                                                        if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
-                                                            value = self.getAssignedTxt(prevSi.iter)
-                                                            for methodname in ast.literal_eval(value):
-                                                                from Playero import buildStringModule
-                                                                assignText2 = assignText1.replace("assignText1", methodname)
-                                                                newnode = buildStringModule(assignText2)
-                                                                assignText2 = self.getAssignedTxt(newnode.body[0].value)
-                                                                forText2 = forText1.replace("forText", assignText2)
-                                                                newnode = buildStringModule(forText2)
-                                                                methodname = self.getAssignedTxt(newnode.body[0].value).strip()
-                                                                if methodname in nodeScope.parent.locals:
-                                                                    realmethod = nodeScope.parent.locals[methodname][0]
-                                                                    cfvalue = self.getFunctionReturnValue(realmethod)
-                                                                    break
-                                                    prevParent = prevSi.parent
-                                                    prevSi = prevSi.previous_sibling()
-                                                    if not prevSi: prevSi = prevParent
-                                            except Exception, e:
-                                                self.logError("backwards locator error", nodeValue, e)
+                    cfvalue = self.getCallUserDefinedName(nodeValue)
             elif isinstance(nodefn, Getattr):
                 attrname = nodefn.attrname
                 if attrname == "name":
@@ -375,6 +331,57 @@ class QueryChecker(BaseChecker):
                                             break
                     prevSi = prevSi.previous_sibling()
         return cgattr
+
+    def getCallUserDefinedName(self, node):
+        cudnvalue = ""
+        nodefn = node.func
+        funcname = nodefn.name
+        nodeScope = node.scope()
+        if funcname in nodeScope.locals:
+            methodParent = nodeScope.locals[funcname][0].parent
+            if isinstance(methodParent, Assign):
+                if isinstance(methodParent.value, CallFunc) and isinstance(methodParent.value.func, Name):
+                    if methodParent.value.func.name == "getattr":
+                        args = methodParent.value.args
+                        if isinstance(args[0], Name) and args[0].name == "self":
+                            methodname = self.getAssignedTxt(args[1]).strip() #the for must be analysed here
+                            if methodname in nodeScope.parent.locals:
+                                realmethod = nodeScope.parent.locals[methodname][0]
+                                cudnvalue = self.getFunctionReturnValue(realmethod)
+                            else:
+                                #backwards name locator
+                                try:
+                                    sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
+                                    forText1 = args[1].as_string().replace(sname.name, '"""forText"""')
+                                    assignText1 = ""
+                                    prevSi = node.previous_sibling()
+                                    if prevSi is None: prevSi = node.parent
+                                    while node.scope() == prevSi.scope(): #cannot go beyond this
+                                        if isinstance(prevSi, Assign):
+                                            if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
+                                                sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
+                                                assignText1 = prevSi.value.as_string().replace(sname.name, '"""assignText1"""')
+                                        elif isinstance(prevSi, For):
+                                            if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
+                                                value = self.getAssignedTxt(prevSi.iter)
+                                                for methodname in ast.literal_eval(value):
+                                                    from Playero import buildStringModule
+                                                    assignText2 = assignText1.replace("assignText1", methodname)
+                                                    newnode = buildStringModule(assignText2)
+                                                    assignText2 = self.getAssignedTxt(newnode.body[0].value)
+                                                    forText2 = forText1.replace("forText", assignText2)
+                                                    newnode = buildStringModule(forText2)
+                                                    methodname = self.getAssignedTxt(newnode.body[0].value).strip()
+                                                    if methodname in nodeScope.parent.locals:
+                                                        realmethod = nodeScope.parent.locals[methodname][0]
+                                                        cudnvalue = self.getFunctionReturnValue(realmethod)
+                                                        break
+                                        prevParent = prevSi.parent
+                                        prevSi = prevSi.previous_sibling()
+                                        if not prevSi: prevSi = prevParent
+                                except Exception, e:
+                                    self.logError("backwards locator error", node, e)
+        return cudnvalue
 
     def getBinOpValue(self, nodeValue):
         try:
