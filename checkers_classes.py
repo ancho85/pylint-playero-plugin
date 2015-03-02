@@ -351,23 +351,30 @@ class QueryChecker(BaseChecker):
                     cfvalue = self.getNameValue(nodefn.expr).replace(arg1, arg2)
                 else:
                     # if reachs here, then the inference did not work
-                    if isinstance(nodefn.expr, Getattr):
-                        if isinstance(nodefn.expr.expr, Name) and nodefn.expr.expr.name == "self":
-                            instAttrName = nodefn.expr.attrname
-                            prevSi = nodeValue.previous_sibling()
-                            while prevSi is not None:
-                                if isinstance(prevSi, Assign):
-                                    target = prevSi.targets[0]
-                                    if isinstance(target, AssAttr):
-                                        if target.expr.name == "self" and target.attrname == instAttrName:
-                                            if isinstance(prevSi.value, CallFunc):
-                                                inst = prevSi.value.infered()[0]
-                                                if isinstance(inst, Instance):
-                                                    if attrname in inst.locals:
-                                                        cfvalue = self.getFunctionReturnValue(inst.locals[attrname][0])
-                                                        break
-                                prevSi = prevSi.previous_sibling()
+                    cfvalue = self.getCallGetattr(nodeValue)
         return cfvalue
+
+    def getCallGetattr(self, node):
+        cgattr = ""
+        nodefn = node.func
+        attrname = nodefn.attrname
+        if isinstance(nodefn.expr, Getattr):
+            if isinstance(nodefn.expr.expr, Name) and nodefn.expr.expr.name == "self":
+                instAttrName = nodefn.expr.attrname
+                prevSi = node.previous_sibling()
+                while prevSi is not None:
+                    if isinstance(prevSi, Assign):
+                        target = prevSi.targets[0]
+                        if isinstance(target, AssAttr):
+                            if target.expr.name == "self" and target.attrname == instAttrName:
+                                if isinstance(prevSi.value, CallFunc):
+                                    inst = prevSi.value.infered()[0]
+                                    if isinstance(inst, Instance):
+                                        if attrname in inst.locals:
+                                            cgattr = self.getFunctionReturnValue(inst.locals[attrname][0])
+                                            break
+                    prevSi = prevSi.previous_sibling()
+        return cgattr
 
     def getBinOpValue(self, nodeValue):
         try:
