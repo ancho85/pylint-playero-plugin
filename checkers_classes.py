@@ -174,7 +174,7 @@ class QueryChecker(BaseChecker):
                 if not anfound:
                     anvalue, anfound = searchBody(["body", "orelse"])
             elif isinstance(nodeValue, If):
-                lookBody = self.doCompareValue(nodeValue, nodeName)
+                lookBody = self.doCompareValue(nodeValue)
                 if lookBody:
                     anvalue, anfound = searchBody(["body"])
                 else:
@@ -190,7 +190,7 @@ class QueryChecker(BaseChecker):
             self.logError("getAssNameValueError", nodeValue, e)
         return (anvalue, anfound)
 
-    def doCompareValue(self, nodeValue, nodeName):
+    def doCompareValue(self, nodeValue):
         evalResult = True
         if isinstance(nodeValue.test, Compare):
             leftval = self.getAssignedTxt(nodeValue.test.left)
@@ -238,7 +238,7 @@ class QueryChecker(BaseChecker):
         for retNode in returns:
             if isinstance(retNode.parent, If):
                 try:
-                    if self.doCompareValue(retNode.parent, nodeName=""):
+                    if self.doCompareValue(retNode.parent):
                         retVal = self.getAssignedTxt(retNode.value)
                         break
                 except Exception:
@@ -576,7 +576,6 @@ class QueryChecker(BaseChecker):
     def getAssignedTxt(self, nodeValue):
         if type(nodeValue) in (type(None), int, str, float, list, dict):
             return str(nodeValue)
-        fname = self.getNodeFileName(nodeValue)
         qvalue = ""
         try:
             if isinstance(nodeValue, Const):
