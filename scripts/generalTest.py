@@ -5,9 +5,16 @@ and finally deletes zero-sized files, leaving only those showing errors
 """
 
 import sys
+import os
+
+def silentRemove(fn):
+    try:
+        os.remove(fn)
+        os.remove("pylint_global.txt")
+    except OSError:
+        pass
 
 def doTest():
-    import os
     import subprocess
     import ConfigParser
     import fnmatch
@@ -39,6 +46,7 @@ def doTest():
             print root
         for filename in fnmatch.filter(sorted(filenames), '*.py'):
             print "Processing", filename
+            newfn = filename[:-3]
             pylintcmd = ["python"]
             pylintcmd.append(lintpath)
             pylintcmd.append("--errors-only")
@@ -51,15 +59,16 @@ def doTest():
             #pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
             pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
             pylintcmd.append(os.path.join(root, filename))
+            pylintcmd.append("> pylint_%s.txt" % newfn)
 
             process = subprocess.Popen(
-                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % filename, "w"), env=envi
+                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % newfn, "w"), env=envi
             )
             process.stdout.read() #to keep the process open until is finished and then delete zero size files
-    for zero in [zf for zf in os.listdir(os.path.dirname(os.path.abspath(__file__))) if os.stat(zf).st_size == 0]:
-        os.remove(zero)
-    print "\a" #cross-platform alert on finish
 
+            (lambda: [silentRemove(fn) for fn in ("_stderr%s.txt" % newfn, "pylint_%s.txt" % newfn) if os.stat(fn).st_size == 0])()
+
+    print "\a" #cross-platform alert on finish
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
@@ -69,4 +78,3 @@ if __name__ == "__main__":
         pool = multiprocessing.Pool(processes=None) #cpu_count()
         r = pool.apply_async(func=doTest)
         r.wait()
-        #doTest()
