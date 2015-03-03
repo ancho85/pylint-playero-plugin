@@ -1,3 +1,9 @@
+"""
+This script tests at once all python scripts in a given directory usign
+async multiprocessing. All errors are stored in a separate filename.txt
+and finally deletes zero-sized files, leaving only those showing errors
+"""
+
 import sys
 
 def doTest():
@@ -43,7 +49,7 @@ def doTest():
             pylintcmd.append("--load-plugins=Playero ")
             pylintcmd.append("--rcfile=%s/config/.pylintrc" % pluginpath)
             #pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
-            #pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
+            pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
             pylintcmd.append(os.path.join(root, filename))
 
             process = subprocess.Popen(
