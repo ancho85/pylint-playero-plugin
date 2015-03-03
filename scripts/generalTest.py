@@ -10,9 +10,8 @@ import os
 def silentRemove(fn):
     try:
         os.remove(fn)
-        os.remove("pylint_global.txt")
     except OSError:
-        pass
+        os.unlink(fn)
 
 def doTest():
     import subprocess
@@ -53,6 +52,7 @@ def doTest():
             pylintcmd.append("--reports=y")
             pylintcmd.append("--files-output=y")
             pylintcmd.append("--output-format=text")
+            pylintcmd.append("--reports=n")
             pylintcmd.append("--msg-template={line}:{msg_id}:{msg} ")
             pylintcmd.append("--load-plugins=Playero ")
             pylintcmd.append("--rcfile=%s/config/.pylintrc" % pluginpath)
