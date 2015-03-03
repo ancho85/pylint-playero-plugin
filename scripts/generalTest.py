@@ -11,7 +11,7 @@ def silentRemove(fn):
     try:
         os.remove(fn)
     except OSError:
-        os.unlink(fn)
+        pass
 
 def doTest():
     import subprocess
