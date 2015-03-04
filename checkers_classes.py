@@ -46,7 +46,7 @@ import re
 
 def queryEnabled():
     from funcs import getConfig
-    return bool(getConfig().get("mysql", "connect"))
+    return int(getConfig().get("mysql", "connect"))
 
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker

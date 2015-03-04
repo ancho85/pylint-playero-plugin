@@ -161,7 +161,7 @@ def register(linter):
     from checkers_classes import QueryChecker
     linter.register_checker(QueryChecker(linter))
 
-    if bool(getConfig().get("optionals", "collect_cache_stats")):
+    if int(getConfig().get("optionals", "collect_cache_stats")):
         cache.collectStats = True
         from checkers_classes import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
