@@ -1,6 +1,7 @@
+import os
 import re
 from funcs import getConfig
-from tools import logHere
+from tools import logHere, includeZipLib
 
 def validateSQL(txt, filename=None):
     config = getConfig()
@@ -80,6 +81,9 @@ def apiValidateSQL(txt, config):
     dbstring += ":" + config.get('mysql', 'pass')
     dbstring += ":" + config.get('mysql', 'dbname')
     dbstring += ":" + config.get('mysql', 'port')
+
+    includeZipLib("mysqlparser.zip")
+
     from mysqlparser.pylib import db
     dbh = db.Connect(dbstring)
     from mysqlparser.pylib import schema
@@ -99,7 +103,6 @@ def cmdValidateSQL(txt, config):
     """validates sql string using command line"""
     res = ""
     import subprocess
-    import os
     mysqlcmd = ["%s/mysql" % config.get("mysql", "%spath" % os.name)]
     mysqlcmd.append("-u%s" % config.get('mysql', 'user'))
     mysqlcmd.append("-p%s" % config.get('mysql', 'pass'))

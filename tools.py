@@ -86,6 +86,12 @@ def embeddedImport(modulename):
     HERE = os.path.dirname(os.path.abspath(__file__))
     return imp.load_source(modulename, os.path.join(HERE, "corepy", "embedded", "%s.py" % modulename))
 
+def includeZipLib(zipfile):
+    import os
+    import sys
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(HERE, "libs", zipfile))
+
 def xmlValue(xtype):
     return {"string": "''",
             "boolean": True,
