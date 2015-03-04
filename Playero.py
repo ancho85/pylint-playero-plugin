@@ -3,9 +3,9 @@ from astroid.builder import AstroidBuilder
 from astroid import scoped_nodes
 from funcs import *
 from tools import hashIt, xmlValue
-from transforms.transform_mods import modules_transform
-from transforms.transform_func import function_transform
-from transforms.transform_exec import exec_transform
+from transforms.modules import modules_transform
+from transforms.functions import function_transform
+from transforms.execs import exec_transform
 
 notFound = set()
 
