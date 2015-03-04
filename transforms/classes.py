@@ -1,11 +1,8 @@
-from astroid import MANAGER, node_classes
+from astroid import MANAGER
 from astroid.builder import AstroidBuilder
-from astroid import scoped_nodes
 from funcs import *
 from tools import hashIt, xmlValue
-from transforms.modules import modules_transform
-from transforms.functions import function_transform
-from transforms.execs import exec_transform
+
 
 notFound = set()
 
@@ -154,21 +151,5 @@ def buildStringModule(text):
     return AstroidBuilder(MANAGER).string_build(text)
 
 
-###plugin's default methods###
 
-def register(linter):
-    """required method to auto register this checker"""
-    from checkers_classes import QueryChecker
-    linter.register_checker(QueryChecker(linter))
-
-    if int(getConfig().get("optionals", "collect_cache_stats")):
-        cache.collectStats = True
-        from checkers_classes import CacheStatisticWriter
-        linter.register_checker(CacheStatisticWriter(linter, cache))
-
-
-MANAGER.register_transform(scoped_nodes.Module, modules_transform)
-MANAGER.register_transform(scoped_nodes.Class, classes_transform)
-MANAGER.register_transform(node_classes.CallFunc, function_transform)
-MANAGER.register_transform(node_classes.Exec, exec_transform)
 
