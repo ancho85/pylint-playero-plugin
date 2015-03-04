@@ -49,15 +49,14 @@ def doTest():
             pylintcmd = ["python"]
             pylintcmd.append(lintpath)
             pylintcmd.append("--errors-only")
-            pylintcmd.append("--reports=y")
+            pylintcmd.append("--reports=n")
             pylintcmd.append("--files-output=y")
             pylintcmd.append("--output-format=text")
-            pylintcmd.append("--reports=n")
             pylintcmd.append("--msg-template={line}:{msg_id}:{msg} ")
             pylintcmd.append("--load-plugins=Playero ")
             pylintcmd.append("--rcfile=%s/config/.pylintrc" % pluginpath)
-            #pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
-            pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
+            pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
+            #pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
             pylintcmd.append(os.path.join(root, filename))
             pylintcmd.append("> pylint_%s.txt" % newfn)
 
