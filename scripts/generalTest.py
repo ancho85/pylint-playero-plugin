@@ -38,6 +38,7 @@ def doTest():
     if len(pythonpath): preffix = ","
     envi['PYTHONPATH'] = pythonpath + "%s%s" % (preffix, pluginpath)
 
+    thisPath = os.path.dirname(os.path.abspath(__file__))
     currRoot = None
     for root, dirnames, filenames in os.walk(sys.argv[1]):
         if not currRoot or root != currRoot:
@@ -45,7 +46,6 @@ def doTest():
             print root
         for filename in fnmatch.filter(sorted(filenames), '*.py'):
             print "Processing", filename
-            newfn = filename[:-3]
             pylintcmd = ["python"]
             pylintcmd.append(lintpath)
             pylintcmd.append("--errors-only")
@@ -58,14 +58,13 @@ def doTest():
             pylintcmd.append("--disable=C0304,C0103,W0512,C0301,W0614,W0401,W0403,C0321,W0511,W0142,W0141,R0913,R0903,W0212,W0312,C0111,C0103,C0303")
             #pylintcmd.extend(["--disable=all", "--enable=E6601"]) #use this line to check only a particular error
             pylintcmd.append(os.path.join(root, filename))
-            pylintcmd.append("> pylint_%s.txt" % newfn)
 
             process = subprocess.Popen(
-                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % newfn, "w"), env=envi
+                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % filename, "w"), env=envi
             )
             process.stdout.read() #to keep the process open until is finished and then delete zero size files
 
-            (lambda: [silentRemove(fn) for fn in ("_stderr%s.txt" % newfn, "pylint_%s.txt" % newfn) if os.stat(fn).st_size == 0])()
+            (lambda: [silentRemove(fn) for fn in os.listdir(thisPath) if os.stat(fn).st_size == 0])()
 
     print "\a" #cross-platform alert on finish
 
