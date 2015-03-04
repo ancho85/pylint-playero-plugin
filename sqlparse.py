@@ -5,8 +5,6 @@ from tools import logHere, includeZipLib
 
 def validateSQL(txt, filename=None):
     config = getConfig()
-    if not config: return ""
-    if not int(config.get("mysql", "connect")): return ""
     if config.get("mysql", "dbname") == "databasename": return "MySQL database is not configured. Check playero.cfg file"
     if config.get("mysql", "pass") == "******": return "MySQL password is not configured. Check playero.cfg file"
     txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
