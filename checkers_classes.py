@@ -44,6 +44,10 @@ from collections import Iterable
 import ast
 import re
 
+def queryEnabled():
+    from funcs import getConfig
+    return bool(getConfig().get("mysql", "connect"))
+
 class QueryChecker(BaseChecker):
     __implements__ = IAstroidChecker
 
@@ -694,17 +698,20 @@ class QueryChecker(BaseChecker):
     ####### pylint's redefinitions #######
 
     def visit_assign(self, node):
+        if not queryEnabled(): return
         if self.isSqlAssAttr(node.targets[0]):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
     def visit_augassign(self, node):
+        if not queryEnabled(): return
         if self.isSqlAssAttr(node.target):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
 
     @check_messages('query-syntax-error', 'query-inference')
     def visit_callfunc(self, node):
+        if not queryEnabled(): return
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
                 inferedNode = node.infered()

@@ -158,15 +158,13 @@ def buildStringModule(text):
 
 def register(linter):
     """required method to auto register this checker"""
-    config = getConfig()
-    if config:
-        if int(config.get("optionals", "collect_cache_stats")):
-            cache.collectStats = True
-            from checkers_classes import CacheStatisticWriter
-            linter.register_checker(CacheStatisticWriter(linter, cache))
-        if int(config.get("mysql", "connect")):
-            from checkers_classes import QueryChecker
-            linter.register_checker(QueryChecker(linter))
+    from checkers_classes import QueryChecker
+    linter.register_checker(QueryChecker(linter))
+
+    if bool(getConfig().get("optionals", "collect_cache_stats")):
+        cache.collectStats = True
+        from checkers_classes import CacheStatisticWriter
+        linter.register_checker(CacheStatisticWriter(linter, cache))
 
 
 MANAGER.register_transform(scoped_nodes.Module, modules_transform)
