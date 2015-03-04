@@ -43,7 +43,7 @@ def getEmbeddedPath():
         res = "e:/Develop/desarrollo/python/other/pylint-playero-plugin"
         if (os.name == "posix"):
             res = "/home/ancho/Develop/pylint-playero-plugin"
-    return res
+    return os.path.join(res, "corepy", "embedded")
 
 @cache.store
 def getScriptDirs(level=255):
@@ -86,7 +86,7 @@ def buildPaths():
             dh = parseWindowRecordName(wpaths)
             recPaths[winname] = recPaths.get(dh.name)
 
-    for cpth in [os.path.join(getEmbeddedPath(), "corepy", "embedded")]:
+    for cpth in [getEmbeddedPath()]:
         for filename in os.listdir(cpth):
             uniquePath = "%s/%s" % (cpth, filename)
             realname = filename.split('.')[0]
@@ -161,7 +161,7 @@ def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = {}, set(), {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
-    paths.append(os.path.join(getEmbeddedPath(), "corepy", "embedded"))
+    paths.append(getEmbeddedPath())
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
@@ -194,9 +194,8 @@ def getModName(modname):
     if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
     if modname.find("_")>-1:
-        embpath = os.path.join(getEmbeddedPath(), "corepy", "embedded")
         corePath = False
-        for _ in [f for f in os.listdir(embpath) if f.split(".py")[0] == modname]:
+        for _ in [f for f in os.listdir(getEmbeddedPath()) if f.split(".py")[0] == modname]:
             corePath = True
         if not corePath:
             modname = None
