@@ -125,8 +125,8 @@ def cmdValidateSQL(txt, config):
             m2 = re.search('Table (.*).*', m.group(0))
             if m2:
                 res = m2.group(1)
-        elif found == 1054: #Unknown column
-            pass
+        elif found == 1049: #Database doesn't exists
+            res = m.group(0)
         elif found == 1045: #Wrong password
             res = m.group(0)
         #else: #Other errors
