@@ -1,32 +1,4 @@
-from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
-from tools import logHere, escapeAnyToString, isNumber
-
-class CacheStatisticWriter(BaseChecker):
-    """write the cache statistics after plugin usage"""
-
-    __implements__ = IRawChecker
-
-    name = 'cache_statistics_writer'
-    msgs = {'C6666': ('cache statistics writed at log directory',
-                      ('cache statistics writed at log directory'),
-                      ('cache statistics writed at log directory')),
-            }
-    options = ()
-    priority = -666
-    cache = None
-
-    def __init__(self, linter=None, cacheobj=None):
-        super(CacheStatisticWriter, self).__init__(linter)
-        self.cache = cacheobj
-
-    def process_module(self, node): # TODO: should redefine this method to "close"
-        """write the cache statistics after plugin usage"""
-        logHere(self.cache.getStatistics(), filename='stats.log')
-        lastline = sum(1 for line in node.file_stream)
-        self.add_message('C6666', lastline)
-
-
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
@@ -38,7 +10,7 @@ from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from tools import filenameFromPath
+from tools import logHere, filenameFromPath, escapeAnyToString, isNumber
 from sqlparse import validateSQL
 from collections import Iterable
 import ast
@@ -369,7 +341,7 @@ class QueryChecker(BaseChecker):
                                             if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
                                                 value = self.getAssignedTxt(prevSi.iter)
                                                 for methodname in ast.literal_eval(value):
-                                                    from Playero import buildStringModule
+                                                    from transforms.classes import buildStringModule
                                                     assignText2 = assignText1.replace("assignText1", methodname)
                                                     newnode = buildStringModule(assignText2)
                                                     assignText2 = self.getAssignedTxt(newnode.body[0].value)

@@ -13,7 +13,7 @@ def register(linter):
 
     if int(getConfig().get("optionals", "collect_cache_stats")):
         cache.collectStats = True
-        from playero_checkers.query_checker import CacheStatisticWriter
+        from playero_checkers.cache_statistics_writer import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
 
 
