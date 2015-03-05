@@ -1,6 +1,6 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
-from tools import logHere
+from libs.tools import logHere
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""

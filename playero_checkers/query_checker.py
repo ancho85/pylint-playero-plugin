@@ -10,14 +10,14 @@ from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from tools import logHere, filenameFromPath, escapeAnyToString, isNumber
-from sqlparse import validateSQL
+from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
+from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
 import re
 
 def queryEnabled():
-    from funcs import getConfig
+    from libs.funcs import getConfig
     return int(getConfig().get("mysql", "connect"))
 
 class QueryChecker(BaseChecker):
