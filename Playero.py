@@ -8,12 +8,12 @@ from funcs import *
 
 def register(linter):
     """required method to auto register this checker"""
-    from playero_checkers.checkers_classes import QueryChecker
+    from playero_checkers.query_checker import QueryChecker
     linter.register_checker(QueryChecker(linter))
 
     if int(getConfig().get("optionals", "collect_cache_stats")):
         cache.collectStats = True
-        from playero_checkers.checkers_classes import CacheStatisticWriter
+        from playero_checkers.query_checker import CacheStatisticWriter
         linter.register_checker(CacheStatisticWriter(linter, cache))
 
 
