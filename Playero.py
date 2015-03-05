@@ -6,7 +6,7 @@ from playero_transforms.modules import modules_transform
 from playero_transforms.functions import function_transform
 from playero_checkers.query_checker import QueryChecker
 from playero_checkers.cache_statistics_writer import CacheStatisticWriter
-from funcs import *
+from libs.funcs import *
 
 def register(linter):
     """required method to auto register this checker"""

@@ -1,7 +1,7 @@
 from astroid import MANAGER
 from astroid.builder import AstroidBuilder
-from funcs import *
-from tools import hashIt, xmlValue
+from libs.funcs import *
+from libs.tools import hashIt, xmlValue
 
 
 notFound = set()

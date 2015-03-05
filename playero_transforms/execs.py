@@ -1,7 +1,7 @@
 from astroid import node_classes
 from astroid import raw_building
-from pyparse import parseExecLine
-from funcs import *
+from libs.pyparse import parseExecLine
+from libs.funcs import *
 
 def exec_transform(assnode):
     module = assnode.frame().parent

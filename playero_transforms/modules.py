@@ -1,7 +1,7 @@
 from astroid.builder import AstroidBuilder
 from astroid import MANAGER, node_classes
 from astroid.exceptions import InferenceError
-from funcs import getClassInfo
+from libs.funcs import getClassInfo
 
 def modules_transform(module):
     modname = module.name
