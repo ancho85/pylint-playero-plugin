@@ -5,4 +5,7 @@ python:
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: pip install -r requirements.txt
 # command to run tests, e.g. python setup.py test
+before_script:
+  - mysql -uroot -e "create database IF NOT EXISTS playero;"
+  - mysql -uroot playero < test/res/playero.sql
 script:  nosetests
