@@ -7,7 +7,7 @@ install: pip install -r requirements.txt
 # command to run tests, e.g. python setup.py test
 before_script:
   - mysql -uroot -e "create database IF NOT EXISTS playero;"
-  - mysql -uroot -e "CREATE USER 'myuser'@'127.0.0.1' IDENTIFIED BY 'mypass';"
+  - mysql -uroot -e "CREATE USER 'myuser'@'localhost' IDENTIFIED BY 'mypass';"
   - mysql -uroot -e "GRANT ALL PRIVILEGES ON playero.* TO 'myuser'@'%' WITH GRANT OPTION;"
   - mysql -uroot -e "FLUSH PRIVILEGES;"
   - mysql -umyuser -pmypass playero < tests/res/playero.sql
