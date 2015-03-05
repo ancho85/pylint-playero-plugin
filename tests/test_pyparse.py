@@ -3,17 +3,29 @@ import sys
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(os.path.join(HERE, ".."))) #pylint_playero_plugin path added to environment
+sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
 from libs.pyparse import parseScript
+
+def getFilePath(filename):
+    return os.path.join(HERE, '..', 'corepy', 'embedded', filename)
 
 class TestPyParse(unittest.TestCase):
 
     def test_embeddedRecordDef(self):
-        filepath = os.path.join(HERE, '..', 'corepy', 'embedded', 'RecordDef.py')
+        filepath = getFilePath("RecordDef.py")
         par = parseScript(filepath)
-        self.assertTrue([attr for attr in ("base_class", "instances", "InternalIdDef") if attr in par.attributes])
-        self.assertTrue([meth for meth in ("isDetail", "getParentDef", "getRecordClass") if meth in par.methods])
+        for attr in ("base_class", "instances", "InternalIdDef"):
+            self.assertTrue(attr in par.attributes, msg="%s not in RecordDef attributes" % attr)
+        for meth in ("isDetail", "getParentDef", "getRecordClass"):
+            self.assert_(meth in par.methods, msg="%s not in RecordDef methods" % meth)
         self.assertEqual(par.inheritance["DetailRecordDef"], "RecordDef")
+
+    def test_embeddedQuery(self):
+        filepath = getFilePath("Query.py")
+        par = parseScript(filepath)
+        self.failUnless(["result", "sql"] == par.attributes.keys())
+        self.assertFalse(bool([meth for meth in ("getSQL", "setSQL", "parseSQL") if meth not in par.methods]))
+        self.failIf(par.inheritance["Query"] != "object")
 
 def test_suite():
     suite = unittest.TestSuite()
