@@ -1,7 +1,7 @@
 import ast
 import os
-from cache import cache
-from tools import logHere
+from libs.cache import cache
+from libs.tools import logHere
 
 @cache.store
 def parseScript(filefullpath):

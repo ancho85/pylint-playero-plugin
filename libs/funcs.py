@@ -1,8 +1,8 @@
 import os
-from cache import cache
-from parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
-from pyparse import parseScript
-from tools import logHere
+from libs.cache import cache
+from libs.parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
+from libs.pyparse import parseScript
+from libs.tools import logHere
 import ConfigParser
 
 RECORD = ".record.xml"
@@ -17,7 +17,7 @@ allCoreClasses = reportClasses + routineClasses + otherClasses
 
 def getConfig():
     config = ConfigParser.ConfigParser()
-    configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config", "playero.cfg")
+    configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")
     f = open(configLocation, "r")
     config.readfp(f) #the configuration file can change, so it must be opened every time
     f.close()
@@ -56,7 +56,7 @@ def getScriptDirs(level=255):
 def buildPaths():
     recPaths, repPaths, rouPaths, winPaths, corePaths = {}, {}, {}, {}, {}
     for coremodule in ("User","LoginDialog"):
-        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "corepy", "xml", "%s.record.xml" % coremodule))}
+        recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "corepy", "xml", "%s.record.xml" % coremodule))}
 
     #for filelist in [os.listdir(ip) for ip in getFullPaths(["interface"]) if os.path.exists(ip)]:
 

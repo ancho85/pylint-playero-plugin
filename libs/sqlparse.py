@@ -1,7 +1,7 @@
 import os
 import re
-from funcs import getConfig
-from tools import logHere, includeZipLib
+from libs.funcs import getConfig
+from libs.tools import logHere, includeZipLib
 
 def validateSQL(txt, filename=None):
     config = getConfig()

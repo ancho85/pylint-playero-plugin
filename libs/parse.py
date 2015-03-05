@@ -129,7 +129,7 @@ class XMLSettingsHandler(handler.ContentHandler):
 def reformatXml(filename):
     openedfile = open(filename, "r")
     import re
-    from tools import latinToAscii
+    from libs.tools import latinToAscii
     readedfile = openedfile.read()
     joinnodes = re.compile(r"\s=\s\"")
     separatenodes = re.compile(r'([a-z]+="[a-z]*")', re.IGNORECASE)
