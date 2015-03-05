@@ -341,7 +341,7 @@ class QueryChecker(BaseChecker):
                                             if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
                                                 value = self.getAssignedTxt(prevSi.iter)
                                                 for methodname in ast.literal_eval(value):
-                                                    from transforms.classes import buildStringModule
+                                                    from playero_transforms.classes import buildStringModule
                                                     assignText2 = assignText1.replace("assignText1", methodname)
                                                     newnode = buildStringModule(assignText2)
                                                     assignText2 = self.getAssignedTxt(newnode.body[0].value)
