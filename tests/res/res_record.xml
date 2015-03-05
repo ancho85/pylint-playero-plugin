@@ -1,0 +1,4 @@
+<record name="RecordDataSearch" tablename="RecordDataSearch" inherits="Master" persistent="false">
+    <field name="Data" type="string" length="255" />
+    <field name="Activities" type="detail" recordname="ActivitySheetRow"/>
+</record>
