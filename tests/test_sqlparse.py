@@ -4,13 +4,17 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
-from libs.funcs import getConfig
 from libs.sqlparse import parseSQL, cmdValidateSQL, apiValidateSQL
 
 class TestSqlParse(unittest.TestCase):
 
     def getCommonConfig(self):
-        config = getConfig()
+        import ConfigParser
+        config = ConfigParser.ConfigParser()
+        configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")
+        f = open(configLocation, "r")
+        config.readfp(f) #the configuration file can change, so it must be opened every time
+        f.close()
         config.set("mysql", "connect", "1")
         config.set("mysql", "dbname", "playero")
         config.set("mysql", "host", "127.0.0.1")
