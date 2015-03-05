@@ -41,7 +41,7 @@ class XMLRecordHandler(handler.ContentHandler):
             if attrs.has_key("inherits"):
                 self.inheritance = str(attrs.get("inherits"))
             if attrs.has_key("persistent"):
-                self.isPersistent = bool(attrs.get("persistent"))
+                self.isPersistent = attrs.get("persistent").lower() == "true"
             if attrs.has_key("name"):
                 self.name = str(attrs.get("name"))
 
@@ -106,7 +106,7 @@ class XMLSettingsHandler(handler.ContentHandler):
     def __init__(self):
         self.scriptdirs = []
         self.sd = []
-        for i in range(255):
+        for _ in range(255):
             self.sd.append(None)
 
     def startElement(self, name, attrs):
