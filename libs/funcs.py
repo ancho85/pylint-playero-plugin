@@ -1,6 +1,6 @@
 import os
 from libs.cache import cache
-from libs.parse import parseSettingsXML, parseRecordXML, parseWindowRecordName
+from libs.xmlparse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from libs.pyparse import parseScript
 from libs.tools import logHere
 import ConfigParser
