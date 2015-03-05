@@ -1,9 +1,9 @@
 import os
 import re
-from libs.funcs import getConfig
 from libs.tools import logHere, includeZipLib
 
 def validateSQL(txt, filename=None):
+    from libs.funcs import getConfig
     config = getConfig()
     if config.get("mysql", "dbname") == "databasename": return "MySQL database is not configured. Check playero.cfg file"
     if config.get("mysql", "pass") == "******": return "MySQL password is not configured. Check playero.cfg file"

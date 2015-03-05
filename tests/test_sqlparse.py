@@ -4,7 +4,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
-from libs.sqlparse import parseSQL, cmdValidateSQL, apiValidateSQL
+from libs.sqlparse import parseSQL, cmdValidateSQL
 
 class TestSqlParse(unittest.TestCase):
 
