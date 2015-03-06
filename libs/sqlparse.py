@@ -103,7 +103,8 @@ def cmdValidateSQL(txt, config):
     import subprocess
     mysqlcmd = ["%s/mysql" % config.get("mysql", "%spath" % os.name)]
     mysqlcmd.append("-u%s" % config.get('mysql', 'user'))
-    mysqlcmd.append("-p%s" % config.get('mysql', 'pass'))
+    pwd = config.get('mysql', 'pass')
+    if pwd: mysqlcmd.append("-p%s" % pwd)
     mysqlcmd.append("-h%s" % config.get('mysql', 'host'))
     mysqlcmd.append("-P%s" % config.get('mysql', 'port'))
     mysqlcmd.append("-D%s" % config.get('mysql', 'dbname'))
