@@ -9,6 +9,7 @@ def validateSQL(txt, filename=None):
     if config.get("mysql", "pass") == "******": return "MySQL password is not configured. Check playero.cfg file"
     txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
     if int(config.get("mysql", "useapi")):
+        txt = txt.replace("\n", " ").replace(";", ";\n")
         res = apiValidateSQL(txt, config)
     else:
         res = cmdValidateSQL(txt, config)
@@ -73,21 +74,19 @@ def parseSQL(txt):
 
 def apiValidateSQL(txt, config):
     """validates sql string using google-mysql-tools api"""
-    res = False
-    dbstring = config.get('mysql', 'host')
-    dbstring += ":" + config.get('mysql', 'user')
-    dbstring += ":" + config.get('mysql', 'pass')
-    dbstring += ":" + config.get('mysql', 'dbname')
-    dbstring += ":" + config.get('mysql', 'port')
 
     includeZipLib("mysqlparser.zip")
-
     from mysqlparser.pylib import db
-    dbh = db.Connect(dbstring)
     from mysqlparser.pylib import schema
-    db = schema.Schema(dbh)
     from mysqlparser.parser_lib.validator import Validator
     from mysqlparser.parser_lib.parser import SQLParser, ParseError
+
+    res = ""
+    conf = lambda x: ":%s" % config.get("mysql", x) if x != "host" else "%s" % config.get("mysql", x)
+    dbstring = "".join([conf(x) for x in ("host", "user", "pass", "dbname", "port")])
+
+    dbh = db.Connect(dbstring)
+    db = schema.Schema(dbh)
     val = Validator(db_schema=db)
     try:
         val.ValidateString(txt, parser_class=SQLParser, fail_fast=True)
