@@ -111,7 +111,6 @@ def cmdValidateSQL(txt, config):
     mysqlcmd.append("--batch")
     mysqlcmd.append("-e")
     mysqlcmd.append("%s" % txt)
-    print ' '.join(mysqlcmd)
     process = subprocess.Popen(
         mysqlcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
