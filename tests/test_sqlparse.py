@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import ConfigParser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
@@ -9,12 +10,9 @@ from libs.sqlparse import parseSQL, cmdValidateSQL
 class TestSqlParse(unittest.TestCase):
 
     def getCommonConfig(self):
-        import ConfigParser
         config = ConfigParser.ConfigParser()
-        configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")
-        f = open(configLocation, "r")
-        config.readfp(f) #the configuration file can change, so it must be opened every time
-        f.close()
+        configLocation = os.path.join(HERE, "..", "config", "playero.cfg")
+        config.readfp(open(configLocation))
         config.set("mysql", "connect", "1")
         config.set("mysql", "dbname", "playero")
         config.set("mysql", "host", "127.0.0.1")
@@ -26,11 +24,20 @@ class TestSqlParse(unittest.TestCase):
         config = self.getCommonConfig()
         config.set("mysql", "useapi", "0")
 
-        txt = """SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType} FROM Alotment al
-                 INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId}"""
-        txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
-        res = cmdValidateSQL(txt, config)
-        self.assertEqual(res, "")
+        txt =  "SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType} FROM Alotment al "
+        txt += "INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId}"
+        res = cmdValidateSQL(parseSQL(txt), config)
+        self.assertEqual(res, "", msg="This query is correct, but an [unknown] error ocurred")
+
+        txt =  "SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType}, " #Extra coma here
+        txt += "FROM Alotment al INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId};"
+        res = cmdValidateSQL(parseSQL(txt), config)
+        self.assert_(res.find("'FROM") > -1, msg="The query parser has not detected the query [extra coma] error")
+
+        txt = "SELECT * FROM [Invoice]"
+        res = cmdValidateSQL(parseSQL(txt), config)
+        self.assert_(res.find("doesn't exist") > -1, msg="The query parser has not detected the [missing table] error")
+
 
 
 def test_suite():
