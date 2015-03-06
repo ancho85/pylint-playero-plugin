@@ -1,17 +1,17 @@
 import os
 import re
-from libs.tools import logHere, includeZipLib
+from libs.tools import logHere
 
 def validateSQL(txt, filename=None):
     from libs.funcs import getConfig
     config = getConfig()
     if config.get("mysql", "dbname") == "databasename": return "MySQL database is not configured. Check playero.cfg file"
     if config.get("mysql", "pass") == "******": return "MySQL password is not configured. Check playero.cfg file"
-    txt = "%s%s%s" % ("START TRANSACTION;\n", parseSQL(txt), ";\nROLLBACK;\n")
+    txt = parseSQL(txt)
     if int(config.get("mysql", "useapi")):
-        txt = txt.replace("\n", " ").replace(";", ";\n")
         res = apiValidateSQL(txt, config)
     else:
+        txt = "%s%s%s" % ("START TRANSACTION;\n", txt, ";\nROLLBACK;\n")
         res = cmdValidateSQL(txt, config)
     if res:
         logHere(txt, filename=["queryError.log", filename][bool(filename)])
@@ -73,32 +73,28 @@ def parseSQL(txt):
     return txt
 
 def apiValidateSQL(txt, config):
-    """validates sql string using google-mysql-tools api"""
-
-    includeZipLib("mysqlparser.zip")
-    from mysqlparser.pylib import db
-    from mysqlparser.pylib import schema
-    from mysqlparser.parser_lib.validator import Validator
-    from mysqlparser.parser_lib.parser import SQLParser, ParseError
-
     res = ""
-    conf = lambda x: ":%s" % config.get("mysql", x) if x != "host" else "%s" % config.get("mysql", x)
-    dbstring = "".join([conf(x) for x in ("host", "user", "pass", "dbname", "port")])
-
-    dbh = db.Connect(dbstring)
-    db = schema.Schema(dbh)
-    val = Validator(db_schema=db)
+    import MySQLdb
+    cnf = lambda x: config.get("mysql", x)
     try:
-        val.ValidateString(txt, parser_class=SQLParser, fail_fast=True)
-    except ParseError, e:
-        res = e.msg
+        db = MySQLdb.connect(cnf("host"), cnf("user"), cnf("pass"), cnf("dbname"), int(cnf("port")), connect_timeout=1)
+    except MySQLdb.OperationalError, e:
+        res = "ERROR %s %s" % (e.args[0], e.args[1])
     else:
-        res = ",".join(err.msg for err in val.Errors() if err.loc != -1)
-    return res
+        try:
+            c = db.cursor()
+            c.execute(txt)
+            c.close()
+            db.rollback()
+        except MySQLdb.MySQLError, e:
+            res = "ERROR %s %s" % (e.args[0], e.args[1])
+        finally:
+            db.close()
+    return parseErrorResponses(res)
 
 def cmdValidateSQL(txt, config):
     """validates sql string using command line"""
-    res = ""
+
     import subprocess
     mysqlcmd = ["%s/mysql" % config.get("mysql", "%spath" % os.name)]
     mysqlcmd.append("-u%s" % config.get('mysql', 'user'))
@@ -113,8 +109,11 @@ def cmdValidateSQL(txt, config):
     process = subprocess.Popen(
         mysqlcmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
+    return parseErrorResponses(process.stderr.read())
 
-    m = re.search('ERROR ([0-9]*).*', process.stderr.read())
+def parseErrorResponses(errorTxt):
+    res = ""
+    m = re.search('ERROR ([0-9]*).*', errorTxt)
     if m:
         found = int(m.group(1))
         if found == 1064: #Query syntax
