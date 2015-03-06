@@ -19,6 +19,7 @@ class TestSqlParse(unittest.TestCase):
         config.set("mysql", "dbname", "playero")
         config.set("mysql", "host", "127.0.0.1")
         config.set("mysql", "user", "root")
+        config.set("mysql", "pass", "")
         return config
 
     def test_cmd(self):
