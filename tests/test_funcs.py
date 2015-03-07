@@ -13,6 +13,7 @@ class TestFuncs(unittest.TestCase):
         configLocation = os.path.join(HERE, "..", "config", "playero.cfg")
         config.readfp(open(configLocation))
         config.set("paths", "posix", os.path.join(HERE, "..", "Playero/"))
+        config.set("plugin_paths", "posix", os.path.join(HERE, ".."))
         config.write(open(configLocation, "wb"))
         from libs.funcs import buildPaths
         recPaths, repPaths, rouPaths, corePaths = buildPaths()
