@@ -9,7 +9,11 @@ before_script:
   - mysql -uroot -e "create database playero;"
   - mysql -uroot playero < tests/res/playero.sql
   - svn --non-interactive --username travis --password travis --depth immediates co svn://www.telenet.com.py/alterplayero/trunk@5 Playero
-  - cd Playero
-  - pwd
+  - cd Playero/base && svn up -r 5
+  - cd ../core && svn up -r 5
+  - cd ../standard && svn up -r 5
+  - cd ../settings && svn up -r 5
+  - mv settings.xml.example settings.xml
+  - ls
 script:
   - nosetests
