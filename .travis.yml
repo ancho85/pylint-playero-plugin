@@ -1,23 +1,25 @@
 language: python
 python:
-- '2.7'
-- '2.6'
+  - '2.7'
+  - '2.6'
 install: pip install -r requirements.txt
-before_script:
-- mysql -uroot -e "create database playero;"
-- mysql -uroot playero < tests/res/playero.sql
-- svn $SVNPARAMS --depth empty co svn://www.telenet.com.py/playero/playero Playero
-- svn $SVNPARAMS --set-depth infinity up Playero/base
-- svn $SVNPARAMS --set-depth infinity up Playero/core
-- svn $SVNPARAMS --set-depth infinity up Playero/standard
-- svn $SVNPARAMS --set-depth infinity up Playero/settings
-- svn $SVNPARAMS --set-depth empty up Playero/extra
-- svn $SVNPARAMS --set-depth infinity up Playero/extra/StdPy
-- mv Playero/settings/settings.xml.example Playero/settings/settings.xml
+  before_script:
+    - mysql -uroot -e "create database playero;"
+    - mysql -uroot playero < tests/res/playero.sql
+    - svn $SVNPARAMS --depth empty co svn://www.telenet.com.py/playero/playero Playero
+    - svn $SVNPARAMS --set-depth infinity up Playero/base
+    - svn $SVNPARAMS --set-depth infinity up Playero/core
+    - svn $SVNPARAMS --set-depth infinity up Playero/standard
+    - svn $SVNPARAMS --set-depth infinity up Playero/settings
+    - svn $SVNPARAMS --set-depth empty    up Playero/extra
+    - svn $SVNPARAMS --set-depth infinity up Playero/extra/StdPy
+    - mv Playero/settings/settings.xml.example Playero/settings/settings.xml
+    - sed -i "s/MP3_Manager/StdPy/g" settings.xml
+    - sed -i '/hansa/d' settings.xml
 script:
-- nosetests
+  - nosetests
 env:
   global:
-  - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=
-  - secure: plQSBlLRnrkhL4TnSF8PM/bYD1ss1DBovfRS+/Ig2JFId0FOkzUFXRZDgeEhWiHQEa6sQxktiOcVr2vpMo9v+954ajP7c+h9jTcni9/9Sswm8+0oa0WuT/Dw8qoMa+lq64d+Zhoh7m7rh7VrpgnSu+OgJ0zOQ09J9cqFEapux+s=
-  - SVNPARAMS="--no-auth-cache --non-interactive --username ${SVNUSER} --password ${SVNPASS}"
+    - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=
+    - secure: plQSBlLRnrkhL4TnSF8PM/bYD1ss1DBovfRS+/Ig2JFId0FOkzUFXRZDgeEhWiHQEa6sQxktiOcVr2vpMo9v+954ajP7c+h9jTcni9/9Sswm8+0oa0WuT/Dw8qoMa+lq64d+Zhoh7m7rh7VrpgnSu+OgJ0zOQ09J9cqFEapux+s=
+    - SVNPARAMS="--no-auth-cache --non-interactive --username ${SVNUSER} --password ${SVNPASS}"
