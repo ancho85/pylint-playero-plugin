@@ -8,7 +8,11 @@ install: pip install -r requirements.txt
 before_script:
   - mysql -uroot -e "create database playero;"
   - mysql -uroot playero < tests/res/playero.sql
-  - printenv
-  - echo $SVNUSER
+  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --depth empty co svn://www.telenet.com.py/alterplayero/trunk@5 Playero
+  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/base
+  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/core
+  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/standard
+  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/settings
+  - mv Playero/settings/settings.xml.example Playero/settings/settings.xml
 script:
   - nosetests
