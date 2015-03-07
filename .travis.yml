@@ -14,8 +14,8 @@ before_script:
   - svn $SVNPARAMS --set-depth empty    up Playero/extra
   - svn $SVNPARAMS --set-depth infinity up Playero/extra/StdPy
   - mv Playero/settings/settings.xml.example Playero/settings/settings.xml
-  - sed -i "s/MP3_Manager/StdPy/g" settings.xml
-  - sed -i '/hansa/d' settings.xml
+  - sed -i "s/MP3_Manager/StdPy/g" Playero/settings/settings.xml
+  - sed -i '/hansa/d' Playero/settings/settings.xml
 script:
   - nosetests
 env:
