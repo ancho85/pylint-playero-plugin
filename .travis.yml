@@ -1,18 +1,25 @@
 language: python
 python:
-  - "2.7"
-  - "2.6"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+- '2.7'
+- '2.6'
 install: pip install -r requirements.txt
-# command to run tests, e.g. python setup.py test
 before_script:
-  - mysql -uroot -e "create database playero;"
-  - mysql -uroot playero < tests/res/playero.sql
-  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --depth empty co svn://www.telenet.com.py/alterplayero/trunk@5 Playero
-  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/base
-  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/core
-  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/standard
-  - svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth infinity up -r 5 Playero/settings
-  - mv Playero/settings/settings.xml.example Playero/settings/settings.xml
+- mysql -uroot -e "create database playero;"
+- mysql -uroot playero < tests/res/playero.sql
+- svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --depth
+  empty co svn://www.telenet.com.py/playero/playero@5 Playero
+- svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth
+  infinity up -r 5 Playero/base
+- svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth
+  infinity up -r 5 Playero/core
+- svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth
+  infinity up -r 5 Playero/standard
+- svn --no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS --set-depth
+  infinity up -r 5 Playero/settings
+- mv Playero/settings/settings.xml.example Playero/settings/settings.xml
 script:
-  - nosetests
+- nosetests
+env:
+  global:
+  - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=
+  - secure: plQSBlLRnrkhL4TnSF8PM/bYD1ss1DBovfRS+/Ig2JFId0FOkzUFXRZDgeEhWiHQEa6sQxktiOcVr2vpMo9v+954ajP7c+h9jTcni9/9Sswm8+0oa0WuT/Dw8qoMa+lq64d+Zhoh7m7rh7VrpgnSu+OgJ0zOQ09J9cqFEapux+s=
