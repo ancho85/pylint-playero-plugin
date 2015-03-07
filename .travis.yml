@@ -18,6 +18,6 @@ script:
 - nosetests
 env:
   global:
-  - SVNPARAMS=--no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS
+  - SVNPARAMS="--no-auth-cache --non-interactive --username $SVNUSER --password $SVNPASS"
   - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=
   - secure: plQSBlLRnrkhL4TnSF8PM/bYD1ss1DBovfRS+/Ig2JFId0FOkzUFXRZDgeEhWiHQEa6sQxktiOcVr2vpMo9v+954ajP7c+h9jTcni9/9Sswm8+0oa0WuT/Dw8qoMa+lq64d+Zhoh7m7rh7VrpgnSu+OgJ0zOQ09J9cqFEapux+s=
