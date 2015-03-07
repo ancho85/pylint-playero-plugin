@@ -8,4 +8,8 @@ install: pip install -r requirements.txt
 before_script:
   - mysql -uroot -e "create database playero;"
   - mysql -uroot playero < tests/res/playero.sql
-script:  nosetests
+  - svn --non-interactive --username travis --password travis --depth immediate co svn://www.telenet.com.py/alterplayero/trunk@5 Playero
+  - cd Playero
+  - pwd
+script:
+  - nosetests
