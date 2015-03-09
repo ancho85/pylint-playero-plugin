@@ -1,5 +1,5 @@
 import unittest
-from libs.funcs import buildPaths
+from libs.funcs import *
 
 class TestFuncs(unittest.TestCase):
 
@@ -22,6 +22,28 @@ class TestFuncs(unittest.TestCase):
 
         self.assertFalse([k for (k, v) in rouPaths.iteritems() if findTxt(v[0], "base")]) #no routines in base
 
+    def test_recordsInfo(self):
+        recf, recd = getRecordsInfo("Department", RECORD)
+        assert recf["Department"]["AutoCashCancel"] == "integer" #From StdPy
+        assert recf["Department"]["DeptName"]       == "string" #From standard
+        assert recf["Department"]["Closed"]         == "Boolean" #From Master
+        assert recf["Department"]["internalId"]     == "internalid" #From Record
+        assert recd["Department"]["OfficePayModes"] == "DepartmentOfficePayModeRow" #Recordname from detail
+
+        repf, repd = getRecordsInfo("Balance", REPORT)
+        assert repf["Balance"]["LabelType"]         == "string" #StdPy
+        assert repf["Balance"]["ExplodeByLabel"]    == "boolean" #Standard
+        assert repf["Balance"]["internalId"]        == "internalid" #Record
+        assert not repd["Balance"] #Empty dict, no detail
+
+        rouf, roud = getRecordsInfo("GenNLT", ROUTINE)
+        assert rouf["GenNLT"]["ExcludeInvalid"]     == "boolean"
+        assert rouf["GenNLT"]["Table"]              == "string"
+        assert not roud["GenNLT"]
+
+        rouf, roud = getRecordsInfo("LoginDialog", RECORD)
+        assert rouf["LoginDialog"]["Password"]      == "string" #embedded
+        assert not roud["LoginDialog"]
 
 def test_suite():
     suite = unittest.TestSuite()
