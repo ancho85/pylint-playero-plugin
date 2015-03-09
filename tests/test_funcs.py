@@ -5,6 +5,7 @@ import ConfigParser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
+from libs.funcs import buildPaths
 
 class TestFuncs(unittest.TestCase):
 
@@ -15,9 +16,23 @@ class TestFuncs(unittest.TestCase):
         config.set("paths", "posix", os.path.join(HERE, "..", "Playero/"))
         config.set("plugin_paths", "posix", os.path.join(HERE, ".."))
         config.write(open(configLocation, "wb"))
-        from libs.funcs import buildPaths
         recPaths, repPaths, rouPaths, corePaths = buildPaths()
-        print sorted(recPaths)
+        findTxt = lambda x, y: x.find(y) > -1
+
+        assert findTxt(recPaths["Task"][0], "base")
+        assert findTxt(recPaths["Department"][0], "StdPy")
+        assert findTxt(recPaths["Department"][1], "standard")
+
+        assert findTxt(repPaths["ListWindowReport"][0], "base")
+        assert findTxt(repPaths["ExpensesList"][0], "StdPy")
+        assert findTxt(repPaths["ExpensesList"][1], "standard")
+
+        assert findTxt(rouPaths["GenNLT"][0], "StdPy")
+        assert findTxt(rouPaths["GenNLT"][1], "standard")
+        assert findTxt(corePaths["Field"][0], "embedded")
+
+        self.assertFalse([k for (k, v) in rouPaths.iteritems() if findTxt(v[0], "base")]) #no routines in base
+
 
 def test_suite():
     suite = unittest.TestSuite()
