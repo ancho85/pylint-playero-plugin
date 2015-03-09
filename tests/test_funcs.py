@@ -61,7 +61,7 @@ class TestFuncs(unittest.TestCase):
         assert attr["rowNr"]         == 0
         assert attr["ParentInvoice"] == "SuperClass"
         assert isinstance(attr["DocTypes"], list)
-        #assert isinstance(attr["Origin"], dict) #XXX check this, it shouldn't be a int
+        assert isinstance(attr["Origin"], dict)
         assert all([m in meth for m in ("getCardReader", "logTransactionAction", "updateCredLimit",
             "generateTaxes", "roundValue", "getOriginType", "bring", "getXML", "createField")])
 

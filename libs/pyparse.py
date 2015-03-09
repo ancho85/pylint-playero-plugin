@@ -83,7 +83,7 @@ class PyParse(ast.NodeVisitor):
         elif isinstance(target, ast.Tuple):
             self.attributes.update((self.getAstValue(x), self.getAstValue(node.value)) for x in target.elts)
         elif isinstance(target, ast.Subscript):
-            self.attributes[self.getAstValue(target.value)] = self.getAstValue(node.value)
+            self.attributes[self.getAstValue(target.value)] = {self.getAstValue(target.slice.value):self.getAstValue(node.value)}
         #elif isinstance(target, ast.Attribute):
         #    self.attributes[target.attr] = self.getAstValue(node.value)
         self.generic_visit(node)
