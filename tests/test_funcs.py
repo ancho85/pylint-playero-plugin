@@ -1,21 +1,10 @@
-import os
-import sys
 import unittest
-import ConfigParser
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
 from libs.funcs import buildPaths
 
 class TestFuncs(unittest.TestCase):
 
     def test_buildPaths(self):
-        config = ConfigParser.ConfigParser()
-        configLocation = os.path.join(HERE, "..", "config", "playero.cfg")
-        config.readfp(open(configLocation))
-        config.set("paths", "posix", os.path.join(HERE, "..", "Playero/"))
-        config.set("plugin_paths", "posix", os.path.join(HERE, ".."))
-        config.write(open(configLocation, "wb"))
+
         recPaths, repPaths, rouPaths, corePaths = buildPaths()
         findTxt = lambda x, y: x.find(y) > -1
 

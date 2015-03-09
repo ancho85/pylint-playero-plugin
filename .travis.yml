@@ -16,6 +16,7 @@ before_script:
   - mv Playero/settings/settings.xml.example Playero/settings/settings.xml
   - sed -i "s/MP3_Manager/StdPy/g" Playero/settings/settings.xml
   - sed -i '/hansa/d' Playero/settings/settings.xml
+  - python scripts/updateConfig.py
 script:
   - nosetests
 env:
