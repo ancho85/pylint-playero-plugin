@@ -1,12 +1,10 @@
 import os
 import sys
 import unittest
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(HERE, "..")) #pylint_playero_plugin path added to environment
 from libs.pyparse import parseScript
 
 def getFilePath(filename):
+    HERE = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(HERE, '..', 'corepy', 'embedded', filename)
 
 class TestPyParse(unittest.TestCase):
