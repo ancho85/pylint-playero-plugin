@@ -22,6 +22,15 @@ class TestFuncs(unittest.TestCase):
 
         self.assertFalse([k for (k, v) in rouPaths.iteritems() if findTxt(v[0], "base")]) #no routines in base
 
+    def test_recordInheritance(self):
+        recf, recd = getRecordInheritance("Invoice")
+        assert all([f in recf for f in ("SalesMan", "InvoiceDate", "CustCode", "Currency", "ShiftDate", "OriginNr", "SerNr", "attachFlag")])
+        assert all([d in recd for d in ("CompoundItemCosts", "Payments", "Items", "Taxes", "Installs")])
+
+        recf, recd = getRecordInheritance("AccessGroup")
+        assert all([f in recf for f in ("PurchaseItemsAccessType", "InitialModule", "Closed", "internalId")])
+        assert all([d in recd for d in ("PurchaseItems", "Customs", "Modules")])
+
     def test_recordsInfo(self):
         recf, recd = getRecordsInfo("Department", RECORD)
         assert recf["Department"]["AutoCashCancel"] == "integer" #From StdPy
@@ -44,6 +53,9 @@ class TestFuncs(unittest.TestCase):
         rouf, roud = getRecordsInfo("LoginDialog", RECORD)
         assert rouf["LoginDialog"]["Password"]      == "string" #embedded
         assert not roud["LoginDialog"]
+
+    def test_classInfo(self):
+        pass
 
 def test_suite():
     suite = unittest.TestSuite()
