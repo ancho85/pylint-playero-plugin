@@ -25,24 +25,14 @@ def getConfig():
 
 @cache.store
 def getPlayeroPath():
-    try:
-        config = getConfig()
-        res = config.get('paths', os.name)
-    except ConfigParser.NoSectionError:
-        res = "e:/Develop/desarrollo/python/ancho/workspace/Playero/"
-        if (os.name == "posix"):
-            res = "/home/ancho/Develop/Playero/"
+    config = getConfig()
+    res = config.get('paths', os.name)
     return res
 
 @cache.store
 def getEmbeddedPath():
-    try:
-        config = getConfig()
-        res = config.get('plugin_paths', os.name)
-    except ConfigParser.NoSectionError:
-        res = "e:/Develop/desarrollo/python/other/pylint-playero-plugin"
-        if (os.name == "posix"):
-            res = "/home/ancho/Develop/pylint-playero-plugin"
+    config = getConfig()
+    res = config.get('plugin_paths', os.name)
     return os.path.join(res, "corepy", "embedded")
 
 @cache.store
