@@ -55,7 +55,15 @@ class TestFuncs(unittest.TestCase):
         assert not roud["LoginDialog"]
 
     def test_classInfo(self):
-        pass
+        attr, meth = getClassInfo("Invoice")
+        assert attr["DEBITNOTE"]     == 2
+        assert attr["ATTACH_NOTE"]   == 3
+        assert attr["rowNr"]         == 0
+        assert attr["ParentInvoice"] == "SuperClass"
+        assert isinstance(attr["DocTypes"], list)
+        #assert isinstance(attr["Origin"], dict) #XXX check this, it shouldn't be a int
+        assert all([m in meth for m in ("getCardReader", "logTransactionAction", "updateCredLimit",
+            "generateTaxes", "roundValue", "getOriginType", "bring", "getXML", "createField")])
 
 def test_suite():
     suite = unittest.TestSuite()
