@@ -2,7 +2,7 @@ pylint-playero-plugin
 ==========================
 [![status](https://sourcegraph.com/api/repos/github.com/ancho85/pylint-playero-plugin/.badges/status.png)](https://sourcegraph.com/github.com/ancho85/pylint-playero-plugin)
 [![Build Status](https://travis-ci.org/ancho85/pylint-playero-plugin.svg?branch=master)](https://travis-ci.org/ancho85/pylint-playero-plugin)
-[![Coverage Status](https://coveralls.io/repos/ancho85/pylint-playero-plugin/badge.png)](https://coveralls.io/r/ancho85/pylint-playero-plugin)
+[![Coverage Status](https://coveralls.io/repos/ancho85/pylint-playero-plugin/badge.svg)](https://coveralls.io/r/ancho85/pylint-playero-plugin)
 
 # About
 
