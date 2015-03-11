@@ -16,5 +16,6 @@ if __name__ == "__main__":
     config.set("mysql", "host", "127.0.0.1")
     config.set("mysql", "user", "root")
     config.set("mysql", "pass", "")
+    config.set("optionals", "collect_cache_stats", 1)
     config.write(open(configLocation, "wb"))
 
