@@ -2,7 +2,7 @@ pylint-playero-plugin
 ==========================
 [![status](https://sourcegraph.com/api/repos/github.com/ancho85/pylint-playero-plugin/.badges/status.png)](https://sourcegraph.com/github.com/ancho85/pylint-playero-plugin)
 [![Build Status](https://travis-ci.org/ancho85/pylint-playero-plugin.svg?branch=master)](https://travis-ci.org/ancho85/pylint-playero-plugin)
-[![Coverage Status](https://coveralls.io/repos/ancho85/pylint-playero-plugin/badge.svg)](https://coveralls.io/r/ancho85/pylint-playero-plugin)
+[![Coverage Status](https://coveralls.io/repos/ancho85/pylint-playero-plugin/badge.svg?branch=coveralls.io-support)](https://coveralls.io/r/ancho85/pylint-playero-plugin?branch=coveralls.io-support)
 
 # About
 
@@ -36,6 +36,8 @@ pylint --load-plugins Playero [..other options..]
 
 # Required
 
+* logilab-common==0.61.0
+* astroid==1.1.1
 * pylint-1.0.0
 
 # Required to check mysql syntax:
