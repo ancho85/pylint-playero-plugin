@@ -4,9 +4,14 @@ Checks that Pylint does not complain about reserved words
 # pylint:disable=C6666
 from OpenOrange import *
 
-ParentMyRecord = SuperClass("MyRecord", "MyInheritance", __file__)
-class MyRecord(ParentMyRecord):
+ParentInvoice = SuperClass("Invoice", "SalesTransaccion", __file__)
+class Invoice(ParentInvoice):
+    rec = NewRecord("Invoice")
 
-    rec = NewRecord("MyRec")
-    win = NewWindow("MyWin")
-    rou = NewReport("MyRep")
+ParentInvoiceWindow = SuperClass("InvoiceWindow", "SalesTransactionWindow", __file__)
+class InvoiceWindow(ParentInvoiceWindow):
+    win = NewWindow("InvoiceWindow")
+
+ParentInvoiceResume = SuperClass("InvoiceResume", "Report", __file__)
+class InvoiceResume(ParentInvoiceResume):
+    rep = NewReport("InvoiceResume")
