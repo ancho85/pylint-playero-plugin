@@ -4,7 +4,7 @@ import unittest
 def additional_tests():
     suites = unittest.TestSuite()
     for file in os.listdir(os.path.dirname(__file__)):
-        if file.endswith('.py') and file!='__init__.py':
+        if file.endswith('.py') and file not in ('__init__.py', 'fulltest.py'):
             name = os.path.splitext(file)[0]
             module = __import__('.'.join((__name__, name)), globals(),
                                 locals(), [name])
