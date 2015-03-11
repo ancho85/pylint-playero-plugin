@@ -1,5 +1,8 @@
 # .coveragerc to control coverage.py
 
+[run]
+source=.
+
 [report]
 omit =
     */corepy/*
@@ -18,6 +21,8 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+
+    def inspectModule
 
     # Don't complain if non-runnable code isn't run:
     if 0:
