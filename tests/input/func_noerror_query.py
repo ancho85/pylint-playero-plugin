@@ -10,24 +10,24 @@ class InvoiceAlter(Routine):
     def getRecorda(self):
         class newObj(object):
             def fieldNames(self):
-                return ["ShowOther", "ShowSalesOrder", str(self)]
+                return ["ShowOther", "ShowAlotment", str(self)]
             def fields(self, fn):
                 class fieldValue(object):
                     def getValue(self): return bool(fn + str(self))
                 return fieldValue()
         return newObj()
 
-    def getSalesOrderQuery(self):
+    def getAlotmentQuery(self):
         specs = self
-        sql = "SELECT 'SalesOrder' as RecordName, det.ArtCode\n"
-        sql += "FROM SalesOrder cab INNER JOIN SalesOrderItemRow det on cab.internalId = det.masterId\n"
-        sql += "WHERE?AND det.ArtCode = i|%s|\n" % specs.Status
+        sql = "SELECT 'Alotment' as RecordName, det.RoomType\n"
+        sql += "FROM Alotment cab INNER JOIN AlotmentRow det on cab.internalId = det.masterId\n"
+        sql += "WHERE?AND cab.Status = i|%s|\n" % specs.Status
         return sql
 
     def run(self):
         specs = self.getRecorda()
         query = Query()
-        query.sql = " SELECT RecordName, ArtCode FROM (\n"
+        query.sql = " SELECT RecordName, RoomType FROM (\n"
         union = ""
         for fn in specs.fieldNames():
             if fn.startswith("Show"):
@@ -40,5 +40,5 @@ class InvoiceAlter(Routine):
                     union = "\nUNION ALL\n"
 
         query.sql += ") AS final \n"
-        query.sql += "ORDER BY ArtCode"
+        query.sql += "ORDER BY RoomType"
         query.open()
