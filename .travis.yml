@@ -2,11 +2,16 @@ language: python
 python:
   - '2.7'
   - '2.6'
-install: pip install -r requirements.txt
+install:
+  - pip install -r requirements.txt
+  - pip install --use-mirrors coverage coveralls
 before_script:
   - scripts/travis-setup.sh
 script:
+  - coverage run test/fulltest.py
   - nosetests
+after_success:
+  - coveralls
 env:
   global:
     - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=

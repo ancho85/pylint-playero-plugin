@@ -1,0 +1,1 @@
+E:  1:MyQuery: Query syntax error
