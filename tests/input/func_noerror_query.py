@@ -75,8 +75,8 @@ class AlotmentDoc(Document):
 
     def getExtra2(self, test):
         specs = self.getRecorda()
-        mydict = {1:1, 2:2}
-        mylist = [1]
+        #mydict = {1:1, 2:2}
+        mylist = [1, 2]
         listcomp = "listcomp"
         if test > 0:
             return specs.Status
@@ -84,19 +84,18 @@ class AlotmentDoc(Document):
         x += "'%s', " % time("")
         x += "'%i', " % len(specs.RootLabel)
         x += "'%s', " % filter(None, ["1","2"])
-        x += "'%s', " % mydict.keys()
+        #x += "'%s', " % ("""%s""" % mydict.keys())
         x += "'%s', " % "replice".replace("i", "a")[0]
         x += "'%s', " % "split,splet".split(",")[0]
-        x += "'%s', " % mylist.extend([2])
+        #x += "'%s', " % mylist.extend([2])
         x += "'%s', " % self.classattr
-        x += "'%s', " % self.classattr
-        x += "'%s', " % mydict
+        #x += "'%s', " % ("""%s""" % mydict)
         x += "'%s', " % self.__field_decimals__ #Parent dictionary attribute
-        x += "'%s', " % mylist + mylist
-        x += "'%s', " % [a for a in ("1","2")]
+        #x += "'%s', " % ("""%s""" % mylist + mylist)
+        #x += "'%s', " % ("""%s""" % [a for a in mylist])
+        #x += "'%s', " % "".join([("%s" % d) for d in listcomp])
         x += "'%s', " % "".join([str(b) for b in listcomp])
-        x += "'%s', " % "".join([c.strip() for c in specs.name()])
-        x += "'%s', " % "".join(["%sbinop" % d for d in specs.name()])
+        x += "'%s' " % "".join([c.strip() for c in listcomp])
         return x
 
     def getExtra3(self):
