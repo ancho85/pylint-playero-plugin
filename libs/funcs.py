@@ -191,13 +191,6 @@ def getModName(modname):
             modname = None
     return modname
 
-def ifElse(condition, trueVal, falseVal):
-    res = falseVal
-    if isinstance(condition, str):
-        condition = ifElse(len(condition.strip()), condition, "")
-    if condition: res = trueVal
-    return res
-
 def inspectModule(module, inspectValue="module", filename="inspect.log"):
     """inspects module functions. Ex: inspectValue='module.body[0].parent.name' """
     modname = module
