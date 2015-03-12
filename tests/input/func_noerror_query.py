@@ -62,7 +62,7 @@ class AlotmentDoc(Document):
 
     def getExtra(self, val1, val2="2", val3="3", val4=4):
         specs = self.getRecorda()
-        sql = "WHERE?AND [al].{%s} IN ('%s')\n" % ("SerNr", "','".join([val1, val2]))
+        sql = "WHERE?AND [al].{%s} IN ('%s')\n" % ("SerNr", "','".join([val1, val3, val2]))
         sql += "WHERE?AND [al].{SerNr} = i|%i|\n" % specs.Status
         sql += "WHERE?AND SerNr = "
         if specs.Status == 1:
@@ -76,7 +76,7 @@ class AlotmentDoc(Document):
     def getExtra2(self, test):
         specs = self.getRecorda()
         #mydict = {1:1, 2:2}
-        mylist = [1, 2]
+        #mylist = [1, 2]
         listcomp = "listcomp"
         if test > 0:
             return specs.Status
