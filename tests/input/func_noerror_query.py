@@ -76,28 +76,26 @@ class AlotmentDoc(Document):
     def getExtra2(self, test):
         parent = self
         specs = self.getRecorda()
-        #mydict = {1:1, 2:2}
-        #mylist = [1, 2]
-        listcomp = "listcomp"
+        mydict = {1:1, 2:2}
+        mylist = [1, 2]
+        listcomp = "listcomp" + "extra"
         if test > 0:
             return specs.Status
-        x =  "'%s', " % date("")
-        x += "'%s', " % time("")
-        x += "'%i', " % len(specs.RootLabel)
-        x += "'%s', " % filter(None, ["1","2"])
-        #x += "'%s', " % map(str, [specs.Status,])
-        #x += "'%s', " % ("""%s""" % mydict.keys())
-        x += "'%s', " % self.classattr.replace("i", "a")[0]
-        x += "'%s', " % self.classattr.split(",")[0]
-        #x += "'%s', " % mylist.extend([2])
-        x += "'%s', " % self.classattr
-        #x += "'%s', " % ("""%s""" % mydict)
-        x += "'%s', " % parent.record #Parent None attribute
-        #x += "'%s', " % ("""%s""" % mylist + mylist)
-        #x += "'%s', " % ("""%s""" % [a for a in mylist])
-        #x += "'%s', " % "".join([("%s" % d) for d in listcomp])
-        x += "'%s', " % "".join([str(b) for b in listcomp])
-        x += "'%s' " % "".join([c.strip() for c in listcomp])
+        x =  "'%s' as test_date\n, "       % date("")
+        x += "'%s' as test_time\n, "       % time("")
+        x += "'%i' as test_len\n, "        % len(specs.RootLabel)
+        x += "'%s' as test_filter\n, "     % filter(None, ["1","2"])
+        x += "'%s' as test_map\n, "        % "','".join(map(str, mylist))
+        x += "'%s' as test_keys\n, "       % "','".join(mydict.keys())
+        x += "'%s' as test_replace\n, "    % self.classattr.replace("i", "a")[0]
+        x += "'%s' as test_split\n, "      % self.classattr.split(",")[0]
+        x += "'%s' as test_classattr\n, "  % self.classattr
+        x += '"%s" as test_dic\n, '        % mydict
+        x += "'%s' as test_parentattr\n, " % parent.record #Parent None attribute
+        x += '"%s" as test_binoplist\n, '  % mylist #+ mylist
+        x += '"%s" as test_listcomp2\n, '  % "".join([d for d in listcomp])
+        x += '"%s" as test_listcomp3\n, '  % "".join([str(b) for b in listcomp])
+        x += '"%s" as test_listcomp4\n'    % "".join([c.strip() for c in listcomp])
         return x
 
     def getExtra3(self):
@@ -112,8 +110,8 @@ class AlotmentDoc(Document):
         query = Query()
         query.sql = "SELECT SerNr, %s,\n" % codeOrder("SerNr", leaves)
         query.sql += monthCode("[al].TransDate")
-        query.sql += "\n, %s" % self.getExtra2(test=1)
-        query.sql += "\n, %s" % self.getExtra2(test=0)
+        query.sql += "\n, %s, \n" % self.getExtra2(test=1)
+        query.sql += self.getExtra2(0)
         query.sql += "\nFROM %s al\n" % specs.name()
         query.sql += self.getExtra("1", "2", val3="33")
         method = getattr(self, "getExtra3lala"[:-4])

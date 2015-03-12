@@ -26,6 +26,7 @@ exclude_lines =
     if 0:
     if __name__ == .__main__.:
 
+    def getNodeFileName
     def inspectModule
     except Exception
     except TypeError
@@ -35,3 +36,4 @@ exclude_lines =
 
     # logging stuff
     logHere(.+)
+    self.logError(.+)
