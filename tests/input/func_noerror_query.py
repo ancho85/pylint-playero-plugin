@@ -85,7 +85,7 @@ class AlotmentDoc(Document):
         x += "'%s', " % time("")
         x += "'%i', " % len(specs.RootLabel)
         x += "'%s', " % filter(None, ["1","2"])
-        x += "'%s', " % map(str, specs.Status)
+        #x += "'%s', " % map(str, [specs.Status,])
         #x += "'%s', " % ("""%s""" % mydict.keys())
         x += "'%s', " % self.classattr.replace("i", "a")[0]
         x += "'%s', " % self.classattr.split(",")[0]

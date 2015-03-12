@@ -33,5 +33,5 @@ exclude_lines =
     # Syntax errors catchs, only those with no variable assignment directly
     except SyntaxError:
 
-    # logging strings
-    logHere("
+    # logging stuff
+    logHere(.+)
