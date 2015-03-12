@@ -38,10 +38,6 @@ class cache(object):
         return new_f
 
     @classmethod
-    def flush(cls, f):
-        cls.storage.pop(id(f))
-
-    @classmethod
     def setStatistics(cls, statsType, fname, *args, **kwargs):
         args_id = tuple( args + tuple(kwargs.items()))
         if fname not in cls.statistics:

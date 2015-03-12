@@ -27,4 +27,11 @@ exclude_lines =
     if __name__ == .__main__.:
 
     def inspectModule
-    except Exception, e
+    except Exception
+    except TypeError
+
+    # Syntax errors catchs, only those with no variable assignment directly
+    except SyntaxError:
+
+    # logging strings
+    logHere("
