@@ -3,7 +3,7 @@
 
 from libs.tools import latinToAscii, embeddedImport, includeZipLib, isNumber
 
-latinToAscii(u"áéíóúÇßþ")
+latinToAscii(u"áéíóúÇ")
 
 embeddedImport("Query")
 
