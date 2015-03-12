@@ -74,6 +74,7 @@ class AlotmentDoc(Document):
         return sql
 
     def getExtra2(self, test):
+        parent = self
         specs = self.getRecorda()
         #mydict = {1:1, 2:2}
         #mylist = [1, 2]
@@ -84,13 +85,14 @@ class AlotmentDoc(Document):
         x += "'%s', " % time("")
         x += "'%i', " % len(specs.RootLabel)
         x += "'%s', " % filter(None, ["1","2"])
+        x += "'%s', " % map(str, specs.Status)
         #x += "'%s', " % ("""%s""" % mydict.keys())
-        x += "'%s', " % "replice".replace("i", "a")[0]
-        x += "'%s', " % "split,splet".split(",")[0]
+        x += "'%s', " % self.classattr.replace("i", "a")[0]
+        x += "'%s', " % self.classattr.split(",")[0]
         #x += "'%s', " % mylist.extend([2])
         x += "'%s', " % self.classattr
         #x += "'%s', " % ("""%s""" % mydict)
-        x += "'%s', " % self.__field_decimals__ #Parent dictionary attribute
+        x += "'%s', " % parent.record #Parent None attribute
         #x += "'%s', " % ("""%s""" % mylist + mylist)
         #x += "'%s', " % ("""%s""" % [a for a in mylist])
         #x += "'%s', " % "".join([("%s" % d) for d in listcomp])
