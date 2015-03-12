@@ -4,6 +4,7 @@ from OpenOrange import *
 from Routine import Routine
 from Document import Document
 from Label import Label
+from Transaction import Transaction
 from SQLTools import codeOrder, monthCode
 
 class InvoiceAlter(Routine):
@@ -86,6 +87,7 @@ class AlotmentDoc(Document):
         x += "'%s' as test_filter\n, "     % filter(None, ["1","2"])
         x += "'%s' as test_map\n, "        % "','".join(map(str, mylist))
         x += "'%s' as test_keys\n, "       % "','".join(mydict.keys())
+        x += "'%s' as test_subscript\n,"   % ["SerNr","RoomType"][specs.Status]
         #x += "'%s' as test_classattr\n, "  % self.classattr
         x += '"%s" as test_dic\n, '        % mydict
         x += "'%s' as test_parentattr\n, " % parent.record #Parent None attribute
@@ -93,7 +95,11 @@ class AlotmentDoc(Document):
         x += '"%s" as test_listcomp1\n, '  % "".join([a.strip() for a in listcomp.split(',')])
         x += '"%s" as test_listcomp2\n, '  % "".join([d for d in listcomp])
         x += '"%s" as test_listcomp3\n, '  % "".join([str(b) for b in listcomp])
-        x += '"%s" as test_listcomp4\n'    % "".join([c.strip() for c in listcomp])
+        x += '"%s" as test_listcomp4\n,'   % "".join([c.strip() for c in listcomp])
+        x += '"%s" as test_listcomp5\n,'   % [('s|%s|') % (x) for x in mylist]
+        # pylint:disable=E1101
+        x += '"%s" as inferenceErr\n,'    % self.non.existant
+        x += '"%s" as indexErr\n'    % mylist[2]
         return x
 
     def getExtra3(self):
@@ -125,8 +131,8 @@ class AlotmentDoc(Document):
         q["two"] = Query()
         q["two"].sql = "WHERE?AND SerNr IS NOT NULL\n"
         slist = ["one", "two"]
-        for sline in slist:
-            txt += q[sline].sql
+        for index in slist:
+            txt += q[index].sql
         return txt
 
     def getExtra7(self):
@@ -151,6 +157,24 @@ class AlotmentDoc(Document):
         query.sql += self.getExtra5("WHERE?AND :1")
         query.sql += self.getExtra6()
         query.sql += self.getExtra7()
+
         method = getattr(self, "getExtra3____"[:-4])
         query.sql += method()
         query.open()
+        self.run2([100, 200])
+
+    def run2(self, extraList):
+        query2 = Query()
+        query2.sql = self.getMore(extraList)
+        query2.open()
+
+    def getMore(self, moreList):
+        return "SELECT * FROM Alotment WHERE SerNr IN ('%s')" % "','".join(moreList)
+
+class Alotment(Transaction):
+
+    def run3(self):
+        query4 = Query()
+        query4.sql = "SELECT SerNr FROM Alotment\n"
+        query4.sql += "WHERE?AND OriginType = i|%s| " % self.Origin.get('Invoice', 0)
+        query4.open()
