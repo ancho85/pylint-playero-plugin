@@ -130,7 +130,7 @@ def parseErrorResponses(errorTxt):
             res = m.group(0)
         #else: #Other errors
         #    res = m.group(0)
-    return res
+    return res.rstrip("\n").rstrip("\r")
 
 
 if __name__ == "__main__":

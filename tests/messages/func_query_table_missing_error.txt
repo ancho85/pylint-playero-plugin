@@ -1,0 +1,1 @@
+E:  7: query syntax error (errQuery: 'playero.MissingTable' doesn't exist)
