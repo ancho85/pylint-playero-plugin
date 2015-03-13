@@ -36,4 +36,4 @@ exclude_lines =
 
     # logging stuff
     logHere(.+)
-    self.logError(.+)
+    self.logError
