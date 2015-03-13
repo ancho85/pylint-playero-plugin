@@ -53,7 +53,7 @@ def latinToAscii(unicrap):
 
 def ifElse(condition, trueVal, falseVal):
     if isinstance(condition, str):
-        condition = ifElse(len(condition.strip()) > 1, condition, "")
+        condition = ifElse(len(condition.strip()), trueVal, falseVal)
     if condition: return trueVal
     return falseVal
 
