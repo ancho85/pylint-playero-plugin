@@ -197,7 +197,7 @@ class QueryChecker(BaseChecker):
             if not nvalue and tryinference:
                 try:
                     inferedValue = nodeValue.infered()
-                except InferenceError:
+                except InferenceError: # pragma: no cover
                     pass
                 else:
                     for inferedValue in inferedValue:
@@ -601,7 +601,7 @@ class QueryChecker(BaseChecker):
                     self.appendQuery(instanceName, value, isnew)
                 else:
                     self.preprocessQueryIfs(nodeTarget, instanceName, value, isnew)
-        except InferenceError, e:
+        except InferenceError, e: # pragma: no cover
             self.logError("setUpQueryTxtInferenceError", nodeTarget, e)
 
     def appendQuery(self, instanceName, value, isnew):
@@ -684,7 +684,7 @@ class QueryChecker(BaseChecker):
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
                 inferedNode = node.infered()
-            except InferenceError, e:
+            except InferenceError, e: # pragma: no cover
                 pass
             else:
                 for x in inferedNode:

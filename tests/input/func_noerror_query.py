@@ -8,6 +8,8 @@ from Document import Document
 from Label import Label
 from User import User
 from Transaction import Transaction
+from TaxSettings import TaxSettings
+from FinSettings import FinSettings
 from SQLTools import codeOrder, monthCode
 from SQLQueryTools import sqlCurConvert
 
@@ -198,10 +200,17 @@ class ReportA(Report):
 
 class WindowA(Window):
 
+    def doMore(self, cond):
+        return ""
+
     def run(self):
+        tx = TaxSettings.bring()
+        fcs = FinSettings.bring()
         value = User.getStockDepo(currentUser())
         query6 = Query()
-        query6.sql = "SELECT * FROM Alotment WHERE SerNr IN ('%s')" % value
+        query6.sql = "SELECT * FROM Alotment WHERE SerNr IN ('%s')\n" % value
+        query6.sql += "AND SerNr = s|%s|" % tx.CredPayTermAsCash
+        query6.sql += self.doMore(not fcs.CLFromChangeValues)
         query6.open()
 
 from RetroactiveAccounts import RetroactiveAccounts
@@ -218,3 +227,9 @@ class HeirFinder(RetroactiveAccounts):
         query.sql = self.doReplacements(query.sql)
         #pylint:disable=E6601
         query.open() #there will be missing tables here
+
+        #coverage for last section
+        query2 = self.getQuery()
+        query2.sql = self.doReplacements(query2.sql)
+        #pylint:disable=W6602
+        query2.open()
