@@ -1,6 +1,8 @@
 # pylint:disable=C6666,R0201
 
 from OpenOrange import *
+from Report import Report
+from Window import Window
 from Routine import Routine
 from Document import Document
 from Label import Label
@@ -179,3 +181,9 @@ class Alotment(Transaction):
         query4.sql += "WHERE?AND OriginType = i|%s| AND SerNr IN " % self.Origin.get('Invoice', 0)
         query4.sql += (1, 2, 3)
         query4.open()
+
+class ReportA(Report):
+    pass
+
+class WindowA(Window):
+    pass

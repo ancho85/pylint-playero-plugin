@@ -10,7 +10,7 @@ from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
+from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber, ifElse
 from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
@@ -543,10 +543,7 @@ class QueryChecker(BaseChecker):
                 self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
             elements = [self.getAssignedTxt(nodeValue.elt)]
-        if elements:
-            lvalue = str(elements)
-        elif targets:
-            lvalue = str(targets)
+        lvalue = ifElse(str(elements), str(elements), str(targets))
         return lvalue
 
     def getAssignedTxt(self, nodeValue):
