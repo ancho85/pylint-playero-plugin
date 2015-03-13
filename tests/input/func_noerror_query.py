@@ -32,6 +32,7 @@ class InvoiceAlter(Routine):
         return sql
 
     def run(self):
+        # pylint:disable=W0201
         self.specs = self.getRecorda()
         query1 = Query()
         query1.sql = " SELECT RecordName, RoomType FROM (\n"
@@ -101,6 +102,7 @@ class AlotmentDoc(Document):
         x += '"%s" as test_listcomp3\n, '  % "".join([str(b) for b in listcomp])
         x += '"%s" as test_listcomp4\n,'   % "".join([c.strip() for c in listcomp])
         x += '"%s" as test_listcomp5\n,'   % [('s|%s|') % (x) for x in mylist]
+        x += '"%s" as test_listcomp6\n,'   % "".join([x for x in ("a", "b")])
         # pylint:disable=E1101
         x += '"%s" as inferenceErr\n,'    % self.non.existant
         x += '"%s" as indexErr\n'    % mylist[2]

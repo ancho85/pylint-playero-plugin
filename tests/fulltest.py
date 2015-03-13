@@ -23,7 +23,7 @@ config = ConfigParser.SafeConfigParser()
 config.read(os.path.join(HERE, "..", "config", "playero.cfg"))
 PLAYEROPATH = config.get('paths', os.name)
 sys.path.append(os.path.join(PLAYEROPATH, "core"))
-for scriptdir in ["base", "standard", "StdPy"]:
+for scriptdir in ["base", "standard", "extra/StdPy"]:
     for pydir in ['records', 'windows', 'reports', 'routines', 'documents','tools']:
         sys.path.append(os.path.join(PLAYEROPATH, scriptdir, pydir))
 sys.path.append(os.path.join(PLUGINPATH, "corepy", "embedded"))
