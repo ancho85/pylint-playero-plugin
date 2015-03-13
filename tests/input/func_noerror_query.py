@@ -6,8 +6,10 @@ from Window import Window
 from Routine import Routine
 from Document import Document
 from Label import Label
+from User import User
 from Transaction import Transaction
 from SQLTools import codeOrder, monthCode
+from SQLQueryTools import sqlCurConvert
 
 class InvoiceAlter(Routine):
 
@@ -30,23 +32,23 @@ class InvoiceAlter(Routine):
         return sql
 
     def run(self):
-        specs = self.getRecorda()
-        query = Query()
-        query.sql = " SELECT RecordName, RoomType FROM (\n"
+        self.specs = self.getRecorda()
+        query1 = Query()
+        query1.sql = " SELECT RecordName, RoomType FROM (\n"
         union = ""
-        for fn in specs.fieldNames():
+        for fn in self.specs.fieldNames():
             if fn.startswith("Show"):
-                if specs.fields(fn).getValue():
+                if self.specs.fields(fn).getValue():
                     recname = fn[4:]
                     if hasattr(self, "get%sQuery" % recname):
                         MyMethod = getattr(self, "get%sQuery" % recname)
-                        query.sql += union
-                        query.sql += MyMethod()
+                        query1.sql += union
+                        query1.sql += MyMethod()
                     union = "\nUNION ALL\n"
 
-        query.sql += ") AS final \n"
-        query.sql += "ORDER BY RoomType"
-        query.open()
+        query1.sql += ") AS final \n"
+        query1.sql += "ORDER BY RoomType"
+        query1.open()
 
 class AlotmentDoc(Document):
 
@@ -148,21 +150,21 @@ class AlotmentDoc(Document):
     def run(self):
         specs = self.getRecorda()
         leaves = Label.getTreeLeaves(specs.RootLabel)
-        query = Query()
-        query.sql = "SELECT SerNr, %s,\n" % codeOrder("SerNr", leaves)
-        query.sql += monthCode("[al].TransDate")
-        query.sql += "\n, %s, \n" % self.getExtra2(test=1)
-        query.sql += self.getExtra2(0)
-        query.sql += "\nFROM %s al\n" % specs.name()
-        query.sql += self.getExtra("1", "2", val3="33")
-        query.sql += self.getExtra4()
-        query.sql += self.getExtra5("WHERE?AND :1")
-        query.sql += self.getExtra6()
-        query.sql += self.getExtra7()
+        query7 = Query()
+        query7.sql = "SELECT SerNr, %s,\n" % codeOrder("SerNr", leaves)
+        query7.sql += monthCode("[al].TransDate")
+        query7.sql += "\n, %s, \n" % self.getExtra2(test=1)
+        query7.sql += self.getExtra2(0)
+        query7.sql += "\nFROM %s al\n" % specs.name()
+        query7.sql += self.getExtra("1", "2", val3="33")
+        query7.sql += self.getExtra4()
+        query7.sql += self.getExtra5("WHERE?AND :1")
+        query7.sql += self.getExtra6()
+        query7.sql += self.getExtra7()
 
         method = getattr(self, "getExtra3____"[:-4])
-        query.sql += method()
-        query.open()
+        query7.sql += method()
+        query7.open()
         self.run2([100, 200])
 
     def run2(self, extraList):
@@ -183,7 +185,34 @@ class Alotment(Transaction):
         query4.open()
 
 class ReportA(Report):
-    pass
+
+    def run(self):
+        query5 = Query()
+        query5.sql = "SELECT Total, "
+        query5.sql += sqlCurConvert("Deposit", "Total", 2)
+        query5.sql += "FROM Deposit\n"
+        query5.sql += "WHERE Status = b|TRUE|\n"
+        query5.open()
 
 class WindowA(Window):
-    pass
+
+    def run(self):
+        value = User.getStockDepo(currentUser())
+        query6 = Query()
+        query6.sql = "SELECT * FROM Alotment WHERE SerNr IN ('%s')" % value
+        query6.open()
+
+from RetroactiveAccounts import RetroactiveAccounts
+class HeirFinder(RetroactiveAccounts):
+
+    def doReplacements(self, txt):
+        d = {1:"ONE", 2:"TWO"}
+        us = User.bring("USER")
+        txt = txt.replace(":1", us.Name + d[1])
+        return txt
+
+    def run(self):
+        query = self.getQuery() #bug detected, getQuery setups a query name that may be different to the one defined here. Issue #24
+        query.sql = self.doReplacements(query.sql)
+        #pylint:disable=E6601
+        query.open() #there will be missing tables here
