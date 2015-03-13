@@ -1,4 +1,4 @@
-# pylint:disable=C6666,R0201
+# pylint:disable=C6666,R0201,E6601
 
 from OpenOrange import *
 from RetroactiveAccounts import RetroactiveAccounts
