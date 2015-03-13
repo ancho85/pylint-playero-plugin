@@ -202,7 +202,10 @@ class ReportA(Report):
 class WindowA(Window):
 
     def doMore(self, cond):
-        return ""
+        txt = ""
+        if cond:
+            txt = ""
+        return txt
 
     def run(self):
         tx = TaxSettings.bring()
