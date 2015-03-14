@@ -8,8 +8,7 @@ install:
 before_script:
   - scripts/travis-setup.sh
 script:
-  - nosetests
-  - coverage run tests/fulltest.py
+  - coverage run tests/fulltest.py --verbose
 after_success:
   - coveralls
 env:

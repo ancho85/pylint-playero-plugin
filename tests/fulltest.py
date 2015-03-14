@@ -36,11 +36,21 @@ def tests():
 
     return make_tests(input_dir, messages_dir, None, callbacks)
 
+def additional_tests():
+    suites = unittest.TestSuite()
+    for fn in os.listdir(os.path.dirname(__file__)):
+        if fn.endswith('.py') and fn not in ('__init__.py', 'fulltest.py'):
+            name = os.path.splitext(fn)[0]
+            module = __import__(name, globals(), locals(), [name])
+            if hasattr(module, 'test_suite'):
+                suites.addTests(module.test_suite())
+    return suites
 
 def suite():
-    return testlib.TestSuite([unittest.makeSuite(test, suiteClass=testlib.TestSuite)
-                              for test in tests()])
-
+    default = [unittest.makeSuite(test, suiteClass=testlib.TestSuite) for test in tests()]
+    default.append(additional_tests())
+    return testlib.TestSuite(default)
 
 if __name__ == '__main__':
     testlib.unittest_main(defaultTest='suite')
+
