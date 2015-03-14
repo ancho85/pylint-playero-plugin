@@ -1,10 +1,9 @@
 # pylint:disable=C6666,R0201,E6601
 
 from OpenOrange import *
-from RetroactiveAccounts import RetroactiveAccounts
 
-class QueryWarning(RetroactiveAccounts):
+class QueryWarning(object):
 
     def run(self):
-        query = self.getQuery()
-        query.open()
+        qw = Query()
+        qw.open()
