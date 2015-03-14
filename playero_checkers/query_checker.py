@@ -404,24 +404,21 @@ class QueryChecker(BaseChecker):
         """locate attribute in inheritance by visiting all assignments"""
         heirVal = ""
         prevSi = node.previous_sibling()
-        while prevSi is not None:
-            if isinstance(prevSi, Assign):
-                if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == node.expr.name:
-                    if isinstance(prevSi.value, CallFunc) and isinstance(prevSi.value.func, Getattr):
-                        if prevSi.value.func.expr.name == "self":
-                            if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
-                                heirClass = node.scope().parent.bases[0].infered()[0]
-                                heirCall = heirClass.locals[prevSi.value.func.attrname][0]
-                                #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
-                                for ass in heirCall.body:
-                                    if isinstance(ass, Assign):
-                                        self.visit_assign(ass)
-                                    elif isinstance(ass, AugAssign):
-                                        self.visit_augassign(ass)
-                                if node.expr.name in self.queryTxt:
-                                    heirVal = self.queryTxt[node.expr.name]
-                                    break #value found, breaks the while
-            prevSi = prevSi.previous_sibling()
+        if isinstance(prevSi, Assign):
+            if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == node.expr.name:
+                if isinstance(prevSi.value, CallFunc) and isinstance(prevSi.value.func, Getattr):
+                    if prevSi.value.func.expr.name == "self":
+                        if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
+                            heirClass = node.scope().parent.bases[0].infered()[0]
+                            heirCall = heirClass.locals[prevSi.value.func.attrname][0]
+                            #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
+                            for ass in heirCall.body:
+                                if isinstance(ass, Assign):
+                                    self.visit_assign(ass)
+                                elif isinstance(ass, AugAssign):
+                                    self.visit_augassign(ass)
+                            if node.expr.name in self.queryTxt:
+                                heirVal = self.queryTxt[node.expr.name]
         return heirVal
 
     def getGetattrValue(self, nodeValue):

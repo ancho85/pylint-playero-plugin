@@ -231,9 +231,3 @@ class HeirFinder(RetroactiveAccounts):
         query.sql = self.doReplacements(query.sql)
         #pylint:disable=E6601
         query.open() #there will be missing tables here
-
-        #coverage for last section
-        query2 = self.getQuery()
-        query2.sql = self.doReplacements(query2.sql)
-        #pylint:disable=W6602
-        query2.open()
