@@ -103,8 +103,8 @@ class AlotmentDoc(Document):
         x += '"%s" as test_listcomp2\n, '  % "".join([d for d in listcomp])
         x += '"%s" as test_listcomp3\n, '  % "".join([str(b) for b in listcomp])
         x += '"%s" as test_listcomp4\n,'   % "".join([c.strip() for c in listcomp])
-        x += '"%s" as test_listcomp5\n,'   % [('s|%s|') % (x) for x in mylist]
-        x += '"%s" as test_listcomp6\n,'   % "".join([x for x in ("a", "b")])
+        x += '"%s" as test_listcomp5\n,'   % [('s|%s|') % (z) for z in mylist]
+        x += '"%s" as test_listcomp6\n,'   % "".join([y for y in ("a", "b")])
         # pylint:disable=E1101
         x += '"%s" as inferenceErr\n,'    % self.non.existant
         x += '"%s" as indexErr\n'    % mylist[2]
