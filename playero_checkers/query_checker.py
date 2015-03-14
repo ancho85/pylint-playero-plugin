@@ -577,6 +577,7 @@ class QueryChecker(BaseChecker):
                         qvalue = self.getAssignedTxt(inferedValue[0])
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
+                    raise InferenceError
         except InferenceError, e:
             self.logError("getAssignedTxtInferenceError", nodeValue, e)
         except Exception, e:
