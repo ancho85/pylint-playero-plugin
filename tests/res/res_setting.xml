@@ -4,6 +4,6 @@
     <logqueries>false</logqueries>
     <language>es</language>
     <webdir>web</webdir>
-    <scriptdir level="0" path="base" />
+    <scriptdir level="0"path="base" />
     <scriptdir level="1" path="standard" />
 </settings>

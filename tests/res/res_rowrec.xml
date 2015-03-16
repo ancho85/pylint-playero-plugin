@@ -1,4 +1,4 @@
-<detailrecord name="AccessGroupReportRow" tablename="AccessGroupReportRow" >
+<detailrecord name="AccessGroupReportRow"tablename="AccessGroupReportRow" >
     <field name="Name" type="string" length="60" />
     <field name="Access" type="integer" />
 </detailrecord>

@@ -14,10 +14,7 @@ def parseRecordXML(filename):
         parser.parse(open(filename, "r"))
     except SAXParseException:
         fixedTxt = reformatXml(filename)
-        try:
-            parseString(fixedTxt, dh)
-        except SAXParseException:
-            pass
+        parseString(fixedTxt, dh)
     return dh
 
 class XMLRecordHandler(handler.ContentHandler):
@@ -77,7 +74,7 @@ def parseWindowRecordName(filename):
         parser.parse(open(filename, "r"))
     except SAXParseException:
         if not dh.name:
-            fixedTxt = reformatXml(open(filename, "r"))
+            fixedTxt = reformatXml(filename)
             parseString(fixedTxt, dh)
     return dh
 
@@ -111,20 +108,12 @@ class XMLSettingsHandler(handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "scriptdir":
-            self.sd[int(attrs.get('level', 0))] = self.unicodeToStr(attrs.get('path', None))
+            self.sd[int(attrs.get('level', 0))] = str(attrs.get('path', None))
 
     def endDocument(self):
         for i in self.sd:
             if i:
                 self.scriptdirs.append(i)
-
-    def unicodeToStr(self, value):
-        res = ""
-        try:
-            res = str(value)
-        except:
-            res = repr(value)
-        return res
 
 def reformatXml(filename):
     openedfile = open(filename, "r")

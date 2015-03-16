@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<window name="LoginDialogWindow" recordname="LoginDialog" modal="true" title="Login" >
+<window name="LoginDialogWindow"recordname="LoginDialog" modal="true" title="Login" >
     <text label="User" fieldname="User" />
-    <text label="Password" fieldname="Password" password="true" md5="true" />
+    <text label="Password" fieldname="Password" password="true" md5="true"/>
     <line>
         <pushbutton label="Login" name="login" />
         <pushbutton label="Cancel" name="cancel" />
