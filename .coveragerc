@@ -30,6 +30,7 @@ exclude_lines =
     def inspectModule
     except Exception
     except TypeError
+    continue
 
     # Syntax errors catchs, only those with no variable assignment directly
     except SyntaxError:
