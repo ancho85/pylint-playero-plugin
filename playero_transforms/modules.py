@@ -1,37 +1,18 @@
 from astroid.builder import AstroidBuilder
 from astroid import MANAGER, node_classes
 from astroid.exceptions import InferenceError
-from libs.funcs import getClassInfo
+from libs.funcs import getClassInfo, getModName, findPaths, allCoreClasses
 
 def modules_transform(module):
-    modname = module.name
+    if not hasattr(module, "name"): return
+    modname = getModName(module.name)
     if not modname: return
-    buildSuperClassModule(module)
-    buildNewRecordModule(module)
-    buildNewReportModule(module)
-    buildNewWindowModule(module)
-
-def isRoutine(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".routines.") > -1:
-            return True
-    return False
-
-def isReport(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".reports.") > -1:
-            return True
-    return False
-
-def assHasAssignedStmts(theAss):
-    """ pylint's problem with lines like: "a = [x for x in tuple([1,2])]" """
-    res = True
-    try:
-        for _ in theAss.assigned_stmts():
-            pass
-    except InferenceError:
-        res = False
-    return res
+    paths, pathType = findPaths(modname)
+    if paths or pathType or modname in allCoreClasses:
+        buildSuperClassModule(module)
+        buildNewRecordModule(module)
+        buildNewReportModule(module)
+        buildNewWindowModule(module)
 
 def getFunctionArguments(module, funcTxt):
     res = []
@@ -40,7 +21,6 @@ def getFunctionArguments(module, funcTxt):
         if not (
                 isinstance(ass, node_classes.AssName)
                 and isinstance(ass.statement(), node_classes.Assign)
-                and assHasAssignedStmts(ass)
                 ): continue
         else:
             for supers in [ #list comprehention of funcTxt's calls
