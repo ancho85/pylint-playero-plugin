@@ -14,3 +14,5 @@ class helloWorld(object):
     test = True
     exec("res3 = %s" % test)
     print res3
+
+    exec("res4 = ")
