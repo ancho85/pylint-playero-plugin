@@ -10,9 +10,9 @@ def modules_transform(module):
     paths, pathType = findPaths(modname)
     if paths or pathType or modname in allCoreClasses:
         buildSuperClassModule(module)
-        buildNewRecordModule(module)
-        buildNewReportModule(module)
-        buildNewWindowModule(module)
+        #buildNewRecordModule(module)
+        #buildNewReportModule(module)
+        #buildNewWindowModule(module)
 
 def getFunctionArguments(module, funcTxt):
     res = []
@@ -44,17 +44,17 @@ def buildSuperClassModule(module):
             module.locals['SuperClass'] = classBuilder("SuperClass", sclist[0], sclist[1])
         sclist = sclist[3:]
 
-def buildNewRecordModule(module):
-    for arg in getFunctionArguments(module, "NewRecord"):
-        module.locals["NewRecord"] = classBuilder("NewRecord", arg)
+#def buildNewRecordModule(module):
+#    for arg in getFunctionArguments(module, "NewRecord"):
+#        module.locals["NewRecord"] = classBuilder("NewRecord", arg)
 
-def buildNewReportModule(module):
-    for arg in getFunctionArguments(module, "NewReport"):
-        module.locals["NewReport"] = classBuilder("NewReport", arg, "Embedded_Report")
+#def buildNewReportModule(module):
+#    for arg in getFunctionArguments(module, "NewReport"):
+#        module.locals["NewReport"] = classBuilder("NewReport", arg, "Embedded_Report")
 
-def buildNewWindowModule(module):
-    for arg in getFunctionArguments(module, "NewWindow"):
-        module.locals["NewWindow"] = classBuilder("NewWindow", arg, "Embedded_Window")
+#def buildNewWindowModule(module):
+#    for arg in getFunctionArguments(module, "NewWindow"):
+#        module.locals["NewWindow"] = classBuilder("NewWindow", arg, "Embedded_Window")
 
 
 def classBuilder(name, classname, parent=""):
