@@ -60,7 +60,7 @@ class Embedded_Window(object):
         #~ #used in webmode
         #~ return self.__record__
     def getTitle(self):
-        from functions import *
+        from functions import tr
         rec = self.getRecord()
         if not rec:
             return self.getOriginalTitle()
