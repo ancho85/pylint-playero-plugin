@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 from libs.pyparse import parseScript
+from libs.funcs import getPlayeroPath
 
 def getFilePath(filename):
     HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,11 @@ class TestPyParse(unittest.TestCase):
         self.failUnless(["result", "sql"] == par.attributes.keys())
         self.assertFalse(bool([meth for meth in ("getSQL", "setSQL", "parseSQL") if meth not in par.methods]))
         self.failIf(par.inheritance["Query"] != "object")
+
+    def test_funcDefDefaults(self):
+        filepath = os.path.join(getPlayeroPath(), "standard", "reports", "RecordHistoryReport.py")
+        par = parseScript(filepath)
+        self.failUnless(par.defaults["FromTime"] == "time")
 
 def test_suite():
     suite = unittest.TestSuite()
