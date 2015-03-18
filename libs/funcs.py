@@ -2,7 +2,7 @@ import os
 from libs.cache import cache
 from libs.xmlparse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from libs.pyparse import parseScript
-from libs.tools import logHere
+from libs.tools import logHere, ifElse
 import ConfigParser
 
 RECORD = ".record.xml"
@@ -178,17 +178,17 @@ def getClassInfo(modulename, parent=""):
     methods = sorted(methods)
     return (attributes, methods)
 
+coreFiles = [f.split(".py")[0] for f in os.listdir(getEmbeddedPath())]
+
 def getModName(modname):
     if modname.find(".")>-1:
         modname = modname.split(".")[-1:][0] #extra.StdPy.records.Delivery -> Delivery
     if modname.endswith("Window") and modname != "Window":
         modname = modname.split("Window")[0]
-    if modname.find("_")>-1:
-        corePath = False
-        for _ in [f for f in os.listdir(getEmbeddedPath()) if f.split(".py")[0] == modname]:
-            corePath = True
-        if not corePath:
-            modname = None
+    if modname.startswith(("test_", "func_")):
+        modname = modname.split("_")[-1:][0] # func_noerror_modules_Invoice -> Invoice
+    elif modname.find("_")>-1:
+        modname = ifElse(modname not in coreFiles, None, modname)
     return modname
 
 def inspectModule(module, inspectValue="module", filename="inspect.log"):

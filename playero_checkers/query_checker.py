@@ -10,7 +10,7 @@ from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
+from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber, ifElse
 from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
@@ -197,7 +197,7 @@ class QueryChecker(BaseChecker):
             if not nvalue and tryinference:
                 try:
                     inferedValue = nodeValue.infered()
-                except InferenceError:
+                except InferenceError: # pragma: no cover
                     pass
                 else:
                     for inferedValue in inferedValue:
@@ -404,24 +404,21 @@ class QueryChecker(BaseChecker):
         """locate attribute in inheritance by visiting all assignments"""
         heirVal = ""
         prevSi = node.previous_sibling()
-        while prevSi is not None:
-            if isinstance(prevSi, Assign):
-                if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == node.expr.name:
-                    if isinstance(prevSi.value, CallFunc) and isinstance(prevSi.value.func, Getattr):
-                        if prevSi.value.func.expr.name == "self":
-                            if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
-                                heirClass = node.scope().parent.bases[0].infered()[0]
-                                heirCall = heirClass.locals[prevSi.value.func.attrname][0]
-                                #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
-                                for ass in heirCall.body:
-                                    if isinstance(ass, Assign):
-                                        self.visit_assign(ass)
-                                    elif isinstance(ass, AugAssign):
-                                        self.visit_augassign(ass)
-                                if node.expr.name in self.queryTxt:
-                                    heirVal = self.queryTxt[node.expr.name]
-                                    break #value found, breaks the while
-            prevSi = prevSi.previous_sibling()
+        if isinstance(prevSi, Assign):
+            if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == node.expr.name:
+                if isinstance(prevSi.value, CallFunc) and isinstance(prevSi.value.func, Getattr):
+                    if prevSi.value.func.expr.name == "self":
+                        if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
+                            heirClass = node.scope().parent.bases[0].infered()[0]
+                            heirCall = heirClass.locals[prevSi.value.func.attrname][0]
+                            #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
+                            for ass in heirCall.body:
+                                if isinstance(ass, Assign):
+                                    self.visit_assign(ass)
+                                elif isinstance(ass, AugAssign):
+                                    self.visit_augassign(ass)
+                            if node.expr.name in self.queryTxt:
+                                heirVal = self.queryTxt[node.expr.name]
         return heirVal
 
     def getGetattrValue(self, nodeValue):
@@ -543,10 +540,7 @@ class QueryChecker(BaseChecker):
                 self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
             elements = [self.getAssignedTxt(nodeValue.elt)]
-        if elements:
-            lvalue = str(elements)
-        elif targets:
-            lvalue = str(targets)
+        lvalue = ifElse(str(elements), str(elements), str(targets))
         return lvalue
 
     def getAssignedTxt(self, nodeValue):
@@ -583,6 +577,7 @@ class QueryChecker(BaseChecker):
                         qvalue = self.getAssignedTxt(inferedValue[0])
                 else:
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
+                    raise InferenceError
         except InferenceError, e:
             self.logError("getAssignedTxtInferenceError", nodeValue, e)
         except Exception, e:
@@ -604,7 +599,7 @@ class QueryChecker(BaseChecker):
                     self.appendQuery(instanceName, value, isnew)
                 else:
                     self.preprocessQueryIfs(nodeTarget, instanceName, value, isnew)
-        except InferenceError, e:
+        except InferenceError, e: # pragma: no cover
             self.logError("setUpQueryTxtInferenceError", nodeTarget, e)
 
     def appendQuery(self, instanceName, value, isnew):
@@ -687,7 +682,7 @@ class QueryChecker(BaseChecker):
         if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
             try:
                 inferedNode = node.infered()
-            except InferenceError, e:
+            except InferenceError, e: # pragma: no cover
                 pass
             else:
                 for x in inferedNode:

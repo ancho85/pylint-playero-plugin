@@ -9,6 +9,7 @@ def validateSQL(txt, filename=None):
     if config.get("mysql", "pass") == "******": return "MySQL password is not configured. Check playero.cfg file"
     txt = parseSQL(txt)
     if int(config.get("mysql", "useapi")):
+        txt = txt.replace("\n", " ").replace(";", ";\n")
         res = apiValidateSQL(txt, config)
     else:
         txt = "%s%s%s" % ("START TRANSACTION;\n", txt, ";\nROLLBACK;\n")
@@ -130,7 +131,7 @@ def parseErrorResponses(errorTxt):
             res = m.group(0)
         #else: #Other errors
         #    res = m.group(0)
-    return res
+    return res.rstrip("\n").rstrip("\r")
 
 
 if __name__ == "__main__":

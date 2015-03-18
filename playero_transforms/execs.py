@@ -3,9 +3,10 @@ from astroid import raw_building
 from libs.pyparse import parseExecLine
 from libs.funcs import *
 from libs.tools import ifElse
+import ast
 
 def exec_transform(assnode):
-    module = assnode.frame().parent
+    module = assnode.root()
     if not module: return
     if not hasattr(module, "name"): return
     modname = getModName(module.name)
@@ -34,10 +35,8 @@ def exec_transform(assnode):
                     elif parsed.targets:
                         value = parsed.values[0]
                         newvalue = ""
-                        if hasattr(value, "func"):
-                            newvalue = value.func.id
-                        elif hasattr(value, "s"):
-                            newvalue = value.s
+                        if isinstance(value, ast.Name):
+                            newvalue = value.id
                         raw_building.attach_const_node(assnode.scope(), parsed.targets[0], newvalue)
         elif isinstance(assnode.expr, node_classes.Const):
             newstatement = eval(assnode.expr.as_string())
@@ -46,8 +45,8 @@ def exec_transform(assnode):
                 for key, newvar in parsed.targets.iteritems():
                     value = parsed.values[key]
                     newvalue = ""
-                    if hasattr(value, "func"):
+                    if isinstance(value, ast.Call):
                         newvalue = value.func.id
-                    elif hasattr(value, "s"):
+                    elif isinstance(value, ast.Str):
                         newvalue = value.s
                     raw_building.attach_const_node(assnode.scope(), newvar, newvalue)

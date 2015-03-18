@@ -1,37 +1,14 @@
 from astroid.builder import AstroidBuilder
 from astroid import MANAGER, node_classes
-from astroid.exceptions import InferenceError
-from libs.funcs import getClassInfo
+from libs.funcs import getClassInfo, getModName, findPaths, allCoreClasses
 
 def modules_transform(module):
-    modname = module.name
+    if not hasattr(module, "name"): return
+    modname = getModName(module.name)
     if not modname: return
-    buildSuperClassModule(module)
-    buildNewRecordModule(module)
-    buildNewReportModule(module)
-    buildNewWindowModule(module)
-
-def isRoutine(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".routines.") > -1:
-            return True
-    return False
-
-def isReport(module):
-    if len(module.body):
-        if module.body[0].parent.name.find(".reports.") > -1:
-            return True
-    return False
-
-def assHasAssignedStmts(theAss):
-    """ pylint's problem with lines like: "a = [x for x in tuple([1,2])]" """
-    res = True
-    try:
-        for _ in theAss.assigned_stmts():
-            pass
-    except InferenceError:
-        res = False
-    return res
+    paths, pathType = findPaths(modname)
+    if paths or pathType or modname in allCoreClasses:
+        buildSuperClassModule(module)
 
 def getFunctionArguments(module, funcTxt):
     res = []
@@ -40,7 +17,6 @@ def getFunctionArguments(module, funcTxt):
         if not (
                 isinstance(ass, node_classes.AssName)
                 and isinstance(ass.statement(), node_classes.Assign)
-                and assHasAssignedStmts(ass)
                 ): continue
         else:
             for supers in [ #list comprehention of funcTxt's calls
@@ -64,19 +40,6 @@ def buildSuperClassModule(module):
             module.locals['SuperClass'] = classBuilder("SuperClass", sclist[0], sclist[1])
         sclist = sclist[3:]
 
-def buildNewRecordModule(module):
-    for arg in getFunctionArguments(module, "NewRecord"):
-        module.locals["NewRecord"] = classBuilder("NewRecord", arg)
-
-def buildNewReportModule(module):
-    for arg in getFunctionArguments(module, "NewReport"):
-        module.locals["NewReport"] = classBuilder("NewReport", arg, "Embedded_Report")
-
-def buildNewWindowModule(module):
-    for arg in getFunctionArguments(module, "NewWindow"):
-        module.locals["NewWindow"] = classBuilder("NewWindow", arg, "Embedded_Window")
-
-
 def classBuilder(name, classname, parent=""):
     attributes, methods = getClassInfo(classname, parent)
     methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
@@ -89,6 +52,6 @@ def %s(classname, superclassname, filename):
 %s
 %s
     return %s()
-''' % (name, classname, "\n".join(attrsTxt),"\n".join(methsTxt), classname)
+''' % (name, classname, "\n".join(attrsTxt), "\n".join(methsTxt), classname)
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals[name]

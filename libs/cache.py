@@ -38,10 +38,6 @@ class cache(object):
         return new_f
 
     @classmethod
-    def flush(cls, f):
-        cls.storage.pop(id(f))
-
-    @classmethod
     def setStatistics(cls, statsType, fname, *args, **kwargs):
         args_id = tuple( args + tuple(kwargs.items()))
         if fname not in cls.statistics:
@@ -62,5 +58,5 @@ class cache(object):
                 if detailed and cls.detailedStats:
                     res.append("Total %s(%s) Hits: %i -- Miss: %i" % (fname, arg, hits, misses))
                 else:
-                    res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses))
+                    res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses)) #pragma: no cover
         return '\n'.join(res)
