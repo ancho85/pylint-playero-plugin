@@ -27,9 +27,9 @@ class TestPyParse(unittest.TestCase):
         self.failIf(par.inheritance["Query"] != "object")
 
     def test_funcDefDefaults(self):
-        filepath = os.path.join(getPlayeroPath(), "standard", "reports", "RecordHistoryReport.py")
+        filepath = os.path.join(getPlayeroPath(), "standard", "reports", "AccountList.py")
         par = parseScript(filepath)
-        self.failUnless(par.defaults["FromTime"] == "time")
+        self.failUnless(par.defaults["Type"] == 5)
 
 def test_suite():
     suite = unittest.TestSuite()
