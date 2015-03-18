@@ -1,21 +1,21 @@
 import os
 import unittest
 import ConfigParser
-from libs.funcs import getConfig
+from libs.funcs import getConfig, CONFIGPATH
 from libs.sqlparse import parseSQL, cmdValidateSQL, apiValidateSQL, validateSQL
 
 class TestSqlParse(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(TestSqlParse, self).__init__(*args, **kwargs)
+    def setUp(self):
         self.q1 =  "SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType} FROM Alotment al "
         self.q1 += "INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId}"
         self.q2 =  "SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType}, " #Extra coma here
         self.q2 += "FROM Alotment al INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId};"
         self.q3 = "SELECT * FROM [NonExistentTable]"
+        self.cfg = getConfig()
 
     def test_cmd(self):
-        config = getConfig()
+        config = self.cfg
         config.set("mysql", "useapi", "0")
 
         res = cmdValidateSQL(parseSQL(self.q1), config)
@@ -30,7 +30,7 @@ class TestSqlParse(unittest.TestCase):
     def test_api(self):
         prepare = lambda txt: parseSQL(txt).replace("\n", " ").replace(";", ";\n")
 
-        config = getConfig()
+        config = self.cfg
         config.set("mysql", "useapi", "1")
 
         res = apiValidateSQL(prepare(self.q1), config)
@@ -43,7 +43,6 @@ class TestSqlParse(unittest.TestCase):
         self.assert_(res.find("doesn't exist") > -1, msg="The query parser has not detected the [missing table] error. %s" % res)
 
     def test_validate(self):
-        bkpConfig = getConfig() #original good config
 
         HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         configLocation = os.path.join(HERE, "config", "playero.cfg")
@@ -53,7 +52,7 @@ class TestSqlParse(unittest.TestCase):
                     "wrongpass":"ERROR 1045 Access denied for user"
                     }
         for checkpoint in tests:
-            config = self.readNewConfig(configLocation) #re read
+            config = getConfig() #re read
             config.set("mysql", "useapi", 1)
             if checkpoint == "nodb":
                 config.set("mysql", "dbname", "databasename")
@@ -63,19 +62,12 @@ class TestSqlParse(unittest.TestCase):
                 config.set("mysql", "dbname", "dbnone")
             elif checkpoint in "wrongpass":
                 config.set("mysql", "pass", "666")
-            self.writeNewConfig(config, configLocation) #write wrong config
+            config.write(open(CONFIGPATH, "wb")) #write wrong config
 
             res = validateSQL(self.q1)
             self.assert_(res.find(tests[checkpoint]) > -1, msg=res)
-            self.writeNewConfig(bkpConfig, configLocation) # rewrite good config
 
-    def readNewConfig(self, configLocation):
-        config = ConfigParser.ConfigParser()
-        config.readfp(open(configLocation))
-        return config
-
-    def writeNewConfig(self, config, configLocation):
-        config.write(open(configLocation, "wb"))
+            self.cfg.write(open(CONFIGPATH, "wb")) # rewrite good config
 
 def test_suite():
     suite = unittest.TestSuite()

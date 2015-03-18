@@ -15,10 +15,11 @@ routineClasses = ["Routine", "RoutineA"]
 otherClasses   = ["Window", "WindowA"]
 allCoreClasses = reportClasses + routineClasses + otherClasses
 
+CONFIGPATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")
+
 def getConfig():
     config = ConfigParser.ConfigParser()
-    configLocation = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")
-    f = open(configLocation, "r")
+    f = open(CONFIGPATH, "r")
     config.readfp(f) #the configuration file can change, so it must be opened every time
     f.close()
     return config
