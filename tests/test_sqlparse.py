@@ -1,6 +1,4 @@
-import os
 import unittest
-import ConfigParser
 from libs.funcs import getConfig, CONFIGPATH
 from libs.sqlparse import parseSQL, cmdValidateSQL, apiValidateSQL, validateSQL
 
@@ -43,9 +41,6 @@ class TestSqlParse(unittest.TestCase):
         self.assert_(res.find("doesn't exist") > -1, msg="The query parser has not detected the [missing table] error. %s" % res)
 
     def test_validate(self):
-
-        HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-        configLocation = os.path.join(HERE, "config", "playero.cfg")
         tests = {"nodb": "MySQL database is not configured. Check playero.cfg file",
                     "nopass":"MySQL password is not configured. Check playero.cfg file",
                     "wrongdb":"ERROR 1049 Unknown database 'dbnone'",
