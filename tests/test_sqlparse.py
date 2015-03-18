@@ -1,4 +1,6 @@
+import os
 import unittest
+import ConfigParser
 from libs.funcs import getConfig
 from libs.sqlparse import parseSQL, cmdValidateSQL, apiValidateSQL, validateSQL
 
