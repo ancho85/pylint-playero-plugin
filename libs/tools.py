@@ -53,7 +53,7 @@ def latinToAscii(unicrap):
 
 def ifElse(condition, trueVal, falseVal):
     if isinstance(condition, str):
-        condition = ifElse(len(condition.strip()), trueVal, falseVal)
+        condition = ifElse(len(condition.strip()), condition, "")
     return [falseVal, trueVal][bool(condition)]
 
 def logHere(*args, **kwargs):
