@@ -54,8 +54,7 @@ def latinToAscii(unicrap):
 def ifElse(condition, trueVal, falseVal):
     if isinstance(condition, str):
         condition = ifElse(len(condition.strip()), trueVal, falseVal)
-    if condition: return trueVal
-    return falseVal
+    return [falseVal, trueVal][bool(condition)]
 
 def logHere(*args, **kwargs):
     filename = "log.log"
