@@ -1,6 +1,8 @@
 from astroid.builder import AstroidBuilder
 from astroid import MANAGER, node_classes
 from libs.funcs import getClassInfo, getModName, findPaths, allCoreClasses
+from libs.tools import hashIt
+from playero_transforms.classes import methodTextBuilder
 
 def modules_transform(module):
     if not hasattr(module, "name"): return
@@ -42,7 +44,8 @@ def buildSuperClassModule(module):
 
 def classBuilder(name, classname, parent=""):
     attributes, methods = getClassInfo(classname, parent)
-    methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    methsTxt = ["    %s" % methodTextDic[x] for x in methodTextDic if x != "__init__"]
     attrsTxt = ["%s%s=%s" % ("            self.", x, attributes[x]) for x in sorted(attributes)]
     txt = '''
 def %s(classname, superclassname, filename):

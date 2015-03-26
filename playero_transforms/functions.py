@@ -2,6 +2,8 @@ from astroid import MANAGER, node_classes, raw_building
 from astroid.builder import AstroidBuilder
 from libs.funcs import getClassInfo
 from libs.cache import cache
+from libs.tools import hashIt
+from playero_transforms.classes import methodTextBuilder
 
 def function_transform(callFunc):
     if isinstance(callFunc.func, node_classes.Name):
@@ -25,7 +27,8 @@ def function_transform(callFunc):
 @cache.store
 def functionBuilder(name, classname, parent=""):
     attributes, methods = getClassInfo(classname, parent)
-    methsTxt = ["%s%s%s" % ("        def ", x, "(self, *args, **kwargs): pass") for x in methods if x != "__init__"]
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    methsTxt = ["    %s" % methodTextDic[x] for x in methodTextDic if x != "__init__"]
     attrsTxt = ["%s%s=%s" % ("            self.", x, attributes[x]) for x in sorted(attributes)]
     txt = '''
 def %s(rname):

@@ -1,7 +1,6 @@
 import ast
 import os
 from libs.cache import cache
-from libs.tools import logHere
 
 @cache.store
 def parseScript(filefullpath):
@@ -22,7 +21,7 @@ class PyParse(ast.NodeVisitor):
     def __init__(self):
         ast.NodeVisitor.__init__(self)
         self.attributes = {}
-        self.methods = set()
+        self.methods = {}
         self.classes = set()
         self.names = set()
         self.inheritance = {}
@@ -44,7 +43,24 @@ class PyParse(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
-        self.methods.add(node.name)
+        """
+        Methods are created with reversed params, to set correctly the defaults values.
+        Then, is re reversed for right order and updated with args and kwargs
+        """
+        #create dict with all arguments with no default value in reversed order
+        self.methods[node.name] = dict((n, x.id) for n, x in enumerate(reversed(node.args.args)))
+        #assign the default values to all arguments previously created
+        for n, y in enumerate(reversed(node.args.defaults)):
+            defname = self.methods[node.name][n]
+            defval = y.id if hasattr(y, "id") else y.s if hasattr(y, "s") else y.n if hasattr(y, "n") else None #ast(Name, Str, Num)
+            self.methods[node.name][n] = {defname:defval}
+        #recreate dict reverting again
+        dictvalues = self.methods[node.name].values()
+        self.methods[node.name] = dict((n, val) for n, val in enumerate(reversed(dictvalues)))
+        #update dict with args and kwargs 'pointers'
+        dictpointers = {"*args": node.args.vararg, "**kwargs": node.args.kwarg}
+        self.methods[node.name].update((n, val) for n, val in enumerate(dictpointers, start=len(self.methods[node.name])) if dictpointers[val])
+
         if node.name == "defaults":
             self.funcDefDefaults(node)
         elif node.name in ("__init__", "run"):

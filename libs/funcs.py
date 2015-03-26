@@ -149,7 +149,7 @@ def getFullPaths(extraDirs):
 
 @cache.store
 def getClassInfo(modulename, parent=""):
-    attributes, methods, inheritance = {}, set(), {}
+    attributes, methods, inheritance = {}, {}, {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
     paths.append(os.path.join(getPlayeroPath(),"core"))
     paths.append(getEmbeddedPath())
@@ -163,20 +163,19 @@ def getClassInfo(modulename, parent=""):
                 parse = parseScript(fullfilepath)
                 attributes.update(parse.attributes)
                 attributes.update(parse.defaults)
-                methods.update(x for x in parse.methods)
+                methods.update(parse.methods)
                 inheritance = parse.inheritance
     heir = inheritance.get(modulename, inheritance.get(parent, ''))
     if heir:
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(heirattr)
-        methods.update(x for x in heirmeths)
+        methods.update(heirmeths)
     if not all([methods, attributes]): #not methods nor attributes for modulename
         from tools import filenameFromPath
         foundPath, foundName = findPaths(modulename)
-        foundName = filenameFromPath(foundPath.get(0,"")).split(RECORD)[0]
+        foundName = filenameFromPath(foundPath.get(0, "")).split(RECORD)[0]
         if foundName != modulename:
             attributes, methods = getClassInfo(foundName)
-    methods = sorted(methods)
     return (attributes, methods)
 
 coreFiles = [f.split(".py")[0] for f in os.listdir(getEmbeddedPath())]

@@ -30,7 +30,7 @@ def classes_transform(module):
 ###classes_transform_methods###
 def buildRecordModule(module):
     modname = getModName(module.name)
-    records, details = getRecordsInfo(modname, RECORD)
+    records = getRecordsInfo(modname, RECORD)[0]
     if modname not in records: return
     xmlfields = records.get(modname, {})
     for fields in xmlfields:
@@ -44,7 +44,8 @@ def buildRecordModule(module):
         module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((xmlfields, attributes, methods)))
 
     module.locals.update([(attrs, {0:attributes[attrs]}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
-    module.locals.update([(meths, buildMethod(meths)) for meths in methods if meths not in module.locals])
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    module.locals.update([(meths, buildMethod(meths, methodTextDic[meths])) for meths in methodTextDic if meths not in module.locals])
     return True
 
 def buildReportModule(module):
@@ -65,7 +66,7 @@ def genericBuilder(module, buildIdx):
     }
     if buildIdx not in buildType: return res
     ext = buildType[buildIdx][0]
-    cls = buildType[buildIdx][1]
+    #cls = buildType[buildIdx][1]
     modname = getModName(module.name)
     if buildIdx == "Document":
         modname = modname.split("Doc")[0]
@@ -88,7 +89,8 @@ def baseClassBuilder(module, baseclass):
         attributes, methods = getClassInfo("Embedded_Routine", parent="Embedded_Record")
     elif baseclass in otherClasses:
         attributes, methods = getClassInfo("Embedded_Window", parent="Embedded_Record")
-    module.locals.update([(method, buildMethod(method)) for method in methods if method not in module.locals])
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    module.locals.update([(meths, buildMethod(meths, methodTextDic[meths])) for meths in methodTextDic if meths not in module.locals])
     module.locals.update([(attr, {0:attributes[attr]}) for attr in attributes if attr not in module.locals])
     module.locals["getRecord"] = buildInstantiator(baseclass, "getRecord", hashIt((xmlfields, attributes, methods)))
 
@@ -104,7 +106,8 @@ def getIteratorString(modname, detailfield):
     detrecords = getRecordsInfo(detailname, RECORD)[0]
     fieldTxt  = ["%s%s=%s" % ("        self.", x, xmlValue(detrecords[detailname][x])) for x in detrecords[detailname]]
     methods = getClassInfo(modname, parent="Record")[1]
-    methsTxt  = ["    def %s (self, *args, **kwargs): pass" % (x) for x in methods if x != "__init__"]
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    methsTxt = [methodTextDic[x] for x in methodTextDic if x != "__init__"]
     txt = '''
 class %s(object):
     def __iter__(self): return self
@@ -128,7 +131,8 @@ def buildInstantiator(name, instancerName, fieldsMethodsHashed):
     fieldTxt += ["%s%s=%s()" % ("        self.", x, x) for x in xmlfields if xmlfields[x] == "detail"]
     itersTxt  = ["%s" % getIteratorString(name, x) for x in xmlfields if xmlfields[x] == "detail"]
     attrsTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
-    methsTxt  = ["%s%s %s" % ("    def ", x, "(self, *args, **kwargs): pass") for x in methods if x not in ("__init__", "fieldNames")]
+    methodTextDic = methodTextBuilder(hashIt(methods))
+    methsTxt = [methodTextDic[x] for x in methodTextDic if x not in ("__init__", "fieldNames")]
     methsTxt += ["%s" % ("    def fieldNames(self, *args, **kwarg): return ['%s']" % "','".join(xmlfields))]
     newClass  = '''
 class %s(object):
@@ -143,9 +147,28 @@ class %s(object):
     return fake.locals[instantiatorname]
 
 @cache.store
-def buildMethod(method):
-    fake = AstroidBuilder(MANAGER).string_build("def %s(self, **kwargs): pass" % method)
+def buildMethod(method, methodText):
+    fake = AstroidBuilder(MANAGER).string_build(methodText[4:])
     return  {0:fake[method]}
+
+@cache.store
+def methodTextBuilder(hashedMethods):
+    txtDic = {}
+    methods = hashIt(hashedMethods, unhash=True)
+    for meth in methods:
+        newMethod = "    def %s(" % meth
+        args = methods[meth]
+        for idx in args:
+            if hasattr(args[idx], "keys"): #it's a dict, defaults
+                newMethod += "".join("%s='%s'," % (k, v) for k, v in args[idx].items())
+            elif args[idx].startswith("*"):
+                sep = "," if newMethod.find("*") > -1 else ""
+                newMethod += "%s%s" % (sep, args[idx])
+            else:
+                newMethod += "%s," % args[idx]
+        newMethod += "): pass"
+        txtDic[meth] = newMethod
+    return txtDic
 
 def buildStringModule(text):
     return AstroidBuilder(MANAGER).string_build(text)
