@@ -22,6 +22,10 @@ class Query(object):
         self.sql = ""
         return True
 
+    def rawExecute(self):
+        self.sql = ""
+        return True
+
     def setLimit(self, qty, offset=-1):
         pass
 
