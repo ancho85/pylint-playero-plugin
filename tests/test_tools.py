@@ -2,7 +2,7 @@
 import unittest
 from libs.tools import *
 
-class TestSqlParse(unittest.TestCase):
+class TestTools(unittest.TestCase):
 
     def test_latinToAscii(self):
         assert latinToAscii(u"Hönig") == "Honig"

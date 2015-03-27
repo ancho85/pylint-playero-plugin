@@ -64,6 +64,10 @@ class TestFuncs(unittest.TestCase):
         assert isinstance(attr["Origin"], dict)
         assert all([m in meth for m in ("getCardReader", "logTransactionAction", "updateCredLimit",
             "generateTaxes", "roundValue", "getOriginType", "bring", "getXML", "createField")])
+        assert meth["fieldIsEditable"][0] == "self"
+        assert meth["fieldIsEditable"][1] == "fieldname"
+        assert meth["fieldIsEditable"][2] == {"rowfieldname":'None'}
+        assert meth["fieldIsEditable"][3] == {"rownr":'None'}
 
 def test_suite():
     suite = unittest.TestSuite()

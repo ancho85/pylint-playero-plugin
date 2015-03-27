@@ -259,7 +259,7 @@ class Embedded_Record(object):
     def exportRecord(self):
         return True
 
-    def fieldIsEditable(self, fieldname, detailfieldname=None, rownr=None):
+    def fieldIsEditable(self, fieldname, rowfieldname=None, rownr=None):
         return True
 
     def delete_fromGUI(self):
