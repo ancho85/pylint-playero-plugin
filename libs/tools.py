@@ -126,3 +126,21 @@ def isNumber(text):
         return False
     except ValueError:
         return False
+
+def debug(fn):
+    import inspect
+    varList, _, _, default = inspect.getargspec(fn)
+    d = {}
+    if default is not None:
+        d = dict((varList[-len(default):][i], v) for i, v in enumerate(default))
+    def f(*argt, **argd):
+        logHere(('Enter %s' % fn).center(100, '='), filename="debug.log")
+        d.update(dict((varList[i], v) for i, v in enumerate(argt)))
+        d.update(argd)
+        for c in d.iteritems():
+            logHere('%s = %s' % c, filename="debug.log")
+        ret = fn(*argt, **argd)
+        logHere('return: %s' % ret, filename="debug.log")
+        logHere(('Exit %s' % fn).center(100, '='), filename="debug.log")
+        return ret
+    return f
