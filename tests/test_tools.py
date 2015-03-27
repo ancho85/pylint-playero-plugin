@@ -23,7 +23,7 @@ class TestTools(unittest.TestCase):
 
 def test_suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestSqlParse))
+    suite.addTest(unittest.makeSuite(TestTools))
     return suite
 
 if __name__ == '__main__':
