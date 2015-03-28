@@ -2,7 +2,6 @@ import os
 from libs.cache import cache
 from libs.xmlparse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from libs.pyparse import parseScript
-from libs.tools import logHere, ifElse
 import ConfigParser
 
 RECORD = ".record.xml"
@@ -188,7 +187,7 @@ def getModName(modname):
     if modname.startswith(("test_", "func_")):
         modname = modname.split("_")[-1:][0] # func_noerror_modules_Invoice -> Invoice
     elif modname.find("_")>-1:
-        modname = ifElse(modname not in coreFiles, None, modname)
+        modname = modname if modname not in coreFiles else None
     return modname
 
 def inspectModule(module, inspectValue="module", filename="inspect.log"):
@@ -196,30 +195,29 @@ def inspectModule(module, inspectValue="module", filename="inspect.log"):
     modname = module
     if hasattr(module, "name"):
         modname = getModName(module.name)
-    if True:
-        exe =  """logHere('Inspecting', '%s --> %s', type(%s), filename='%s')\n""" % (modname, inspectValue, inspectValue, filename)
-        exe += """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
-        exe += """    exec("xdir = type(%s.%%s)" %% x) \n""" % inspectValue
-        exe += """    logHere(x, '----->', xdir, filename='%s')\n""" % filename
-        exe += """    res = False\n"""
-        exe += """    exec("res = callable(%s.%%s)" %% x) \n""" % inspectValue
-        exe += """    if res:\n"""
-        exe += """        try:\n"""
-        exe += """            exec("funccall = %s.%%s()" %% x)\n""" % inspectValue
-        exe += """            exec('funcname = \"----> function call %s\" % x')\n"""
-        exe += """            import types\n"""
-        exe += """            if isinstance(funccall, types.GeneratorType):\n"""
-        exe += """                funcname += " GENERATOR"\n"""
-        exe += """                funccall = [x for x in funccall]\n"""
-        exe += """            logHere(funcname, 'VALUE:', funccall, filename='%s') \n""" % filename
-        exe += """        except:\n"""
-        exe += """            import inspect\n"""
-        exe += """            exec("funcparameters = inspect.getargspec(%s.%%s)" %% x)\n""" % inspectValue
-        exe += """            logHere('---->funcall %%s missing parameters: %%s' %% (x, funcparameters), filename='%s')\n""" % filename
-        exe += """    else:\n"""
-        exe += """        exec("logHere(('---->value %%s', %s.%%s), filename='%s')" %% (x,x))\n""" % (inspectValue, filename)
-        exe += """    logHere("", filename='%s', whitespace=1)""" % filename
-        exec(exe)
+    exe =  """from libs.tools import logHere\n"""
+    exe += """logHere('Inspecting', '%s --> %s', type(%s), filename='%s')\n""" % (modname, inspectValue, inspectValue, filename)
+    exe += """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
+    exe += """    exec("xdir = type(%s.%%s)" %% x) \n""" % inspectValue
+    exe += """    logHere(x, '----->', xdir, filename='%s')\n""" % filename
+    exe += """    exec("res = callable(%s.%%s)" %% x) \n""" % inspectValue
+    exe += """    if res:\n"""
+    exe += """        try:\n"""
+    exe += """            exec("funccall = %s.%%s()" %% x)\n""" % inspectValue
+    exe += """            exec('funcname = \"----> function call %s\" % x')\n"""
+    exe += """            import types\n"""
+    exe += """            if isinstance(funccall, types.GeneratorType):\n"""
+    exe += """                funcname += " GENERATOR"\n"""
+    exe += """                funccall = [x for x in funccall]\n"""
+    exe += """            logHere(funcname, 'VALUE:', funccall, filename='%s') \n""" % filename
+    exe += """        except:\n"""
+    exe += """            import inspect\n"""
+    exe += """            exec("funcparameters = inspect.getargspec(%s.%%s)" %% x)\n""" % inspectValue
+    exe += """            logHere('---->funcall %%s missing parameters: %%s' %% (x, funcparameters), filename='%s')\n""" % filename
+    exe += """    else:\n"""
+    exe += """        exec("logHere(('---->value %%s', %s.%%s), filename='%s')" %% (x,x))\n""" % (inspectValue, filename)
+    exe += """    logHere("", filename='%s', whitespace=1)""" % filename
+    exec(exe)
 
 if __name__ == "__main__":
     """ok =  ["PayMode", "CredCardType"] #lineending failure

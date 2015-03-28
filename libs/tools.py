@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+import os
+import sys
+import imp
+import ntpath
+import cPickle
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
 def latinToAscii(unicrap):
     """This takes a UNICODE string and replaces Latin-1 characters with
         something equivalent in 7-bit ASCII. It returns a plain ASCII string.
@@ -40,16 +49,7 @@ def latinToAscii(unicrap):
         0x09:'', #Horizontal Tab
         0x0b:'' #Vertical Tab """
         }
-
-    r = ''
-    for i in unicrap:
-        if xlate.has_key(ord(i)):
-            r += xlate[ord(i)]
-        elif ord(i) >= 0x80:
-            pass
-        else:
-            r += str(i)
-    return r
+    return ''.join(xlate.get(ord(i), str(i) if ord(i) < 0x80 else '') for i in unicrap)
 
 def ifElse(condition, trueVal, falseVal):
     if isinstance(condition, str):
@@ -57,38 +57,26 @@ def ifElse(condition, trueVal, falseVal):
     return [falseVal, trueVal][bool(condition)]
 
 def logHere(*args, **kwargs):
-    filename = "log.log"
-    if "filename" in kwargs: filename = kwargs["filename"]
-    import os
-    HERE = os.path.dirname(os.path.abspath(__file__))
+    filename = kwargs.get("filename", "log.log")
     logfile = os.path.join(HERE, '..', 'logs', filename)
     f = file(logfile, "a")
-    ws = kwargs.get("whitespace", 0)
     for arg in args:
         f.write("%s  " % str(arg))
-    f.write("\n%s" % ifElse(ws > 0, "\n" * ws, ""))
+    f.write("\n%s" % "\n" * kwargs.get("whitespace", 0))
 
 def hashIt(param, unhash=False):
-    import cPickle
     if unhash:
         return cPickle.loads(param)
     return cPickle.dumps(param, 2) #binary format
 
 def filenameFromPath(path):
-    import ntpath
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
 
 def embeddedImport(modulename):
-    import os
-    import imp
-    HERE = os.path.dirname(os.path.abspath(__file__))
     return imp.load_source(modulename, os.path.join(HERE, "..", "corepy", "embedded", "%s.py" % modulename))
 
 def includeZipLib(zipfile):
-    import os
-    import sys
-    HERE = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, os.path.join(HERE, "..", "libs", zipfile))
 
 def xmlValue(xtype):
