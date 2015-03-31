@@ -111,11 +111,11 @@ def getIteratorString(modname, detailfield):
     txt = '''
 class %s(object):
     def __iter__(self): return self
-    def count(): pass
-    def remove(int): pass
-    def insert(int, *args): pass
-    def append(*args): pass
-    def clear(*args): pass
+    def count(self): pass
+    def remove(self, int): pass
+    def insert(self, int, row): pass
+    def append(self, row): pass
+    def clear(self): pass
     def __init__(self, *args):
         self.__fail__ = None
 %s
@@ -133,7 +133,7 @@ def buildInstantiator(name, instancerName, fieldsMethodsHashed):
     attrsTxt  = ["%s%s=%s" % ("        self.", x, attributes[x]) for x in sorted(attributes)]
     methodTextDic = methodTextBuilder(hashIt(methods))
     methsTxt = [methodTextDic[x] for x in methodTextDic if x not in ("__init__", "fieldNames")]
-    methsTxt += ["%s" % ("    def fieldNames(self, *args, **kwarg): return ['%s']" % "','".join(xmlfields))]
+    methsTxt += ["%s" % ("    def fieldNames(self): return ['%s']" % "','".join(xmlfields))]
     newClass  = '''
 class %s(object):
     def __init__(self, *args):
@@ -144,6 +144,9 @@ class %s(object):
 %s
 ''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrsTxt), "\n".join(methsTxt), "\n".join(itersTxt))
     fake = AstroidBuilder(MANAGER).string_build(newClass)
+    if name == "EmployeeMovement":
+        from libs.tools import logHere
+        logHere(newClass)
     return fake.locals[instantiatorname]
 
 @cache.store
