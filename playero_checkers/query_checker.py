@@ -10,7 +10,7 @@ from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
-from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber, ifElse
+from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
 from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
@@ -514,7 +514,6 @@ class QueryChecker(BaseChecker):
         return '{%s}' % ",".join(map(tupleDictator, nodeValue.items))
 
     def getListCompValue(self, nodeValue):
-        lvalue = "['']"
         targets = []
         fgen = nodeValue.generators[0]
         if isinstance(fgen, Comprehension):
@@ -542,7 +541,7 @@ class QueryChecker(BaseChecker):
                 self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
             elements = [self.getAssignedTxt(nodeValue.elt)]
-        lvalue = ifElse(str(elements), str(elements), str(targets))
+        lvalue = str(elements) or str(targets)
         return lvalue
 
     def getAssignedTxt(self, nodeValue):

@@ -2,7 +2,6 @@ from astroid import node_classes
 from astroid import raw_building
 from libs.pyparse import parseExecLine
 from libs.funcs import *
-from libs.tools import ifElse
 import ast
 
 def exec_transform(assnode):
@@ -29,7 +28,7 @@ def exec_transform(assnode):
                 parsed = parseExecLine(newstatement, mode="single")
                 if not parsed.errors:
                     if parsed.importfrom:
-                        name = ifElse(parsed.alias, parsed.alias, parsed.importwhat)
+                        name = parsed.alias or parsed.importwhat
                         newClass = raw_building.build_class(name)
                         assnode.root().add_local_node(newClass, name)
                     elif parsed.targets:

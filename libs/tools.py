@@ -51,11 +51,6 @@ def latinToAscii(unicrap):
         }
     return ''.join(xlate.get(ord(i), str(i) if ord(i) < 0x80 else '') for i in unicrap)
 
-def ifElse(condition, trueVal, falseVal):
-    if isinstance(condition, str):
-        condition = ifElse(len(condition.strip()), condition, "")
-    return [falseVal, trueVal][bool(condition)]
-
 def logHere(*args, **kwargs):
     filename = kwargs.get("filename", "log.log")
     logfile = os.path.join(HERE, '..', 'logs', filename)
