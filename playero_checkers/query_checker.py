@@ -412,13 +412,15 @@ class QueryChecker(BaseChecker):
                             heirClass = node.scope().parent.bases[0].infered()[0]
                             heirCall = heirClass.locals[prevSi.value.func.attrname][0]
                             #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
+                            prevKeys = self.queryTxt.keys()
                             for ass in heirCall.body:
                                 if isinstance(ass, Assign):
                                     self.visit_assign(ass)
                                 elif isinstance(ass, AugAssign):
                                     self.visit_augassign(ass)
-                            if node.expr.name in self.queryTxt:
-                                heirVal = self.queryTxt[node.expr.name]
+                            newKey = [k for k in self.queryTxt if k not in prevKeys]
+                            if newKey:
+                                heirVal = self.queryTxt[newKey[0]]
         return heirVal
 
     def getGetattrValue(self, nodeValue):

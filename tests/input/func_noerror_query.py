@@ -231,7 +231,7 @@ class HeirFinder(RetroactiveAccounts):
         return txt
 
     def run(self):
-        query = self.getQuery() #bug detected, getQuery setups a query name that may be different to the one defined here. Issue #24
-        query.sql = self.doReplacements(query.sql)
+        query8 = self.getQuery()
+        query8.sql = self.doReplacements(query8.sql)
         #pylint:disable=E6601
-        query.open() #there will be missing tables here
+        query8.open() #there will be missing tables here
