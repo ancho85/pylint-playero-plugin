@@ -60,9 +60,8 @@ def logHere(*args, **kwargs):
     filename = kwargs.get("filename", "log.log")
     logfile = os.path.join(HERE, '..', 'logs', filename)
     f = file(logfile, "a")
-    for arg in args:
-        f.write("%s  " % str(arg))
-    f.write("\n%s" % "\n" * kwargs.get("whitespace", 0))
+    f.writelines("%s  " % str(arg) for arg in args)
+    f.write("%s" % "\n" * (kwargs.get("whitespace", 0) + 1))
 
 def hashIt(param, unhash=False):
     if unhash:
