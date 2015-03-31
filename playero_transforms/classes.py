@@ -144,9 +144,6 @@ class %s(object):
 %s
 ''' % (instantiatorname, "\n".join(fieldTxt), "\n".join(attrsTxt), "\n".join(methsTxt), "\n".join(itersTxt))
     fake = AstroidBuilder(MANAGER).string_build(newClass)
-    if name == "EmployeeMovement":
-        from libs.tools import logHere
-        logHere(newClass)
     return fake.locals[instantiatorname]
 
 @cache.store
