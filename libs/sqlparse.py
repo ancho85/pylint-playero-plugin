@@ -129,6 +129,8 @@ def parseErrorResponses(errorTxt):
             res = m.group(0)
         elif found == 1045: #Wrong password
             res = m.group(0)
+        elif found == 1066: #Not unique table/alias
+            res = m.group(0)
         #else: #Other errors
         #    res = m.group(0)
     return res.rstrip("\n").rstrip("\r")
