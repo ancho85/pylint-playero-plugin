@@ -9,7 +9,5 @@ class Alotment(Transaction):
         query4 = Query()
         query4.sql = "SELECT SerNr FROM Alotment\n"
         query4.sql += "WHERE?AND OriginType = i|%s| \n" % self.Origin.get('Invoice', 0)
-        query4.sql += "AND SerNr IN \n"
-        query4.sql += (1, 2, 3)
         query4.sql += "AND SerNr = i|%s| " % self.Origin[self.name()]
         query4.open()
