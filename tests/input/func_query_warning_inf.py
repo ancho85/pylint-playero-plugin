@@ -1,6 +1,7 @@
-# pylint:disable=C6666,R0201,W0110
+# pylint:disable=C6666,R0201,E6601
 
 from OpenOrange import *
+import string
 
 class AlotmentRow(object):
 
@@ -11,15 +12,9 @@ class AlotmentRow(object):
 
     def run3(self):
         record = self.getRecorda()
-        labels = filter(lambda x: x.strip().find(':') < 0, record.Labels.split(','))
         qinf = Query()
-        qinf.sql = "SELECT SerNr FROM [Alotment]"
-        if (record.Labels):
-            if len(labels):
-                qinf.sql += " WHERE?AND ("
-                OR = ""
-                for lab in labels:
-                    qinf.sql += OR + "SerNr = s|%s|" % lab
-                    OR = " OR "
-                qinf.sql += ")"
+        qinf.sql = "SELECT SerNr, "
+        sumseq = string.join(record.Labels.split(","), "+")
+        qinf.sql += "SUM(%s) AS Budget " %  sumseq
+        qinf.sql += "FROM [Alotment]"
         qinf.open()

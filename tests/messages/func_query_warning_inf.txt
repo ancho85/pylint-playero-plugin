@@ -1,1 +1,1 @@
-W: 14:AlotmentRow.run3.<lambda>: query inference could not be resolved (Lambda(<lambda>))
+W:  1: query inference could not be resolved (Module(string))
