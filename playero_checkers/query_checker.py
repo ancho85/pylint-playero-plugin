@@ -5,7 +5,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Slice, Comprehension, \
                                     Discard, Index
-from astroid.scoped_nodes import Function, Class, ListComp
+from astroid.scoped_nodes import Function, Class, ListComp, Lambda
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
 from pylint.interfaces import IAstroidChecker
@@ -242,17 +242,15 @@ class QueryChecker(BaseChecker):
                     cfvalue = "00:00:00"
                 elif funcname == "len":
                     cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
-                elif funcname == "map":
+                elif funcname in ("map", "filter"):
                     mapto = nodeValue.args[0]
                     target = self.getAssignedTxt(nodeValue.args[1])
                     if target in ("", "0"): target = "['0','0']"
-                    evaluation = "map(%s, %s)" % (mapto.as_string(), target)
+                    evaluation = "%s(%s, %s)" % (funcname, mapto.as_string(), target)
                     try:
                         cfvalue = str(eval(evaluation))
                     except Exception, e:
                         self.logError("getCallFuncValueMapEvalError", nodeValue, e)
-                elif funcname == "filter":
-                    pass
                 else: #method may be locally defined
                     cfvalue = self.getCallUserDefinedName(nodeValue)
             elif isinstance(nodefn, Getattr):
@@ -544,6 +542,21 @@ class QueryChecker(BaseChecker):
         lvalue = str(elements) or str(targets)
         return lvalue
 
+    def getLambdaValue(self, nodeValue):
+        lvalue = ""
+        if isinstance(nodeValue.parent, CallFunc):
+            lambdaArgs = nodeValue.parent.args[1]
+            args = self.getAssignedTxt(lambdaArgs)
+            if args:
+                ite = None
+                try:
+                    ite = eval(args)
+                except Exception, e:
+                    pass
+                if isinstance(ite, Iterable):
+                    lvalue = ite
+        return lvalue
+
     def getAssignedTxt(self, nodeValue):
         if type(nodeValue) in (type(None), int, str, float, list, dict):
             return str(nodeValue)
@@ -571,6 +584,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getListCompValue(nodeValue)
             elif isinstance(nodeValue, Dict):
                 qvalue = self.getDictValue(nodeValue)
+            elif isinstance(nodeValue, Lambda):
+                qvalue = self.getLambdaValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
