@@ -34,8 +34,9 @@ class QueryChecker(BaseChecker):
         }
     options = ()
 
-    queryTxt = {} # instanceName : parsedSQLtext
-    funcParams = {} # functionName : argumentIndex : argumentValue
+    def open(self):
+        self.queryTxt = {}  # instanceName : parsedSQLtext
+        self.funcParams = {}  # functionName : argumentIndex : argumentValue
 
     def setFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
