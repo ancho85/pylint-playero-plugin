@@ -23,7 +23,3 @@ class WindowA(Window):
         query6.sql += "AND SerNr = s|%s|" % tx.CredPayTermAsCash
         query6.sql += self.doMore(not fcs.CLFromChangeValues)
         query6.open()
-
-        query7 = Query()
-        query7.sql = "SHOW INNODB STATUS"
-        query7.open()
