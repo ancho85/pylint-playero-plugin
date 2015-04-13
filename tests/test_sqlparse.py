@@ -10,11 +10,12 @@ class TestSqlParse(unittest.TestCase):
         self.q2 =  "SELECT [al].{SerNr}, [ar].{Qty}, [ar].{RoomType}, " #Extra coma here
         self.q2 += "FROM Alotment al INNER JOIN AlotmentRow ar ON [al].{internalId} = [ar].{masterId};"
         self.q3 = "SELECT * FROM [NonExistentTable]"
+        self.q4 = "SELECT SerNr FROM Alotment alias1 INNER JOIN Deposit alias1" #bad alias
         self.cfg = getConfig()
 
     def test_cmd(self):
         config = self.cfg
-        config.set("mysql", "useapi", "0")
+        config.set("mysql", "useapi", 0)
 
         res = cmdValidateSQL(parseSQL(self.q1), config)
         self.assertEqual(res, "", msg="This query is correct, but an [unknown] error ocurred. %s" % res)
@@ -25,11 +26,14 @@ class TestSqlParse(unittest.TestCase):
         res = cmdValidateSQL(parseSQL(self.q3), config)
         self.assert_(res.find("doesn't exist") > -1, msg="The query parser has not detected the [missing table] error. %s" % res)
 
+        res = cmdValidateSQL(parseSQL(self.q4), config)
+        self.assert_(res.find("Not unique table/alias") > -1, msg="The query parser has not detected the [alias] error. %s" % res)
+
     def test_api(self):
         prepare = lambda txt: parseSQL(txt).replace("\n", " ").replace(";", ";\n")
 
         config = self.cfg
-        config.set("mysql", "useapi", "1")
+        config.set("mysql", "useapi", 1)
 
         res = apiValidateSQL(prepare(self.q1), config)
         self.assertEqual(res, "", msg="This query is correct, but an [unknown] error ocurred.\n%s" % res)
@@ -39,6 +43,9 @@ class TestSqlParse(unittest.TestCase):
 
         res = apiValidateSQL(prepare(self.q3), config)
         self.assert_(res.find("doesn't exist") > -1, msg="The query parser has not detected the [missing table] error. %s" % res)
+
+        res = apiValidateSQL(parseSQL(self.q4), config)
+        self.assert_(res.find("Not unique table/alias") > -1, msg="The query parser has not detected the [alias] error. %s" % res)
 
     def test_validate(self):
         tests = {"nodb": "MySQL database is not configured. Check playero.cfg file",
@@ -55,12 +62,12 @@ class TestSqlParse(unittest.TestCase):
                 config.set("mysql", "pass", "******")
             elif checkpoint == "wrongdb":
                 config.set("mysql", "dbname", "dbnone")
-            elif checkpoint in "wrongpass":
+            elif checkpoint == "wrongpass":
                 config.set("mysql", "pass", "666")
             config.write(open(CONFIGPATH, "wb")) #write wrong config
 
             res = validateSQL(self.q1)
-            self.assert_(res.find(tests[checkpoint]) > -1, msg=res)
+            self.assert_(res.find(tests[checkpoint]) > -1, msg="%s, %s" % (checkpoint, res))
 
             self.cfg.write(open(CONFIGPATH, "wb")) # rewrite good config
 
