@@ -134,6 +134,10 @@ def parseErrorResponses(errorTxt):
             m2 = re.search('ERROR 1066 \(42000\) at line [0-9]+: (.*)', m.group(0))
             if m2:
                 res = m2.group(1)
+            else:
+                m2 = re.search('ERROR 1066 (.*)', m.group(0))
+                if m2:
+                    res = m2.group(1)
         #else: #Other errors
         #    res = m.group(0)
     return res.rstrip("\n").rstrip("\r")
