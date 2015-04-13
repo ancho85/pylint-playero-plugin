@@ -71,7 +71,6 @@ def parseSQL(txt):
     txt = txt.replace("\\[", "[").replace("\\{", "{")
     if show_pattern.match(txt):
         txt = "SELECT 1" #Forcing a simple query. mysql hangs at cmdValidateSQL
-        logHere(txt)
     return txt
 
 def apiValidateSQL(txt, config):
