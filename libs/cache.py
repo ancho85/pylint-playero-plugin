@@ -58,5 +58,5 @@ class cache(object):
                 if detailed and cls.detailedStats:
                     res.append("Total %s(%s) Hits: %i -- Miss: %i" % (fname, arg, hits, misses))
                 else:
-                    res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses)) #pragma: no cover
+                    res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses))
         return '\n'.join(res)

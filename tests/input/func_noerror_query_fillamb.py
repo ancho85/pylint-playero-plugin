@@ -1,4 +1,4 @@
-# pylint:disable=C6666,R0201,W0110
+# pylint:disable=R0201,W0110
 
 from OpenOrange import *
 

@@ -8,7 +8,7 @@ class CacheStatisticWriter(BaseChecker):
     __implements__ = IRawChecker
 
     name = 'cache_statistics_writer'
-    msgs = {'C6666': ('cache statistics writed at log directory',
+    msgs = {'I6666': ('cache statistics writed at log directory',
                       ('cache statistics writed at log directory'),
                       ('cache statistics writed at log directory')),
             }
@@ -20,10 +20,12 @@ class CacheStatisticWriter(BaseChecker):
         super(CacheStatisticWriter, self).__init__(linter)
         self.cache = cacheobj
 
-    def process_module(self, node): # TODO: should redefine this method to "close"
+    def process_module(self, node):
         """write the cache statistics after plugin usage"""
-        logHere(self.cache.getStatistics(), filename='stats.log')
-        lastline = sum(1 for line in node.file_stream)
-        self.add_message('C6666', lastline)
+        if self.cache.collectStats: #pragma: no cover
+            logHere(self.cache.getStatistics(), filename='stats.log')
+            lastline = len(node.file_stream.readlines())
+            self.add_message('I6666', lastline)
 
-
+    def close(self):
+        self.cache.collectStats = False

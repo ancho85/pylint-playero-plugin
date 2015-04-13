@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint:disable=C6666
 
 from libs.tools import latinToAscii, embeddedImport, includeZipLib, isNumber
 

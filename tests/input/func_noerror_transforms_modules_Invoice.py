@@ -1,7 +1,6 @@
 """
 Checks that Pylint does not complain about reserved words
 """
-# pylint:disable=C6666
 from OpenOrange import *
 
 ParentInvoice = SuperClass("Invoice", "SalesTransaccion", __file__)
