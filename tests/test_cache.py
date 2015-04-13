@@ -4,6 +4,7 @@ from libs.funcs import cache
 class TestCache(unittest.TestCase):
 
     def setUp(self):
+        cache.flush()
         cache.collectStats = True
         cache.debug = True
 

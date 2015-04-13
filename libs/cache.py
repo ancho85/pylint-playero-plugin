@@ -60,3 +60,7 @@ class cache(object):
                 else:
                     res.append("Total %s()  Hits: %i -- Miss: %i" % (fname, hits, misses))
         return '\n'.join(res)
+
+    @classmethod
+    def flush(cls):
+        cls.storage = {}
