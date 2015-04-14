@@ -2,7 +2,7 @@
 set -ev
 mysql -uroot -e "create database playero;"
 mysql -uroot playero < tests/res/playero.sql
-svn $SVNPARAMS --depth empty co svn://www.telenet.com.py/playero/playero Playero
+svn $SVNPARAMS --depth empty co svn://svn.hbs.com.py/playero/playero Playero
 svn $SVNPARAMS --set-depth infinity up Playero/base
 svn $SVNPARAMS --set-depth infinity up Playero/core
 svn $SVNPARAMS --set-depth infinity up Playero/standard
