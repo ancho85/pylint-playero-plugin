@@ -64,3 +64,4 @@ class cache(object):
     @classmethod
     def flush(cls):
         cls.storage = {}
+        cls.statistics = {}
