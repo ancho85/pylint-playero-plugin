@@ -22,10 +22,11 @@ class CacheStatisticWriter(BaseChecker):
 
     def process_module(self, node):
         """write the cache statistics after plugin usage"""
-        if self.cache.collectStats: #pragma: no cover
+        if self.cache and self.cache.collectStats: #pragma: no cover
             logHere(self.cache.getStatistics(), filename='stats.log')
             lastline = len(node.file_stream.readlines())
             self.add_message('I6666', lastline)
 
     def close(self):
-        self.cache.collectStats = False
+        if self.cache:
+            self.cache.collectStats = False
