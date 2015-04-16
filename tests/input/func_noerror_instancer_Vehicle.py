@@ -10,12 +10,12 @@ class Vehicle(ParentVehicle):
         amcLoad.load() #creates a fresh instance of AirMilesCard
 
         print amcBring.Code
-        amcBring.prepaidCard()
+        amcBring.isFlotaPrepaid()
 
         print amcLoad.Code
         print amcLoad.Closed
         amcLoad.checkCode()
-        amcLoad.prepaidCard()
+        amcLoad.isFlotaPrepaid()
 
 ParentVehicleRow = SuperClass("VehicleRow", "Record", __file__)
 class VehicleRow(ParentVehicleRow):
