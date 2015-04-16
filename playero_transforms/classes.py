@@ -40,9 +40,6 @@ def buildRecordModule(module):
             module.locals[fields] = records[modname][fields]
     attributes, methods = getClassInfo(modname, getModName(module.parent.name))
 
-    for insBuilder in ("bring", "getMasterRecord", "load", "getRecord"):
-        module.locals[insBuilder] = buildInstantiator(modname, insBuilder, hashIt((xmlfields, attributes, methods)))
-
     module.locals.update([(attrs, {0:attributes[attrs]}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
     methodTextDic = methodTextBuilder(hashIt(methods))
     module.locals.update([(meths, buildMethod(meths, methodTextDic[meths])) for meths in methodTextDic if meths not in module.locals])

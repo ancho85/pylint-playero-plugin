@@ -1,9 +1,9 @@
 from astroid import MANAGER, node_classes, raw_building
 from astroid.builder import AstroidBuilder
-from libs.funcs import getClassInfo
+from libs.funcs import getClassInfo, getModName, findPaths, allCoreClasses, getRecordsInfo
 from libs.cache import cache
 from libs.tools import hashIt
-from playero_transforms.classes import methodTextBuilder
+from playero_transforms.classes import methodTextBuilder, buildInstantiator
 
 def function_transform(callFunc):
     if isinstance(callFunc.func, node_classes.Name):
@@ -23,6 +23,20 @@ def function_transform(callFunc):
             if isinstance(arg, node_classes.Const):
                 newFunc = functionBuilder(name=funcName, classname=arg.value, parent=funcName[3:])
                 callFunc.frame().parent.add_local_node(newFunc[0], funcName)
+    elif isinstance(callFunc.func, node_classes.Getattr):
+        module = callFunc.root()
+        if not hasattr(module, "name"): return
+        modname = getModName(module.name)
+        if not modname: return
+        paths, pathType = findPaths(modname)
+        if paths or pathType or modname in allCoreClasses:
+            if callFunc.func.attrname in ("bring", "getRecord", "getMasterRecord"):
+                insName = callFunc.func.attrname
+                records = getRecordsInfo(modname, pathType)[0]
+                xmlfields = records.get(modname, {})
+                attributes, methods = getClassInfo(modname)
+                newInst = buildInstantiator(modname, insName, hashIt((xmlfields, attributes, methods)))
+                callFunc.frame().parent.add_local_node(newInst[0], insName)
 
 @cache.store
 def functionBuilder(name, classname, parent=""):
