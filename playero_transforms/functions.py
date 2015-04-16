@@ -6,6 +6,7 @@ from libs.tools import hashIt
 from playero_transforms.classes import methodTextBuilder, buildInstantiator
 
 def function_transform(callFunc):
+    fparent = callFunc.frame().parent
     if isinstance(callFunc.func, node_classes.Name):
         funcName = callFunc.func.name
         if funcName == "hasattr":
@@ -22,7 +23,7 @@ def function_transform(callFunc):
             arg = callFunc.args[0]
             if isinstance(arg, node_classes.Const):
                 newFunc = functionBuilder(name=funcName, classname=arg.value, parent=funcName[3:])
-                callFunc.frame().parent.add_local_node(newFunc[0], funcName)
+                fparent.add_local_node(newFunc[0], funcName)
     elif isinstance(callFunc.func, node_classes.Getattr):
         module = callFunc.root()
         if not hasattr(module, "name"): return
@@ -36,7 +37,10 @@ def function_transform(callFunc):
                 xmlfields = records.get(modname, {})
                 attributes, methods = getClassInfo(modname)
                 newInst = buildInstantiator(modname, insName, hashIt((xmlfields, attributes, methods)))
-                callFunc.frame().parent.add_local_node(newInst[0], insName)
+                if fparent:
+                    fparent.add_local_node(newInst[0], insName)
+                else:
+                    callFunc.frame().add_local_node(newInst[0], insName)
 
 @cache.store
 def functionBuilder(name, classname, parent=""):
