@@ -1,16 +1,18 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
+from pylint.checkers.utils import check_messages
 from libs.tools import logHere
 
 class CacheStatisticWriter(BaseChecker):
     """write the cache statistics after plugin usage"""
 
-    __implements__ = IRawChecker
+    __implements__ = (IRawChecker,)
 
     name = 'cache_statistics_writer'
-    msgs = {'I6666': ('cache statistics writed at log directory',
-                      ('cache statistics writed at log directory'),
-                      ('cache statistics writed at log directory')),
+    msgs = {
+        'C6666': ('cache statistics was written at log directory',
+                  'cache-written',
+                  'Used when cache statistics are written at log directory'),
             }
     options = ()
     priority = -666
@@ -20,12 +22,13 @@ class CacheStatisticWriter(BaseChecker):
         super(CacheStatisticWriter, self).__init__(linter)
         self.cache = cacheobj
 
+    @check_messages("cache-written")
     def process_module(self, node):
         """write the cache statistics after plugin usage"""
         if self.cache and self.cache.collectStats: #pragma: no cover
             logHere(self.cache.getStatistics(), filename='stats.log')
             lastline = len(node.file_stream.readlines())
-            self.add_message('I6666', lastline)
+            self.add_message('C6666', lastline)
 
     def close(self):
         if self.cache:
