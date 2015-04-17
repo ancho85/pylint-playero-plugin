@@ -1,4 +1,4 @@
-# pylint:disable=R0201,W0122
+# pylint:disable=R0201,W0122,C6666
 
 def doWorld():
     return "World!"
