@@ -1,7 +1,7 @@
 from pylint.interfaces import IRawChecker
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import check_messages
-from libs.tools import logHere
+from libs.tools import logHere, filenameFromPath
 
 class MemoryUsageWriter(BaseChecker):
     """write the memory usage after plugin usage"""
@@ -39,12 +39,12 @@ class MemoryUsageWriter(BaseChecker):
         #for line in summary.format_(sum1, limit=15, sort='size', order='descending'):
         #    logHere(line)
 
-        logHere(self.linter.base_file, filename="memory.log")
+        fname = filenameFromPath(self.linter.base_file)
         from pympler import tracker, summary, muppy
         tr = tracker.SummaryTracker()
         sum2 = summary.summarize(muppy.get_objects())
         diff = tr.diff(summary1=self.tr.s0, summary2=sum2)
         for line in summary.format_(diff, limit=15, sort='size', order='descending'):
-            logHere(line, filename="memory.log")
+            logHere(line, filename="memory-%s.log" % fname)
         from datetime import datetime
-        logHere("\n%s\n" % datetime.now(), filename="memory.log")
+        logHere("\n%s\n" % datetime.now(), filename="memory-%s.log" % fname)
