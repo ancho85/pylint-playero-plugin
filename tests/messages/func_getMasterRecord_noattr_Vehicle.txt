@@ -1,1 +1,1 @@
-E:  15: Instance of 'Vehicle_getMasterRecord' has no 'pasteHookedVehicle1' member
+E: 15:VehicleRow.doRow: Instance of 'Vehicle_getMasterRecord' has no 'pasteHookedVehicle1' member
