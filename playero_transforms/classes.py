@@ -39,6 +39,7 @@ def buildRecordModule(module):
         else:
             module.locals[fields] = records[modname][fields]
     attributes, methods = getClassInfo(modname, getModName(module.parent.name))
+    module.locals["bring"] = buildInstantiator(modname, "bring", hashIt((xmlfields, attributes, methods)))
 
     module.locals.update([(attrs, {0:attributes[attrs]}) for attrs in attributes if not attrs.startswith("_") and attrs not in module.locals])
     methodTextDic = methodTextBuilder(hashIt(methods))
@@ -56,19 +57,13 @@ def buildDocumentModule(module):
 
 def genericBuilder(module, buildIdx):
     res = False
-    buildType = {
-                "Document": [RECORD, ".documents."],
-                "Report"  : [REPORT, ".reports."],
-                "Routine" : [ROUTINE,".routines."]
-    }
+    buildType = {"Document": RECORD, "Report" : REPORT, "Routine" : ROUTINE}
     if buildIdx not in buildType: return res
-    ext = buildType[buildIdx][0]
-    #cls = buildType[buildIdx][1]
     modname = getModName(module.name)
     if buildIdx == "Document":
         modname = modname.split("Doc")[0]
     classtype = module.basenames[0]
-    records = getRecordsInfo(modname, extensions=ext)[0]
+    records = getRecordsInfo(modname, extensions=buildType[buildIdx])[0]
     xmlfields = records.get(modname, {})
     attributes, methods = getClassInfo(modname, parent=classtype)
     module.locals["getRecord"] = buildInstantiator(modname, "getRecord", hashIt((xmlfields, attributes, methods)))

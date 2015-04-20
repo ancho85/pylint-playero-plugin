@@ -31,16 +31,13 @@ def function_transform(callFunc):
         if not modname: return
         paths, pathType = findPaths(modname)
         if paths or pathType or modname in allCoreClasses:
-            if callFunc.func.attrname in ("bring", "getRecord", "getMasterRecord"):
-                insName = callFunc.func.attrname
-                records = getRecordsInfo(modname, pathType)[0]
-                xmlfields = records.get(modname, {})
-                attributes, methods = getClassInfo(modname)
-                newInst = buildInstantiator(modname, insName, hashIt((xmlfields, attributes, methods)))
+            insName = callFunc.func.attrname
+            if insName in ("getRecord", "getMasterRecord"):
+                getter = instanciatorBuilder(modname, pathType, insName)
                 if fparent:
-                    fparent.add_local_node(newInst[0], insName)
+                    fparent.add_local_node(getter, insName)
                 else:
-                    callFunc.frame().add_local_node(newInst[0], insName)
+                    callFunc.frame().add_local_node(getter, insName)
 
 @cache.store
 def functionBuilder(name, classname, parent=""):
@@ -59,3 +56,11 @@ def %s(rname):
 ''' % (name, classname, "\n".join(attrsTxt), "\n".join(methsTxt), classname)
     fake = AstroidBuilder(MANAGER).string_build(txt)
     return fake.locals[name]
+
+@cache.store
+def instanciatorBuilder(modname, pathType, insName):
+    records = getRecordsInfo(modname, pathType)[0]
+    xmlfields = records.get(modname, {})
+    attributes, methods = getClassInfo(modname)
+    newInst = buildInstantiator(modname, insName, hashIt((xmlfields, attributes, methods)))
+    return newInst[0]
