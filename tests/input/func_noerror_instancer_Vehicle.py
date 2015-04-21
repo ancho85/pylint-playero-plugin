@@ -35,5 +35,5 @@ class VehicleRow(ParentVehicleRow):
 
     def pasteCustCode(self):
         from Customer import Customer
-        cus = Customer.bring("TEST")
+        cus = Customer.bring(self.internalId)
         print cus.Name
