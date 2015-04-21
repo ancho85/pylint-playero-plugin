@@ -7,3 +7,6 @@ class VehicleWindow(ParentVehicleWindow):
         veRecord = self.getRecord() #returns buffered instance of AirMilesCard
         print veRecord.Code
         veRecord.pasteHookedVehicle()
+
+modlevelVehicle = VehicleWindow.getRecord()
+print modlevelVehicle.Code
