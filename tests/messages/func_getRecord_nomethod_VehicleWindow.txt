@@ -1,0 +1,1 @@
+E:  8:VehicleWindow.doWin: Instance of 'Vehicle_getRecord' has no 'pasteHookedVehicle1' member

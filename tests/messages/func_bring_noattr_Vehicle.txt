@@ -1,0 +1,3 @@
+E: 10:Vehicle.doStuff: Instance of 'PySettings_bring' has no 'NonExistant' member
+E: 10:Vehicle.doStuff: Instance of 'RawRecord_bring' has no 'NonExistant' member
+E: 10:Vehicle.doStuff: Instance of 'Record_bring' has no 'NonExistant' member
