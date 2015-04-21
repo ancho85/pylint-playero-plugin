@@ -12,7 +12,7 @@ script:
   - coverage run tests/fulltest.py
 after_success:
   - coveralls
-  - python scripts/show-memory.py
+  - tail -n +1 logs/memory-*
 env:
   global:
     - secure: BNmMM2cK+CHIXA0Ij8kP3VGSDUFknRqdCiK7kc3SOb6RfHzrJ6kgPqXYDSDL1QcBc72NTaZ01KyJ6XGMNvxbSJuWLHyo90mXQBCWdTgvdTVSpQVifrD0oGbcEDSBmS7xaCLWLa+iUgx7Q0l/Ndwg7BNsczXJ3hK5JOs7DalUvIA=
