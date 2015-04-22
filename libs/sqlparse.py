@@ -31,6 +31,7 @@ def parseSQL(txt):
                                   (.*?)                                         #Any character zero to infinite times
                                   (?:                                           #Start of non-capturing group
                                     $|                                          #Anchor to end of line
+                                    \)|                                         #Literally )
                                     \s+                                         #One or more spaces before Optional syntax
                                     (?=                                         #Start of positive lookahead assertion
                                         INNER\s+JOIN|
@@ -56,7 +57,8 @@ def parseSQL(txt):
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     def force_no_rows(mo):
-        return "%s INNER JOIN mysql.`host` ON FALSE\n" % mo.group(1) #doing this I make sure never returns any row
+        finale = mo.group(0).replace(mo.group(1), "")
+        return "%s INNER JOIN mysql.`host` ON FALSE%s\n" % (mo.group(1), finale) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)
