@@ -19,13 +19,14 @@ def doTest():
     import fnmatch
 
     try:
-        configfile = str(os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "config", "playero.cfg")))
+        HERE = os.path.dirname(os.path.realpath(__file__))
+        configfile = str(os.path.normpath(os.path.join(HERE, "..", "config", "playero.cfg")))
         config = ConfigParser.SafeConfigParser()
         config.read(configfile)
         pluginpath = config.get('plugin_paths', os.name)
         lintpath = config.get('pylint_paths', os.name)
     except ConfigParser.NoSectionError:
-        pluginpath = "c:\\Python26\\Lib\\site-packages\\ooPlugin\\sublimetext-playero-plugin"
+        pluginpath = "c:\\Python26\\Lib\\site-packages\\ooPlugin\\pylint-playero-plugin"
         lintpath = "c:\\Python26\\Lib\\site-packages\\pylint-1.0.0-py2.6.egg\\pylint\\lint.py"
         if (os.name == "posix"): #TODO put default linux values
             pluginpath = ""
@@ -34,9 +35,9 @@ def doTest():
 
     envi = dict(os.environ)
     pythonpath = envi.get('PYTHONPATH', '')
-    preffix = ""
-    if len(pythonpath): preffix = ","
-    envi['PYTHONPATH'] = pythonpath + "%s%s" % (preffix, pluginpath)
+    if pythonpath.find("pylint-playero-plugin") == -1:
+        preffix = "," if len(pythonpath) else ""
+        envi['PYTHONPATH'] = pythonpath + "%s%s" % (preffix, pluginpath)
 
     thisPath = os.path.dirname(os.path.abspath(__file__))
     currRoot = None
@@ -59,7 +60,7 @@ def doTest():
             pylintcmd.append(os.path.join(root, filename))
 
             process = subprocess.Popen(
-                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % filename, "w"), env=envi
+                pylintcmd, stdout=subprocess.PIPE, stderr=file("_stderr%s.txt" % filename, "w")#, env=envi
             )
             process.stdout.read() #to keep the process open until is finished and then delete zero size files
 
