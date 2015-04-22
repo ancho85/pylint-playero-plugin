@@ -19,13 +19,13 @@ def getFunctionArguments(module, funcTxt):
         if not (
                 isinstance(ass, node_classes.AssName)
                 and isinstance(ass.statement(), node_classes.Assign)
+                and not isinstance(ass.parent, node_classes.Tuple)
                 ): continue
         else:
             for supers in [ #list comprehention of funcTxt's calls
                             superCall for superCall in ass.assigned_stmts()
                             if isinstance(superCall, node_classes.CallFunc)
-                            and superCall.as_string().startswith(funcTxt)
-            ]:
+                            and superCall.as_string().startswith(funcTxt)]:
                 for arg in supers.args:
                     if isinstance(arg, node_classes.Const):
                         res.append(arg.value)
