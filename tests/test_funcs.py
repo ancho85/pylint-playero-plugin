@@ -24,11 +24,11 @@ class TestFuncs(unittest.TestCase):
 
     def test_recordInheritance(self):
         recf, recd = getRecordInheritance("Invoice")
-        assert all([f in recf for f in ("SalesMan", "InvoiceDate", "CustCode", "Currency", "ShiftDate", "OriginNr", "SerNr", "attachFlag")])
+        assert all([f1 in recf for f1 in ("SalesMan", "InvoiceDate", "CustCode", "Currency", "ShiftDate", "OriginNr", "SerNr", "attachFlag")])
         assert all([d in recd for d in ("CompoundItemCosts", "Payments", "Items", "Taxes", "Installs")])
 
         recf, recd = getRecordInheritance("AccessGroup")
-        assert all([f in recf for f in ("PurchaseItemsAccessType", "InitialModule", "Closed", "internalId")])
+        assert all([f2 in recf for f2 in ("PurchaseItemsAccessType", "InitialModule", "Closed", "internalId")])
         assert all([d in recd for d in ("PurchaseItems", "Customs", "Modules")])
 
     def test_recordsInfo(self):
@@ -68,6 +68,10 @@ class TestFuncs(unittest.TestCase):
         assert meth["fieldIsEditable"][1] == "fieldname"
         assert meth["fieldIsEditable"][2] == {"rowfieldname":'None'}
         assert meth["fieldIsEditable"][3] == {"rownr":'None'}
+
+        attr, meth = getClassInfo("User", "Master")
+        assert attr["buffer"] == "RecordBuffer"
+        assert all([m in meth for m in ("store", "save", "load")])
 
 def test_suite():
     suite = unittest.TestSuite()
