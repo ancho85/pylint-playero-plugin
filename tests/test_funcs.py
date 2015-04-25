@@ -69,9 +69,9 @@ class TestFuncs(unittest.TestCase):
         assert meth["fieldIsEditable"][2] == {"rowfieldname":'None'}
         assert meth["fieldIsEditable"][3] == {"rownr":'None'}
 
-        attr, meth = getClassInfo("User", "Master")
+        attr, meth = getClassInfo("User")
         assert attr["buffer"] == "RecordBuffer"
-        assert all([m in meth for m in ("store", "save", "load")])
+        assert all([m in meth for m in ("store", "save", "load", "hasField")])
 
 def test_suite():
     suite = unittest.TestSuite()
