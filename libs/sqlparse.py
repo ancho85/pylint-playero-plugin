@@ -27,13 +27,13 @@ def parseSQL(txt):
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
     #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
     show_pattern = re.compile(r"SHOW.*STATUS", re.I) #Commands like SHOW INNODB STATUS or SHOW TABLE STATUS
-    from_pattern = re.compile(ur"""(?<=FROM\s)                                  #Start of positive lookbehind assertion FROM
-                                  (.*?)                                         #Any character zero to infinite times (1st capturing group)
-                                  (                                             #Start of 2nd capturing group
-                                    $|                                          #Anchor to end of line
-                                    \)|                                         #Literally )
-                                    \s+                                         #One or more spaces before Optional syntax
-                                    (?=                                         #Start of positive lookahead assertion
+    from_pattern = re.compile(ur"""(?<=FROM\s)                   #Start of positive lookbehind assertion FROM
+                                  ([\`]*\w.*?)                    #Any word preceded (or not) by ` zero to infinite times (1st capturing group)
+                                  (                              #Start of 2nd capturing group
+                                    $|                           #Anchor to end of line
+                                    \)|                          #Literally )
+                                    \s+                          #One or more spaces before Optional syntax
+                                    (?=                          #Start of positive lookahead assertion
                                         INNER\s+JOIN|
                                         LEFT\s+JOIN|
                                         RIGHT\s+JOIN|
@@ -46,8 +46,8 @@ def parseSQL(txt):
                                         INTO\s+OUTFILE|
                                         FOR\s+UPDATE|
                                         LOCK\s+IN\s+SHARE\s+MODE
-                                    )                                           #End of lookahead assertion. Optional syntax
-                                  )                                             #End of 2nd capturing group
+                                    )                            #End of lookahead assertion. Optional syntax
+                                  )                              #End of 2nd capturing group
                                """, re.IGNORECASE | re.VERBOSE | re.DOTALL)
 
     def value_replacer(mo):
@@ -57,7 +57,7 @@ def parseSQL(txt):
     def boolean_value_replacer(mo):
         return {"true": "1", "1": "1", "false": "0", "0": "0"}[mo.group(1).replace("[","\\[").replace("{", "\\{").lower()]
     def force_no_rows(mo):
-        return "%s INNER JOIN mysql.`host` ON FALSE %s" % (mo.group(1), mo.group(2)) #doing this I make sure never returns any row
+        return "%s INNER JOIN mysql.`host` ON FALSE%s" % (mo.group(1), mo.group(2)) #doing this I make sure never returns any row
     txt = value_pattern.sub(value_replacer, txt)
     txt = boolean_value_pattern.sub(boolean_value_replacer, txt)
     txt = integer_value_pattern.sub(integer_value_replacer, txt)

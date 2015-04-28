@@ -71,6 +71,21 @@ class TestSqlParse(unittest.TestCase):
 
             self.cfg.write(open(CONFIGPATH, "wb")) # rewrite good config
 
+    def test_parseSQL(self):
+        res1 =  "SELECT `al` .`SerNr`, `ar` .`Qty`, `ar` .`RoomType` FROM Alotment al "
+        res1 += "INNER JOIN mysql.`host` ON FALSE INNER JOIN AlotmentRow ar ON `al` .`internalId` = `ar` .`masterId`"
+        res2 =  "SELECT `al` .`SerNr`, `ar` .`Qty`, `ar` .`RoomType`, FROM Alotment al "
+        res2 += "INNER JOIN mysql.`host` ON FALSE INNER JOIN AlotmentRow ar ON `al` .`internalId` = `ar` .`masterId` "
+        res3 =  "SELECT * FROM `NonExistentTable`  INNER JOIN mysql.`host` ON FALSE"
+        res4 =  "SELECT SerNr FROM Alotment alias1 INNER JOIN mysql.`host` ON FALSE INNER JOIN Deposit alias1"
+        assert res1 == parseSQL(self.q1)
+        assert res2 == parseSQL(self.q2)
+        assert res3 == parseSQL(self.q3)
+        assert res4 == parseSQL(self.q4)
+        subquery = "SELECT [SerNr] FROM (SELECT [de].{SerNr} FROM Deposit de LIMIT 1) as T"
+        res5 = "SELECT `SerNr`  FROM (SELECT `de` .`SerNr` FROM Deposit de INNER JOIN mysql.`host` ON FALSE LIMIT 1) as T"
+        assert parseSQL(subquery) == res5
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestSqlParse))
