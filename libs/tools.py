@@ -122,7 +122,8 @@ def debug(fn):
         for c in d.iteritems():
             logHere('%s = %s' % c, filename="debug.log")
         ret = fn(*argt, **argd)
-        logHere('return: %s' % ret, filename="debug.log")
+        logHere('return:', filename="debug.log")
+        logHere(ret, filename="debug.log")
         logHere(('Exit %s' % fn).center(100, '='), filename="debug.log")
         return ret
     return f
