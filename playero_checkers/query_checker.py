@@ -143,6 +143,7 @@ class QueryChecker(BaseChecker):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
                         if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
+                        if anvalue == "[]": anvalue = "['666']"
                         anfound = True
                         try:
                             anvalue = ast.literal_eval(anvalue)[0]
