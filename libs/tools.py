@@ -118,8 +118,8 @@ def debug(fn):
         d = dict((varList[-len(default):][i], v) for i, v in enumerate(default))
     def f(*argt, **argd):
         global indent
-        logHere(indent, ('Enter %s' % fn).center(100, '='), filename="debug.log")
         indent += "    "
+        logHere(indent, ('Enter %s' % fn).center(100, '='), filename="debug.log")
         d.update(dict((varList[i], v) for i, v in enumerate(argt)))
         d.update(argd)
         for c in d.iteritems():
@@ -127,7 +127,7 @@ def debug(fn):
         ret = fn(*argt, **argd)
         logHere(indent, 'return:', filename="debug.log")
         logHere(indent, ret, filename="debug.log")
-        indent = indent[:-4]
         logHere(indent, ('Exit %s' % fn).center(100, '='), filename="debug.log")
+        indent = indent[:-4]
         return ret
     return f
