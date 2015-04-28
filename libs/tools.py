@@ -109,6 +109,7 @@ def isNumber(text):
     except ValueError:
         return False
 
+indent = ""
 def debug(fn):
     import inspect
     varList, _, _, default = inspect.getargspec(fn)
@@ -116,14 +117,17 @@ def debug(fn):
     if default is not None:
         d = dict((varList[-len(default):][i], v) for i, v in enumerate(default))
     def f(*argt, **argd):
-        logHere(('Enter %s' % fn).center(100, '='), filename="debug.log")
+        global indent
+        logHere(indent, ('Enter %s' % fn).center(100, '='), filename="debug.log")
+        indent += "    "
         d.update(dict((varList[i], v) for i, v in enumerate(argt)))
         d.update(argd)
         for c in d.iteritems():
-            logHere('%s = %s' % c, filename="debug.log")
+            logHere(indent, '%s = %s' % c, filename="debug.log")
         ret = fn(*argt, **argd)
-        logHere('return:', filename="debug.log")
-        logHere(ret, filename="debug.log")
-        logHere(('Exit %s' % fn).center(100, '='), filename="debug.log")
+        logHere(indent, 'return:', filename="debug.log")
+        logHere(indent, ret, filename="debug.log")
+        indent = indent[:-4]
+        logHere(indent, ('Exit %s' % fn).center(100, '='), filename="debug.log")
         return ret
     return f
