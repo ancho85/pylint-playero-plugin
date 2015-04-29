@@ -126,7 +126,10 @@ def debug(fn):
             logHere(indent, '%s = %s' % c, filename="debug.log")
         ret = fn(*argt, **argd)
         logHere(indent, 'return:', filename="debug.log")
-        logHere(indent, ret, filename="debug.log")
+        if type(ret) == str:
+            logHere(indent, ret.replace("\n", "%s\n" % indent), filename="debug.log")
+        else:
+            logHere(indent, ret, filename="debug.log")
         logHere(indent, ('Exit %s' % fn).center(100, '='), filename="debug.log")
         indent = indent[:-4]
         return ret
