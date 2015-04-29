@@ -93,6 +93,8 @@ class QueryChecker(BaseChecker):
                     if res == newVal: continue
                     elif previousValue and atr == "orelse": continue
                     res = self.concatOrReplace(elm, nodeName, res, newVal)
+                    if res and atr == "body":
+                        break #multiple concatenations with the same previously calculated values
             elif isinstance(node, For):
                 if isinstance(node.target, AssName) and nodeName == node.target.name:
                     res = newVal
