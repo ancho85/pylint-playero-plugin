@@ -173,9 +173,6 @@ class QueryChecker(BaseChecker):
         return evalResult
 
     def getNameValue(self, nodeValue):
-        #if nodeValue.name == "factor":
-        #    import rpdb2
-        #    rpdb2.start_embedded_debugger("123456")
         nvalue = ""
         try:
             nvalue = self.getFuncParams(nodeValue)
