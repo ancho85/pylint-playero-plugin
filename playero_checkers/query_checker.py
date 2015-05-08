@@ -88,6 +88,21 @@ class QueryChecker(BaseChecker):
                         res = newVal
                         if not isNumber(newVal) and isNumber(previousValue):
                             res = previousValue
+            elif isinstance(node, If):
+                for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                    if res == newVal: continue
+                    elif previousValue and atr == "orelse": continue
+                    res = self.concatOrReplace(elm, nodeName, res, newVal)
+                    if res and atr == "body":
+                        break #multiple concatenations with the same previously calculated values
+            elif isinstance(node, For):
+                if isinstance(node.target, AssName) and nodeName == node.target.name:
+                    res = newVal
+                else:
+                    for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
+                        if res == newVal: continue
+                        elif previousValue and atr == "orelse": continue
+                        res = self.concatOrReplace(elm, nodeName, res, newVal)
             elif isinstance(node, Discard):
                 if isinstance(node.value, CallFunc):
                     if hasattr(node.value.func, "expr") and isinstance(node.value.func.expr, Name):
@@ -100,14 +115,14 @@ class QueryChecker(BaseChecker):
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         if not tolineno: tolineno = 999999
         anvalue = ""
-        anfound = None
+        anfound = False
 
         def searchBody(attrs):
-            bvalue, bfound = None, None
+            bvalue, bfound = None, False
             getBVal = lambda x: "" if x is None else x
             for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(nodeValue, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
-                    (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=nodeValue.tolineno)
+                    (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
                     if afound and assValue != bvalue:
                         bvalue = self.concatOrReplace(elm, nodeName, getBVal(bvalue), assValue)
                         bfound = afound
@@ -119,19 +134,19 @@ class QueryChecker(BaseChecker):
                 if isinstance(nodeValue.targets[0], AssName):
                     if nodeName and nodeName == nodeValue.targets[0].name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = nodeValue
+                        anfound = True
             elif isinstance(nodeValue, AugAssign):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = nodeValue
+                        anfound = True
             elif isinstance(nodeValue, For):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
                         if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
                         if anvalue == "[]": anvalue = "['666']"
-                        anfound = nodeValue
+                        anfound = True
                         try:
                             anvalue = ast.literal_eval(anvalue)[0]
                         except Exception, e:
@@ -150,7 +165,7 @@ class QueryChecker(BaseChecker):
                     if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name):
                         if nodeName == nvf.expr.name:
                             anvalue = self.getCallFuncValue(nodeValue.value)
-                            anfound = nodeValue
+                            anfound = True
         except Exception, e:
             self.logError("getAssNameValueError", nodeValue, e)
         return (anvalue, anfound)
@@ -181,16 +196,7 @@ class QueryChecker(BaseChecker):
                 if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                 (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                 if assFound:
-                    if isinstance(elm, (Assign, AugAssign, Discard)):
-                        nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
-                    elif isinstance(elm, (If, For)):
-                        if isinstance(assFound, Assign):
-                            if not isNumber(assValue) and isNumber(nvalue):
-                                pass
-                            else:
-                                nvalue = assValue
-                        elif isinstance(assFound, AugAssign):
-                            nvalue = nvalue + assValue
+                    nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
                     tryinference = False
             if not nvalue and tryinference:
                 try:
