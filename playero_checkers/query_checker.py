@@ -4,7 +4,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Slice, Comprehension, \
-                                    Discard, Index
+                                    Discard, Index, UnaryOp
 from astroid.scoped_nodes import Function, Class, ListComp, Lambda
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -170,6 +170,7 @@ class QueryChecker(BaseChecker):
 
     def doCompareValue(self, nodeValue):
         evalResult = True
+        evaluation = "True"
         if isinstance(nodeValue.test, Compare):
             leftval = self.getAssignedTxt(nodeValue.test.left)
             op = nodeValue.test.ops[0] #a list with 1 tuple
@@ -177,14 +178,12 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
-        else:
-            evaluation = self.getAssignedTxt(nodeValue.test)
+        elif isinstance(nodeValue.test, (UnaryOp, Const)):
+            evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
         try:
             evalResult = eval(evaluation)
-        except NameError:
-            evaluation = '"""%s"""' % evaluation
-            evalResult = eval(evaluation)
         except Exception, e:
+            evalResult = False
             self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
         anvalue = self.getFuncParams(nodeValue.parent)
         if anvalue: evalResult = False

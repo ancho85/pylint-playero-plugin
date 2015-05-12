@@ -4,6 +4,10 @@ from OpenOrange import *
 
 class AttributeCompare(object):
 
+    def __init__(self):
+        self.Option = None
+        self.OtherOption = ""
+
     def getRecorda(self):
         ac = AttributeCompare()
         ac.Option = 1

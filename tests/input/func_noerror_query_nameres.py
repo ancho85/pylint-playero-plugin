@@ -9,7 +9,7 @@ class QueryNameRes(object):
             sqlStr += "LEFT JOIN (SELECT SerNr FROM Deposit) de ON\n"
             sqlStr += "(de.SerNr = cab.SerNr)\n"
         sqlStr += "GROUP BY cab.Office\n"
-        if not self:
+        if self:
             sqlStr += " %s cab.Office " % having
             sqlStr += "IS NOT NULL\n"
             having = "AND "
