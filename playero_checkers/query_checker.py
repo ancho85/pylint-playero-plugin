@@ -177,12 +177,17 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
-            try:
-                evalResult = eval(evaluation)
-            except Exception, e:
-                self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
-            anvalue = self.getFuncParams(nodeValue.parent)
-            if anvalue: evalResult = False
+        else:
+            evaluation = self.getAssignedTxt(nodeValue.test)
+        try:
+            evalResult = eval(evaluation)
+        except NameError:
+            evaluation = '"""%s"""' % evaluation
+            evalResult = eval(evaluation)
+        except Exception, e:
+            self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
+        anvalue = self.getFuncParams(nodeValue.parent)
+        if anvalue: evalResult = False
         return evalResult
 
     def getNameValue(self, nodeValue):
@@ -629,7 +634,8 @@ class QueryChecker(BaseChecker):
         nodeGrandParent = nodeTarget.parent.parent
         if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
             if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
-                self.appendQuery(instanceName, value, isnew)
+                if self.doCompareValue(nodeGrandParent):
+                    self.appendQuery(instanceName, value, isnew)
             else:
                 self.preprocessQueryIfs(nodeTarget.parent, instanceName, value, isnew)
 
