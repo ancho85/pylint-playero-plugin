@@ -26,6 +26,7 @@ class AttributeCompare(object):
             query.sql += "GROUP BY TransDate\n"
         if not True:
             query.sql += "GROUP BY TransTime\n"
-        if specs.OtherOption:
+        a = specs.OtherOption
+        if not a or specs.OtherOption != a:
             query.sql += "HAVING SerNr > 0\n"
         query.open()

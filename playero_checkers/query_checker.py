@@ -4,7 +4,7 @@ from astroid.node_classes import Getattr, AssAttr, Const, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Slice, Comprehension, \
-                                    Discard, Index, UnaryOp
+                                    Discard, Index, UnaryOp, BoolOp
 from astroid.scoped_nodes import Function, Class, ListComp, Lambda
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -178,7 +178,11 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
-        elif isinstance(nodeValue.test, (UnaryOp, Const)):
+        elif isinstance(nodeValue.test, UnaryOp):
+            evaluation = self.getUnaryOp(nodeValue.test)
+        elif isinstance(nodeValue.test, BoolOp):
+            evaluation = self.getBoolOp(nodeValue.test)
+        elif isinstance(nodeValue.test, Const):
             evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
         if evaluation:
             try:
@@ -564,8 +568,25 @@ class QueryChecker(BaseChecker):
                     lvalue = ite
         return lvalue
 
+    def getUnaryOp(self, nodeValue):
+        uvalue = self.getAssignedTxt(nodeValue.operand)
+        if not uvalue: uvalue = "True"
+        return uvalue
+
+    def getBoolOp(self, nodeValue):
+        bvalue = []
+        for val in nodeValue.values:
+            if isinstance(val, UnaryOp):
+                bvalue.append(self.getUnaryOp(val))
+            elif isinstance(val, Compare):
+                bvalue.append(self.getAssignedTxt(val.left))
+                bvalue.extend([self.getAssignedTxt(v) for v in val.ops])
+            else:
+                bvalue.append(self.getAssignedTxt(val))
+        return str(any(bvalue))
+
     def getAssignedTxt(self, nodeValue):
-        if type(nodeValue) in (type(None), int, str, float, list, dict):
+        if type(nodeValue) in (type(None), int, str, float, list, dict, tuple):
             return str(nodeValue)
         qvalue = ""
         try:
@@ -602,6 +623,7 @@ class QueryChecker(BaseChecker):
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
                     raise InferenceError
         except InferenceError, e:
+            logHere(nodeValue, e)
             self.logError("getAssignedTxtInferenceError", nodeValue, e)
         except Exception, e:
             self.logError("getAssignedTxtError", nodeValue, e)
