@@ -180,11 +180,12 @@ class QueryChecker(BaseChecker):
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
         elif isinstance(nodeValue.test, (UnaryOp, Const)):
             evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
-        try:
-            evalResult = eval(evaluation)
-        except Exception, e:
-            evalResult = False
-            self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
+        if evaluation:
+            try:
+                evalResult = eval(evaluation)
+            except Exception, e:
+                evalResult = False
+                self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
         anvalue = self.getFuncParams(nodeValue.parent)
         if anvalue: evalResult = False
         return evalResult
