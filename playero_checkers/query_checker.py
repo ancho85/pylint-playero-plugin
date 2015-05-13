@@ -1,3 +1,5 @@
+# pylint:disable=W0703,R0912
+
 from pylint.checkers import BaseChecker
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
@@ -178,15 +180,19 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
-        elif isinstance(nodeValue.test, UnaryOp):
-            evaluation = self.getUnaryOp(nodeValue.test)
+        elif False and isinstance(nodeValue.test, UnaryOp):
+            #if nodeValue.lineno == 55:
+            #    import rpdb2
+            #    rpdb2.start_embedded_debugger("123456", timeout=20)
+            #logHere(nodeValue.lineno, nodeValue.test, nodeValue.test.as_string())
+            evaluation = self.getUnaryOpValue(nodeValue.test)
         elif isinstance(nodeValue.test, BoolOp):
-            evaluation = self.getBoolOp(nodeValue.test)
+            evaluation = self.getBoolOpValue(nodeValue.test)
         elif isinstance(nodeValue.test, Const):
             evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
         if evaluation:
             try:
-                evalResult = eval(evaluation)
+                evalResult = eval("%s" % str(evaluation))
             except Exception, e:
                 evalResult = False
                 self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
@@ -568,22 +574,28 @@ class QueryChecker(BaseChecker):
                     lvalue = ite
         return lvalue
 
-    def getUnaryOp(self, nodeValue):
-        uvalue = self.getAssignedTxt(nodeValue.operand)
-        if not uvalue: uvalue = "True"
+    def getUnaryOpValue(self, nodeValue):
+        uvalue = "True"
+        if not isinstance(nodeValue.operand, UnaryOp):
+            uvalue = self.getAssignedTxt(nodeValue.operand)
         return uvalue
 
-    def getBoolOp(self, nodeValue):
+    def getBoolOpValue(self, nodeValue):
         bvalue = []
         for val in nodeValue.values:
             if isinstance(val, UnaryOp):
-                bvalue.append(self.getUnaryOp(val))
+                bvalue.append(self.getUnaryOpValue(val))
             elif isinstance(val, Compare):
-                bvalue.append(self.getAssignedTxt(val.left))
-                bvalue.extend([self.getAssignedTxt(v) for v in val.ops])
+                bvalue.append(self.getCompareValue(val))
             else:
                 bvalue.append(self.getAssignedTxt(val))
         return str(any(bvalue))
+
+    def getCompareValue(self, nodeValue):
+        cvalue = []
+        cvalue.append(self.getAssignedTxt(nodeValue.left))
+        cvalue.extend([self.getAssignedTxt(v) for v in nodeValue.ops])
+        return str(any(cvalue))
 
     def getAssignedTxt(self, nodeValue):
         if type(nodeValue) in (type(None), int, str, float, list, dict, tuple):
@@ -614,6 +626,12 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getDictValue(nodeValue)
             elif isinstance(nodeValue, Lambda):
                 qvalue = self.getLambdaValue(nodeValue)
+            elif isinstance(nodeValue, BoolOp):
+                qvalue = self.getBoolOpValue(nodeValue)
+            elif isinstance(nodeValue, Compare):
+                qvalue = self.getCompareValue(nodeValue)
+            elif isinstance(nodeValue, UnaryOp):
+                qvalue = self.getUnaryOpValue(nodeValue)
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
@@ -623,7 +641,6 @@ class QueryChecker(BaseChecker):
                     self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
                     raise InferenceError
         except InferenceError, e:
-            logHere(nodeValue, e)
             self.logError("getAssignedTxtInferenceError", nodeValue, e)
         except Exception, e:
             self.logError("getAssignedTxtError", nodeValue, e)
