@@ -190,7 +190,7 @@ class QueryChecker(BaseChecker):
             evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
         if evaluation:
             try:
-                evalResult = eval("%s" % str(evaluation))
+                evalResult = eval("%s" % str(evaluation), nodeValue.root().globals, nodeValue.root().locals)
             except Exception, e:
                 evalResult = False
                 self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
@@ -263,7 +263,7 @@ class QueryChecker(BaseChecker):
                     if target in ("", "0"): target = "['0','0']"
                     evaluation = "%s(%s, %s)" % (funcname, mapto.as_string(), target)
                     try:
-                        cfvalue = str(eval(evaluation))
+                        cfvalue = str(eval(evaluation, nodeValue.root().globals, nodeValue.scope().locals))
                     except Exception, e:
                         self.logError("getCallFuncValueMapEvalError", nodeValue, e)
                 else: #method may be locally defined
@@ -396,7 +396,7 @@ class QueryChecker(BaseChecker):
                 else:
                     newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
                 toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
-                qvalue = eval(toeval)
+                qvalue = eval(toeval, nodeValue.root().globals, nodeValue.scope().locals)
                 qvalue = qvalue.replace("NEWLINE", "\n")
             else:
                 qvalue += self.getAssignedTxt(nodeValue.right)
@@ -512,7 +512,7 @@ class QueryChecker(BaseChecker):
                 if nvalue.startswith("{"):
                     evaluation = '%s.get("%s", None)' % (nvalue, idx)
                 try:
-                    svalue = eval(evaluation)
+                    svalue = eval(evaluation, nodeValue.root().globals, nodeValue.scope().locals)
                 except IndexError:
                     svalue = eval('%s[0]' % nvalue)
                 except Exception, e:
@@ -528,12 +528,13 @@ class QueryChecker(BaseChecker):
 
     def getListCompValue(self, nodeValue):
         targets = []
+        doEval = lambda x: eval(x, nodeValue.root().globals, nodeValue.scope().locals)
         fgen = nodeValue.generators[0]
         if isinstance(fgen, Comprehension):
             if isinstance(fgen.iter, CallFunc):
                 evaluation = "'%s'.%s('%s')" % (self.getAssignedTxt(fgen.iter.func.expr), fgen.iter.func.attrname, self.getAssignedTxt(fgen.iter.args[0]))
                 try:
-                    targets = eval(evaluation)
+                    targets = doEval(evaluation)
                 except Exception, e:
                     self.logError("getListCompValueError", nodeValue, e)
             elif isinstance(fgen.iter, Name):
@@ -544,12 +545,12 @@ class QueryChecker(BaseChecker):
         if isinstance(nodeValue.elt, CallFunc):
             if isinstance(nodeValue.elt.func, Getattr):
                 try:
-                    elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
+                    elements = [doEval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
                     self.logError("getListCompValueEval1Error", nodeValue, e)
         elif isinstance(nodeValue.elt, BinOp):
             try:
-                elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
+                elements = [doEval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
             except Exception, e:
                 self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
@@ -565,7 +566,7 @@ class QueryChecker(BaseChecker):
             if args:
                 ite = None
                 try:
-                    ite = eval(args)
+                    ite = eval(args, nodeValue.root().globals, nodeValue.scope().locals)
                 except Exception:
                     pass
                 if isinstance(ite, Iterable):
@@ -575,7 +576,7 @@ class QueryChecker(BaseChecker):
     def getUnaryOpValue(self, nodeValue):
         uvalue = "True"
         if not isinstance(nodeValue.operand, UnaryOp):
-            uvalue = self.getAssignedTxt(nodeValue.operand)
+            uvalue = '"""%s"""' % self.getAssignedTxt(nodeValue.operand)
         return uvalue
 
     def getBoolOpValue(self, nodeValue):
