@@ -17,6 +17,7 @@ from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
 import re
+import __builtin__
 
 def queryEnabled():
     from libs.funcs import getConfig
@@ -47,6 +48,7 @@ class QueryChecker(BaseChecker):
             funcname = node.func.attrname
         elif isinstance(node.func, Name):
             funcname = node.func.name
+        if funcname in dir(__builtin__): return
         try:
             self.funcParams[funcname] = {}
             for idx, nodearg in enumerate(node.args):
@@ -180,11 +182,7 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
-        elif False and isinstance(nodeValue.test, UnaryOp):
-            #if nodeValue.lineno == 55:
-            #    import rpdb2
-            #    rpdb2.start_embedded_debugger("123456", timeout=20)
-            #logHere(nodeValue.lineno, nodeValue.test, nodeValue.test.as_string())
+        elif isinstance(nodeValue.test, UnaryOp):
             evaluation = self.getUnaryOpValue(nodeValue.test)
         elif isinstance(nodeValue.test, BoolOp):
             evaluation = self.getBoolOpValue(nodeValue.test)
