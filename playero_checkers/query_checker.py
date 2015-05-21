@@ -40,6 +40,7 @@ class QueryChecker(BaseChecker):
     def open(self):
         self.queryTxt = {}  # instanceName : parsedSQLtext
         self.funcParams = {}  # functionName : argumentIndex : argumentValue
+        self.ifProcessed = set()
 
     def setFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -670,12 +671,17 @@ class QueryChecker(BaseChecker):
 
     def preprocessQueryIfs(self, nodeTarget, instanceName, value, isnew):
         nodeGrandParent = nodeTarget.parent.parent
-        if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
+        if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If...
             if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
                 if self.doCompareValue(nodeGrandParent):
                     self.appendQuery(instanceName, value, isnew)
+                    self.ifProcessed.add(nodeGrandParent.lineno)
             else:
+                self.ifProcessed.add(nodeGrandParent.lineno)
                 self.preprocessQueryIfs(nodeTarget.parent, instanceName, value, isnew)
+        else: #Else included if his parent was not processed
+            if nodeGrandParent.lineno not in self.ifProcessed:
+                self.appendQuery(instanceName, value, isnew)
 
     def isSqlAssAttr(self, node):
         return isinstance(node, AssAttr) and node.attrname == "sql"

@@ -30,3 +30,11 @@ class AttributeCompare(object):
         if not a or specs.OtherOption != a:
             query.sql += "HAVING SerNr > 0\n"
         query.open()
+
+        query2 = Query()
+        query2.sql = "SELECT SerNr, internalId, SUM(Total) FROM Alotment\n"
+        if False:
+            query2.sql += "GROUP BY SerNr\n"
+        else:
+            query2.sql += "GROUP BY internalId\n"
+        query2.open()
