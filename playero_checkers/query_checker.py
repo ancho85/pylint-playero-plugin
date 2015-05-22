@@ -17,7 +17,6 @@ from libs.sqlparse import validateSQL
 from collections import Iterable
 import ast
 import re
-import __builtin__
 
 def queryEnabled():
     from libs.funcs import getConfig
@@ -49,7 +48,6 @@ class QueryChecker(BaseChecker):
             funcname = node.func.attrname
         elif isinstance(node.func, Name):
             funcname = node.func.name
-        if funcname in dir(__builtin__): return
         try:
             self.funcParams[funcname] = {}
             for idx, nodearg in enumerate(node.args):
@@ -630,8 +628,8 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getBoolOpValue(nodeValue)
             elif isinstance(nodeValue, Compare):
                 qvalue = self.getCompareValue(nodeValue)
-            elif isinstance(nodeValue, UnaryOp):
-                qvalue = self.getUnaryOpValue(nodeValue)
+                """elif isinstance(nodeValue, UnaryOp):
+                    qvalue = self.getUnaryOpValue(nodeValue)"""
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
