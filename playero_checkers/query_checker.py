@@ -14,6 +14,7 @@ from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
 from libs.sqlparse import validateSQL
+from libs.cache import cache
 from collections import Iterable
 import ast
 import re
@@ -113,6 +114,7 @@ class QueryChecker(BaseChecker):
             self.logError("concatOrReplaceError", node, e)
         return res
 
+    @cache.store
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         if not tolineno: tolineno = 999999
         anvalue = ""
