@@ -1,10 +1,12 @@
+# pylint:disable=W0703,R0912
+
 from pylint.checkers import BaseChecker
 from astroid.node_classes import Getattr, AssAttr, Const, \
                                     If, BinOp, CallFunc, Name, Tuple, \
                                     Return, Assign, AugAssign, AssName, \
                                     Keyword, Compare, Subscript, For, \
                                     Dict, List, Slice, Comprehension, \
-                                    Discard, Index
+                                    Discard, Index, UnaryOp, BoolOp
 from astroid.scoped_nodes import Function, Class, ListComp, Lambda
 from astroid.bases import YES, Instance
 from astroid.exceptions import InferenceError
@@ -12,6 +14,7 @@ from pylint.interfaces import IAstroidChecker
 from pylint.checkers.utils import check_messages
 from libs.tools import logHere, filenameFromPath, escapeAnyToString, isNumber
 from libs.sqlparse import validateSQL
+from libs.cache import cache
 from collections import Iterable
 import ast
 import re
@@ -37,6 +40,7 @@ class QueryChecker(BaseChecker):
     def open(self):
         self.queryTxt = {}  # instanceName : parsedSQLtext
         self.funcParams = {}  # functionName : argumentIndex : argumentValue
+        self.ifProcessed = set()
 
     def setFuncParams(self, node):
         """ define the funcParams dict based of a function call"""
@@ -110,20 +114,21 @@ class QueryChecker(BaseChecker):
             self.logError("concatOrReplaceError", node, e)
         return res
 
+    @cache.store
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         if not tolineno: tolineno = 999999
         anvalue = ""
-        anfound = False
+        anfound = None
 
         def searchBody(attrs):
-            bvalue, bfound = None, False
+            bvalue, bfound = None, None
             getBVal = lambda x: "" if x is None else x
             for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(nodeValue, atr) if elm.lineno < tolineno]:
                 if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
                     (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
                     if afound and assValue != bvalue:
                         bvalue = self.concatOrReplace(elm, nodeName, getBVal(bvalue), assValue)
-                        bfound = afound
+                        bfound = elm
             return (getBVal(bvalue), bfound)
 
         try:
@@ -132,18 +137,19 @@ class QueryChecker(BaseChecker):
                 if isinstance(nodeValue.targets[0], AssName):
                     if nodeName and nodeName == nodeValue.targets[0].name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = True
+                        anfound = nodeValue
             elif isinstance(nodeValue, AugAssign):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = True
+                        anfound = nodeValue
             elif isinstance(nodeValue, For):
                 if isinstance(nodeValue.target, AssName):
                     if nodeName and nodeName == nodeValue.target.name:
                         anvalue = self.getAssignedTxt(nodeValue.iter)
                         if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
-                        anfound = True
+                        if anvalue == "[]": anvalue = "['666']"
+                        anfound = nodeValue
                         try:
                             anvalue = ast.literal_eval(anvalue)[0]
                         except Exception, e:
@@ -162,13 +168,14 @@ class QueryChecker(BaseChecker):
                     if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name):
                         if nodeName == nvf.expr.name:
                             anvalue = self.getCallFuncValue(nodeValue.value)
-                            anfound = True
+                            anfound = nodeValue
         except Exception, e:
             self.logError("getAssNameValueError", nodeValue, e)
         return (anvalue, anfound)
 
     def doCompareValue(self, nodeValue):
         evalResult = True
+        evaluation = "True"
         if isinstance(nodeValue.test, Compare):
             leftval = self.getAssignedTxt(nodeValue.test.left)
             op = nodeValue.test.ops[0] #a list with 1 tuple
@@ -176,12 +183,20 @@ class QueryChecker(BaseChecker):
             if op[0] != "in": rightval = '"""%s"""' % rightval
             elif not rightval: rightval = "[0, 0]"
             evaluation = '"""%s""" %s %s' % (leftval, op[0], rightval)
+        elif isinstance(nodeValue.test, UnaryOp):
+            evaluation = self.getUnaryOpValue(nodeValue.test)
+        elif isinstance(nodeValue.test, BoolOp):
+            evaluation = self.getBoolOpValue(nodeValue.test)
+        elif isinstance(nodeValue.test, Const):
+            evaluation = '%s' % self.getAssignedTxt(nodeValue.test)
+        if evaluation:
             try:
-                evalResult = eval(evaluation)
+                evalResult = eval("%s" % str(evaluation), nodeValue.root().globals, nodeValue.root().locals)
             except Exception, e:
+                evalResult = False
                 self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
-            anvalue = self.getFuncParams(nodeValue.parent)
-            if anvalue: evalResult = False
+        anvalue = self.getFuncParams(nodeValue.parent)
+        if anvalue: evalResult = False
         return evalResult
 
     def getNameValue(self, nodeValue):
@@ -193,7 +208,7 @@ class QueryChecker(BaseChecker):
                 if elm.lineno >= nodeValue.lineno: break #finding values if element's line is previous to node's line
                 (assValue, assFound) = self.getAssNameValue(elm, nodeName=nodeValue.name, tolineno=nodeValue.parent.lineno)
                 if assFound:
-                    nvalue = self.concatOrReplace(elm, nodeValue.name, nvalue, assValue)
+                    nvalue = self.concatOrReplace(assFound, nodeValue.name, nvalue, assValue)
                     tryinference = False
             if not nvalue and tryinference:
                 try:
@@ -249,7 +264,7 @@ class QueryChecker(BaseChecker):
                     if target in ("", "0"): target = "['0','0']"
                     evaluation = "%s(%s, %s)" % (funcname, mapto.as_string(), target)
                     try:
-                        cfvalue = str(eval(evaluation))
+                        cfvalue = str(eval(evaluation, nodeValue.root().globals, nodeValue.scope().locals))
                     except Exception, e:
                         self.logError("getCallFuncValueMapEvalError", nodeValue, e)
                 else: #method may be locally defined
@@ -382,7 +397,7 @@ class QueryChecker(BaseChecker):
                 else:
                     newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
                 toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
-                qvalue = eval(toeval)
+                qvalue = eval(toeval, nodeValue.root().globals, nodeValue.scope().locals)
                 qvalue = qvalue.replace("NEWLINE", "\n")
             else:
                 qvalue += self.getAssignedTxt(nodeValue.right)
@@ -498,7 +513,7 @@ class QueryChecker(BaseChecker):
                 if nvalue.startswith("{"):
                     evaluation = '%s.get("%s", None)' % (nvalue, idx)
                 try:
-                    svalue = eval(evaluation)
+                    svalue = eval(evaluation, nodeValue.root().globals, nodeValue.scope().locals)
                 except IndexError:
                     svalue = eval('%s[0]' % nvalue)
                 except Exception, e:
@@ -514,12 +529,13 @@ class QueryChecker(BaseChecker):
 
     def getListCompValue(self, nodeValue):
         targets = []
+        doEval = lambda x: eval(x, nodeValue.root().globals, nodeValue.scope().locals)
         fgen = nodeValue.generators[0]
         if isinstance(fgen, Comprehension):
             if isinstance(fgen.iter, CallFunc):
                 evaluation = "'%s'.%s('%s')" % (self.getAssignedTxt(fgen.iter.func.expr), fgen.iter.func.attrname, self.getAssignedTxt(fgen.iter.args[0]))
                 try:
-                    targets = eval(evaluation)
+                    targets = doEval(evaluation)
                 except Exception, e:
                     self.logError("getListCompValueError", nodeValue, e)
             elif isinstance(fgen.iter, Name):
@@ -530,12 +546,12 @@ class QueryChecker(BaseChecker):
         if isinstance(nodeValue.elt, CallFunc):
             if isinstance(nodeValue.elt.func, Getattr):
                 try:
-                    elements = [eval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
+                    elements = [doEval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
                     self.logError("getListCompValueEval1Error", nodeValue, e)
         elif isinstance(nodeValue.elt, BinOp):
             try:
-                elements = [eval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
+                elements = [doEval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
             except Exception, e:
                 self.logError("getListCompValueEval2Error", nodeValue, e)
         else:
@@ -551,15 +567,38 @@ class QueryChecker(BaseChecker):
             if args:
                 ite = None
                 try:
-                    ite = eval(args)
-                except Exception, e:
+                    ite = eval(args, nodeValue.root().globals, nodeValue.scope().locals)
+                except Exception:
                     pass
                 if isinstance(ite, Iterable):
                     lvalue = ite
         return lvalue
 
+    def getUnaryOpValue(self, nodeValue):
+        uvalue = "True"
+        if not isinstance(nodeValue.operand, UnaryOp):
+            uvalue = '"""%s"""' % self.getAssignedTxt(nodeValue.operand)
+        return uvalue
+
+    def getBoolOpValue(self, nodeValue):
+        bvalue = []
+        for val in nodeValue.values:
+            if isinstance(val, UnaryOp):
+                bvalue.append(self.getUnaryOpValue(val))
+            elif isinstance(val, Compare):
+                bvalue.append(self.getCompareValue(val))
+            else:
+                bvalue.append(self.getAssignedTxt(val))
+        return str(any(bvalue))
+
+    def getCompareValue(self, nodeValue):
+        cvalue = []
+        cvalue.append(self.getAssignedTxt(nodeValue.left))
+        cvalue.extend([self.getAssignedTxt(v) for v in nodeValue.ops])
+        return str(any(cvalue))
+
     def getAssignedTxt(self, nodeValue):
-        if type(nodeValue) in (type(None), int, str, float, list, dict):
+        if type(nodeValue) in (type(None), int, str, float, list, dict, tuple):
             return str(nodeValue)
         qvalue = ""
         try:
@@ -587,6 +626,12 @@ class QueryChecker(BaseChecker):
                 qvalue = self.getDictValue(nodeValue)
             elif isinstance(nodeValue, Lambda):
                 qvalue = self.getLambdaValue(nodeValue)
+            elif isinstance(nodeValue, BoolOp):
+                qvalue = self.getBoolOpValue(nodeValue)
+            elif isinstance(nodeValue, Compare):
+                qvalue = self.getCompareValue(nodeValue)
+                """elif isinstance(nodeValue, UnaryOp):
+                    qvalue = self.getUnaryOpValue(nodeValue)"""
             else:
                 inferedValue = nodeValue.infered()
                 if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
@@ -626,11 +671,17 @@ class QueryChecker(BaseChecker):
 
     def preprocessQueryIfs(self, nodeTarget, instanceName, value, isnew):
         nodeGrandParent = nodeTarget.parent.parent
-        if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If... Else will not be included
+        if nodeTarget.parent not in nodeGrandParent.orelse: #Only first part of If...
             if not isinstance(nodeGrandParent.parent, If): #ElIf will not be included
-                self.appendQuery(instanceName, value, isnew)
+                if self.doCompareValue(nodeGrandParent):
+                    self.appendQuery(instanceName, value, isnew)
+                    self.ifProcessed.add(nodeGrandParent.lineno)
             else:
+                self.ifProcessed.add(nodeGrandParent.lineno)
                 self.preprocessQueryIfs(nodeTarget.parent, instanceName, value, isnew)
+        else: #Else included if his parent was not processed
+            if nodeGrandParent.lineno not in self.ifProcessed:
+                self.appendQuery(instanceName, value, isnew)
 
     def isSqlAssAttr(self, node):
         return isinstance(node, AssAttr) and node.attrname == "sql"

@@ -31,6 +31,19 @@ class TestPyParse(unittest.TestCase):
         par = parseScript(filepath)
         self.failUnless(par.defaults["Type"] == 5)
 
+    def test_inheritance(self):
+        bases = {"User.py": "Master", "Master.py": "Record"}
+        for fn, inhe in bases.iteritems():
+            filepath = os.path.join(getPlayeroPath(), "base", "records", fn)
+            par = parseScript(filepath)
+            self.failUnless(par.inheritance[fn[:-3]] == inhe)
+
+        cores = {"Record.py": "RawRecord", "RawRecord.py": "Embedded_Record"}
+        for fn, inhe in cores.iteritems():
+            filepath = os.path.join(getPlayeroPath(), "core", fn)
+            par = parseScript(filepath)
+            self.failUnless(par.inheritance[fn[:-3]] == inhe)
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestPyParse))

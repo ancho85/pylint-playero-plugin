@@ -111,8 +111,9 @@ class PyParse(ast.NodeVisitor):
             elif value:
                 if isinstance(value[0], ast.Str):
                     currentClass = value[0].s
-                    self.inheritance[currentClass] = ""
-                    self.subnodeVisit(value, currentClass)
+                    if currentClass not in self.inheritance:
+                        self.inheritance[currentClass] = ""
+                        self.subnodeVisit(value, currentClass)
 
     def subnodeVisit(self, node, current):
         if isinstance(node, list):

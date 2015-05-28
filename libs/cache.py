@@ -26,12 +26,12 @@ class cache(object):
                 cls.storage[fid][args_id] = f(*args, **kwargs)
 
                 if cls.debug and fname not in cls.skipDebug:
-                    logHere("CACHE MISS: %s (%d) (args: %s) (kwargs: %s)"%(fname, fid, str(args), str(kwargs)))
+                    logHere("CACHE MISS: %s (%d) (args: %s) (kwargs: %s)"%(fname, fid, str(args), str(kwargs)), filename="cachedebug.log")
                 if cls.collectStats:
                     cls.setStatistics("miss", fname, *args, **kwargs)
             else:
                 if cls.debug and fname not in cls.skipDebug:
-                    logHere("CACHE HIT: %s (%d) (args: %s) (kwargs: %s)"%(fname, fid, str(args), str(kwargs)))
+                    logHere("CACHE HIT: %s (%d) (args: %s) (kwargs: %s)"%(fname, fid, str(args), str(kwargs)), filename="cachedebug.log")
                 if cls.collectStats:
                     cls.setStatistics("hit", fname, *args, **kwargs)
             return cls.storage[fid][args_id]

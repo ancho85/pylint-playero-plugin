@@ -2,6 +2,7 @@ import os
 from libs.cache import cache
 from libs.xmlparse import parseSettingsXML, parseRecordXML, parseWindowRecordName
 from libs.pyparse import parseScript
+from libs.tools import logHere
 import ConfigParser
 
 RECORD = ".record.xml"
@@ -195,8 +196,8 @@ def inspectModule(module, inspectValue="module", filename="inspect.log"):
     modname = module
     if hasattr(module, "name"):
         modname = getModName(module.name)
-    exe =  """from libs.tools import logHere\n"""
-    exe += """logHere('Inspecting', '%s --> %s', type(%s), filename='%s')\n""" % (modname, inspectValue, inspectValue, filename)
+    logHere('Inspecting', '%s --> %s' % (modname, inspectValue), filename='%s' % filename)
+    exe  = """logHere('Type', type(%s), filename='%s')\n""" % (inspectValue, filename)
     exe += """for x in [x for x in sorted(dir(%s)) if not x.startswith('_')]: \n""" % inspectValue
     exe += """    exec("xdir = type(%s.%%s)" %% x) \n""" % inspectValue
     exe += """    logHere(x, '----->', xdir, filename='%s')\n""" % filename
