@@ -23,7 +23,7 @@ def getFunctionArguments(module, funcTxt):
         else:
             res = [get_super_arguments(superCall) for superCall in ass.assigned_stmts()
                     if isinstance(superCall, node_classes.CallFunc)  and superCall.as_string().startswith(funcTxt)]
-
+    if not res: res = [[]]
     return res
 
 def get_super_arguments(supers):
@@ -36,7 +36,7 @@ def get_super_arguments(supers):
     return res
 
 def buildSuperClassModule(module):
-    sclist = getFunctionArguments(module, "SuperClass")
+    sclist = getFunctionArguments(module, "SuperClass")[0]
     if not len(sclist) % 3 == 0: return
     while len(sclist):
         if not sclist[0].endswith("Row"):
