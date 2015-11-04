@@ -67,29 +67,23 @@ class PyParse(ast.NodeVisitor):
             self.funcDefStarters(node)
 
     def funcDefDefaults(self, node):
-        for elm in node.body:
-            if isinstance(elm, ast.Assign):
-                target = elm.targets[0]
-                if isinstance(target, ast.Name):
-                    instname = self.getAstValue(target)
-                    if self.getAstValue(elm.value) == "getRecord":
-                        self.defaults[instname] = {}
-                elif isinstance(target, ast.Attribute):
-                    instname = self.getAstValue(target.value)
-                    if instname in self.defaults:
-                        self.defaults[instname][target.attr] = self.getAstValue(elm.value)
+        for elm, target in [(e, e.targets[0]) for e in node.body if isinstance(e, ast.Assign)]:
+            if isinstance(target, ast.Name) and self.getAstValue(elm.value) == "getRecord":
+                instname = self.getAstValue(target)
+                self.defaults[instname] = {}
+            elif isinstance(target, ast.Attribute):
+                instname = self.getAstValue(target.value)
+                if instname in self.defaults:
+                    self.defaults[instname][target.attr] = self.getAstValue(elm.value)
         new = {}
         for insts in self.defaults: #each instantiator name have a dict with attributeName/value pair
             new.update(self.defaults[insts])
         self.defaults = new
 
     def funcDefStarters(self, node):
-        for elm in node.body:
-            if isinstance(elm, ast.Assign):
-                target = elm.targets[0]
-                if isinstance(target, ast.Attribute):
-                    if self.getAstValue(target.value) == "self":
-                        self.attributes[target.attr] = self.getAstValue(elm.value)
+        for elm, target in [(e, e.targets[0]) for e in node.body if isinstance(e, ast.Assign)]:
+            if isinstance(target, ast.Attribute) and self.getAstValue(target.value) == "self":
+                self.attributes[target.attr] = self.getAstValue(elm.value)
 
     def visit_Assign(self, node):
         target = node.targets[0]
@@ -105,24 +99,16 @@ class PyParse(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Call(self, node):
-        for key, value in ast.iter_fields(node):
-            if key == 'func':
-                pass
-            elif value:
-                if isinstance(value[0], ast.Str):
-                    currentClass = value[0].s
-                    if currentClass not in self.inheritance:
-                        self.inheritance[currentClass] = ""
-                        self.subnodeVisit(value, currentClass)
+        for key, value in [(k, v) for k, v in ast.iter_fields(node) if k != "func" and v and isinstance(v[0], ast.Str)]:
+            currentClass = value[0].s
+            if currentClass not in self.inheritance:
+                self.inheritance[currentClass] = ""
+                self.subnodeVisit(value, currentClass)
 
     def subnodeVisit(self, node, current):
         if isinstance(node, list):
-            for item in node:
-                if isinstance(item, ast.Str):
-                    if item.s != current:
-                        self.inheritance[current] = item.s
-                else:
-                    pass
+            for item in [i for i in node if isinstance(i, ast.Str) and i.s != current]:
+                self.inheritance[current] = item.s
 
     def getAstValue(self, node):
         res = None
@@ -190,7 +176,7 @@ class PyExecLineParse(ast.NodeVisitor):
 
 if __name__ == "__main__":
     filepath = "e:/Develop/desarrollo/python/ancho/workspace/Playero/extra/StdPY/records/Invoice.py"
-    if (os.name == "posix"):
+    if os.name == "posix":
         filepath = "/home/ancho/Develop/Playero/standard/records/Invoice.py"
     par = parseScript(filepath)
     """print "---attributes---"

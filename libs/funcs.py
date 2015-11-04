@@ -46,54 +46,63 @@ def getScriptDirs(level=255):
 
 def buildPaths():
     recPaths, repPaths, rouPaths, winPaths, corePaths = {}, {}, {}, {}, {}
-    for coremodule in ("User","LoginDialog"):
+    for coremodule in "User", "LoginDialog":
         recPaths[coremodule] = {0: str(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "corepy", "xml", "%s.record.xml" % coremodule))}
 
-    #for filelist in [os.listdir(ip) for ip in getFullPaths(["interface"]) if os.path.exists(ip)]:
+    for realname, uniquePath in get_script_filename_paths():
+        if uniquePath.endswith(RECORD):
+            dicPaths = recPaths
+        elif uniquePath.endswith(REPORT):
+            dicPaths = repPaths
+        elif uniquePath.endswith(ROUTINE):
+            dicPaths = rouPaths
+        elif uniquePath.endswith(WINDOW):
+            dicPaths = winPaths
+        else:
+            continue
 
+        if realname not in dicPaths:
+            dicPaths[realname] = {}
+        dicPaths[realname].update([(len(dicPaths[realname]), uniquePath)])
+
+    recPaths = build_window_record_paths(winPaths, recPaths)
+    corePaths = build_core_paths()
+    return recPaths, repPaths, rouPaths, corePaths
+
+def get_script_filename_paths():
     for sd in getScriptDirs(255):
         interfacePath = os.path.join(getPlayeroPath(), sd, "interface")
         if os.path.exists(interfacePath):
             for filename in os.listdir(interfacePath):
                 uniquePath = "%s/%s" % (interfacePath, filename)
                 realname = filename.split('.')[0]
+                yield realname, uniquePath
 
-                if filename.endswith(RECORD):
-                    dicPaths = recPaths
-                elif filename.endswith(REPORT):
-                    dicPaths = repPaths
-                elif filename.endswith(ROUTINE):
-                    dicPaths = rouPaths
-                elif filename.endswith(WINDOW):
-                    dicPaths = winPaths
-                else: continue
-
-                if realname not in dicPaths:
-                    dicPaths[realname] = {}
-                dicPaths[realname].update([(len(dicPaths[realname]), uniquePath)])
-
+def build_window_record_paths(winPaths, recPaths):
     for winname in [windef for windef in winPaths if windef not in recPaths]:
         for wpaths in winPaths[winname].values():
             dh = parseWindowRecordName(wpaths)
             recPaths[winname] = recPaths.get(dh.name)
+    return recPaths
 
+def build_core_paths():
+    corePaths = {}
     for cpth in [getEmbeddedPath()]:
-        for filename in os.listdir(cpth):
+        for filename in [fn for fn in os.listdir(cpth) if fn.endswith(EMBCORE)]:
             uniquePath = "%s/%s" % (cpth, filename)
             realname = filename.split('.')[0]
-            if filename.endswith(EMBCORE):
-                if realname not in corePaths:
-                    corePaths[realname] = {}
-                corePaths[realname].update([(len(corePaths[realname]), uniquePath)])
-
-    return (recPaths, repPaths, rouPaths, corePaths)
+            if realname not in corePaths:
+                corePaths[realname] = {}
+            corePaths[realname].update([(len(corePaths[realname]), uniquePath)])
+    return corePaths
 
 @cache.store
 def getRecordsInfo(modulename, extensions=RECORD):
     fields = {}
     details = {}
     paths, pathType = findPaths(modulename)
-    if pathType != extensions: return (fields, details)
+    if pathType != extensions:
+        return fields, details
     for level in paths:
         fullpath = paths[level]
         recordname = modulename
@@ -108,7 +117,7 @@ def getRecordsInfo(modulename, extensions=RECORD):
         heirFields, heirDetails = getRecordInheritance(inheritance)
         fields[recordname].update(heirFields)
         details[recordname].update(heirDetails)
-    return (fields, details)
+    return fields, details
 
 @cache.store
 def getRecordInheritance(inheritance):
@@ -116,7 +125,6 @@ def getRecordInheritance(inheritance):
     fields = {}
     details = {}
     paths, pathType = findPaths(inheritance)
-    if pathType != RECORD or not paths: return (fields, details)
     for level in paths:
         fullpath = paths[level]
         dh = parseRecordXML(fullpath)
@@ -128,7 +136,7 @@ def getRecordInheritance(inheritance):
         heirFields, heirDetails = getRecordInheritance(inheritance)
         fields.update(heirFields)
         details.update(heirDetails)
-    return (fields, details)
+    return fields, details
 
 __recordPaths__, __reportPaths__, __routinePaths__, __corePaths__ = buildPaths()
 
@@ -142,7 +150,7 @@ def findPaths(name):
     if not foundPaths:
         foundPaths, pathType = __corePaths__.get(name, {}), EMBCORE
     if not foundPaths: pathType = None
-    return (foundPaths, pathType)
+    return foundPaths, pathType
 
 def getFullPaths(extraDirs):
     return [os.path.join(getPlayeroPath(), x, y) for x in getScriptDirs(255) for y in extraDirs]
@@ -151,32 +159,28 @@ def getFullPaths(extraDirs):
 def getClassInfo(modulename, parent=""):
     attributes, methods, inheritance = {}, {}, {}
     paths = getFullPaths(extraDirs=["records", "windows", "tools", "routines", "documents", "reports"])
-    paths.append(os.path.join(getPlayeroPath(),"core"))
+    paths.append(os.path.join(getPlayeroPath(), "core"))
     paths.append(getEmbeddedPath())
     searchInList = [modulename]
     if parent and parent != modulename:
         searchInList.append(parent)
-    for path in paths:
-        if os.path.exists(path):
-            for filename in [f for f in os.listdir(path) if f.endswith(".py") and f.split(".py")[0] in searchInList]:
-                fullfilepath = os.path.join(path, filename)
-                parse = parseScript(fullfilepath)
-                attributes.update(parse.attributes)
-                attributes.update(parse.defaults)
-                methods.update(parse.methods)
-                inheritance = parse.inheritance
+    for path in [p for p in paths if os.path.exists(p)]:
+        for filename in [fn for fn in os.listdir(path) if fn.endswith(".py") and fn.split(".py")[0] in searchInList]:
+            parse = parseScript(os.path.join(path, filename))
+            attributes.update(parse.attributes)
+            attributes.update(parse.defaults)
+            methods.update(parse.methods)
+            inheritance = parse.inheritance
+    attributes, methods = get_class_inheritance_info(attributes, methods, modulename, inheritance, parent)
+    return attributes, methods
+
+def get_class_inheritance_info(attributes, methods, modulename, inheritance, parent):
     heir = inheritance.get(modulename, inheritance.get(parent, ''))
     if heir:
         heirattr, heirmeths = getClassInfo(heir)
         attributes.update(heirattr)
         methods.update(heirmeths)
-    if not all([methods, attributes]): #not methods nor attributes for modulename
-        from tools import filenameFromPath
-        foundPath, foundName = findPaths(modulename)
-        foundName = filenameFromPath(foundPath.get(0, "")).split(RECORD)[0]
-        if foundName != modulename:
-            attributes, methods = getClassInfo(foundName)
-    return (attributes, methods)
+    return attributes, methods
 
 coreFiles = [f.split(".py")[0] for f in os.listdir(getEmbeddedPath())]
 
@@ -226,14 +230,14 @@ if __name__ == "__main__":
     ok += ["CreditCard", "Bank", "GasStationSettings", "SerNrControl", "User", "Coupon", "SLRetencionDoc", "SLRetencionDocWindow", "Retencion"]
     ok += ["Transaction", "ContactWay"]
     for b in ok:
-        print "     processing", b
+        print("     processing", b)
         attr, meth = getClassInfo(b)
         for at in attr:
-            print at
+            print(at)
         for mt in meth:
-            print mt"""
+            print(mt)"""
     recPaths, repPaths, rouPaths, corePaths = buildPaths()
     for mod in sorted(recPaths):
-        print mod
+        print(mod)
         for level in recPaths[mod]:
-            print "--->", level, recPaths[mod][level]
+            print("--->", level, recPaths[mod][level])

@@ -56,26 +56,30 @@ class QueryChecker(BaseChecker):
                     idx, nodearg = nodearg.arg, nodearg.value #redefining index and value
                 self.funcParams[funcname][idx] = self.getAssignedTxt(nodearg)
         except Exception, e:
-            self.logError("setFuncParams", node, e)
+            QueryChecker.logError("setFuncParams", node, e)
 
     def getFuncParams(self, node, forceSearch=True):
         fparam = ""
         nodescope = node.scope()
         try:
-            if isinstance(nodescope, Function):
-                if hasattr(node, "name") and node.name in nodescope.argnames():
-                    funcname = nodescope.name
-                    if funcname in self.funcParams:
-                        fp = self.funcParams[funcname]
-                        funcargs = [x for x in nodescope.args.args if x.name not in ("self", "classobj", "cls")]
-                        for idx, funcarg in enumerate(funcargs):
-                            if node.name == funcarg.name:
-                                fparam = fp.get(funcarg.name, fp.get(idx, "")) #get by name and then, by index
-                    elif forceSearch: #funcname wasn't created
-                        self.searchNode(nodescope.root(), funcname)
-                        fparam = self.getFuncParams(node, forceSearch=False) #forceSearch=False to prevent infinite loop
+            if isinstance(nodescope, Function) and hasattr(node, "name") and node.name in nodescope.argnames():
+                funcname = nodescope.name
+                if funcname in self.funcParams:
+                    fparam = self.get_func_params_by_name_or_index(node)
+                elif forceSearch: #funcname wasn't created
+                    self.searchNode(nodescope.root(), funcname)
+                    fparam = self.getFuncParams(node, forceSearch=False) #forceSearch=False to prevent infinite loop
         except Exception, e:
-            self.logError("getFuncParamsError", node, e)
+            QueryChecker.logError("getFuncParamsError", node, e)
+        return fparam
+
+    def get_func_params_by_name_or_index(self, node):
+        fparam = ""
+        fp = self.funcParams[node.scope().name]
+        funcargs = [x for x in node.scope().args.args if x.name not in ("self", "classobj", "cls")]
+        for idx, funcarg in enumerate(funcargs):
+            if node.name == funcarg.name:
+                fparam = fp.get(funcarg.name, fp.get(idx, "")) #get by name and then, by index
         return fparam
 
     def concatOrReplace(self, node, nodeName, previousValue, newValue):
@@ -83,95 +87,111 @@ class QueryChecker(BaseChecker):
         try:
             newVal = self.getAssignedTxt(newValue)
             if isinstance(node, AugAssign):
-                if isinstance(node.target, AssName):
-                    if nodeName == node.target.name:
-                        res = previousValue+newVal
+                res = QueryChecker.concat_aug_assign(node, nodeName, previousValue, newVal)
             elif isinstance(node, Assign):
-                if isinstance(node.targets[0], AssName):
-                    if nodeName == node.targets[0].name:
-                        res = newVal
-                        if not isNumber(newVal) and isNumber(previousValue):
-                            res = previousValue
+                res = QueryChecker.concat_assign(node, nodeName, previousValue, newVal)
             elif isinstance(node, If):
-                for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
-                    if res == newVal: continue
-                    elif previousValue and atr == "orelse": continue
-                    res = self.concatOrReplace(elm, nodeName, res, newVal)
+                res = self.concat_if_for(node, nodeName, previousValue, newVal)
+            elif isinstance(node, For) and isinstance(node.target, AssName) and nodeName == node.target.name:
+                res = newVal
             elif isinstance(node, For):
-                if isinstance(node.target, AssName) and nodeName == node.target.name:
-                    res = newVal
-                else:
-                    for elm, atr in [(elm, atr) for atr in ("body", "orelse") for elm in getattr(node, atr)]:
-                        if res == newVal: continue
-                        elif previousValue and atr == "orelse": continue
-                        res = self.concatOrReplace(elm, nodeName, res, newVal)
-            elif isinstance(node, Discard):
-                if isinstance(node.value, CallFunc):
-                    if hasattr(node.value.func, "expr") and isinstance(node.value.func.expr, Name):
-                        if nodeName == node.value.func.expr.name:
-                            res = newVal
+                res = self.concat_if_for(node, nodeName, previousValue, newValue)
+            elif isinstance(node, Discard) and isinstance(node.value, CallFunc):
+                res = QueryChecker.concat_discard(node.value, nodeName, previousValue, newVal)
         except Exception, e:
-            self.logError("concatOrReplaceError", node, e)
+            QueryChecker.logError("concatOrReplaceError", node, e)
         return res
+
+    @staticmethod
+    def concat_aug_assign(node, node_name, prev_value, new_value):
+        res = prev_value
+        if isinstance(node, AugAssign) and isinstance(node.target, AssName) and node_name == node.target.name:
+            res = "%s%s" % (prev_value, new_value)
+        return res
+
+    @staticmethod
+    def concat_assign(node, node_name, prev_value, new_value):
+        res = prev_value
+        if isinstance(node.targets[0], AssName) and node_name == node.targets[0].name:
+            res = new_value
+            if not isNumber(new_value) and isNumber(prev_value):
+                res = prev_value
+        return res
+
+    def concat_if_for(self, node, node_name, prev_value, new_value):
+        res = prev_value
+        for atr in "body", "orelse":
+            for elm in getattr(node, atr):
+                if (res == new_value) or (prev_value and atr == "orelse"):
+                    continue
+                res = self.concatOrReplace(elm, node_name, res, new_value)
+        return res
+
+    @staticmethod
+    def concat_discard(node_value, node_name, prev_value, new_value):
+        res = prev_value
+        if hasattr(node_value.func, "expr") and isinstance(node_value.func.expr, Name) and node_name == node_value.func.expr.name:
+            res = new_value
+        return res
+
+    def search_assname_body(self, body_or_else, node_value, node_name, to_line_number):
+        bvalue, bfound = None, None
+        getBVal = lambda x: "" if x is None else x
+        for elm, atr in [(elm, atr) for atr in body_or_else for elm in getattr(node_value, atr) if elm.lineno < to_line_number]:
+            if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
+                (assValue, afound) = self.getAssNameValue(elm, nodeName=node_name, tolineno=to_line_number)
+                if afound and assValue != bvalue:
+                    bvalue = self.concatOrReplace(elm, node_name, getBVal(bvalue), assValue)
+                    bfound = elm
+        return getBVal(bvalue), bfound
 
     @cache.store
     def getAssNameValue(self, nodeValue, nodeName="", tolineno=999999):
         if not tolineno: tolineno = 999999
         anvalue = ""
         anfound = None
+        if nodeValue.lineno > tolineno: return anvalue, anfound
+        if isinstance(nodeValue, Assign):
+            anvalue, anfound = self.get_assname_target_value(nodeValue.targets[0], nodeValue.value, nodeName)
+        elif isinstance(nodeValue, AugAssign):
+            anvalue, anfound = self.get_assname_target_value(nodeValue.target, nodeValue.value, nodeName)
+        elif isinstance(nodeValue, For):
+            anvalue, anfound = self.get_assname_for_value(nodeValue, nodeName, tolineno)
+        elif isinstance(nodeValue, If):
+            lookBody = "body" if self.doCompareValue(nodeValue) else "orelse"
+            anvalue, anfound = self.search_assname_body([lookBody], nodeValue, nodeName, tolineno)
+        elif isinstance(nodeValue, Discard) and isinstance(nodeValue.value, CallFunc):
+            anvalue, anfound = self.get_assname_func_value(nodeValue, nodeName)
+        return anvalue, anfound
 
-        def searchBody(attrs):
-            bvalue, bfound = None, None
-            getBVal = lambda x: "" if x is None else x
-            for elm, atr in [(elm, atr) for atr in attrs for elm in getattr(nodeValue, atr) if elm.lineno < tolineno]:
-                if not (bvalue and atr == "orelse"): #no need to search in 'orelse' if the 'body' returns a value
-                    (assValue, afound) = self.getAssNameValue(elm, nodeName=nodeName, tolineno=tolineno)
-                    if afound and assValue != bvalue:
-                        bvalue = self.concatOrReplace(elm, nodeName, getBVal(bvalue), assValue)
-                        bfound = elm
-            return (getBVal(bvalue), bfound)
+    def get_assname_target_value(self, target_node, target_value, node_name):
+        anvalue = ""
+        anfound = None
+        if node_name and isinstance(target_node, AssName) and node_name == target_node.name:
+            anvalue = self.getAssignedTxt(target_value)
+            anfound = target_node.parent
+        return anvalue, anfound
 
+    def get_assname_for_value(self, node_value, node_name, to_line_number):
+        anvalue, anfound = self.get_assname_target_value(node_value.target, node_value.iter, node_name)
+        if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
+        elif anvalue == "[]": anvalue = "['666']"
         try:
-            if nodeValue.lineno > tolineno: return (anvalue, anfound)
-            if isinstance(nodeValue, Assign):
-                if isinstance(nodeValue.targets[0], AssName):
-                    if nodeName and nodeName == nodeValue.targets[0].name:
-                        anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = nodeValue
-            elif isinstance(nodeValue, AugAssign):
-                if isinstance(nodeValue.target, AssName):
-                    if nodeName and nodeName == nodeValue.target.name:
-                        anvalue = self.getAssignedTxt(nodeValue.value)
-                        anfound = nodeValue
-            elif isinstance(nodeValue, For):
-                if isinstance(nodeValue.target, AssName):
-                    if nodeName and nodeName == nodeValue.target.name:
-                        anvalue = self.getAssignedTxt(nodeValue.iter)
-                        if not anvalue.startswith("["): anvalue = "['%s']" % anvalue
-                        if anvalue == "[]": anvalue = "['666']"
-                        anfound = nodeValue
-                        try:
-                            anvalue = ast.literal_eval(anvalue)[0]
-                        except Exception, e:
-                            self.logError("getAssNameValueError literal_eval", nodeValue, e)
-                if not anfound:
-                    anvalue, anfound = searchBody(["body", "orelse"])
-            elif isinstance(nodeValue, If):
-                lookBody = self.doCompareValue(nodeValue)
-                if lookBody:
-                    anvalue, anfound = searchBody(["body"])
-                else:
-                    anvalue, anfound = searchBody(["orelse"])
-            elif isinstance(nodeValue, Discard):
-                if isinstance(nodeValue.value, CallFunc):
-                    nvf = nodeValue.value.func
-                    if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name):
-                        if nodeName == nvf.expr.name:
-                            anvalue = self.getCallFuncValue(nodeValue.value)
-                            anfound = nodeValue
+            anvalue = ast.literal_eval(anvalue)[0]
         except Exception, e:
-            self.logError("getAssNameValueError", nodeValue, e)
-        return (anvalue, anfound)
+            QueryChecker.logError("get_assname_for_value literal_eval", node_value, e)
+        if not anfound:
+            anvalue, anfound = self.search_assname_body(["body", "orelse"], node_value, node_name, to_line_number)
+        return anvalue, anfound
+
+    def get_assname_func_value(self, node_value, node_name):
+        anvalue = ""
+        anfound = None
+        nvf = node_value.value.func
+        if isinstance(nvf, Getattr) and isinstance(nvf.expr, Name) and node_name == nvf.expr.name:
+            anvalue = self.getCallFuncValue(node_value.value)
+            anfound = node_value
+        return anvalue, anfound
 
     def doCompareValue(self, nodeValue):
         evalResult = True
@@ -194,7 +214,7 @@ class QueryChecker(BaseChecker):
                 evalResult = eval("%s" % str(evaluation), nodeValue.root().globals, nodeValue.root().locals)
             except Exception, e:
                 evalResult = False
-                self.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
+                QueryChecker.logError("EvaluationError doCompareValue %s" % evaluation, nodeValue, e)
         anvalue = self.getFuncParams(nodeValue.parent)
         if anvalue: evalResult = False
         return evalResult
@@ -211,33 +231,28 @@ class QueryChecker(BaseChecker):
                     nvalue = self.concatOrReplace(assFound, nodeValue.name, nvalue, assValue)
                     tryinference = False
             if not nvalue and tryinference:
-                try:
-                    inferedValue = nodeValue.infered()
-                except InferenceError: # pragma: no cover
-                    pass
-                else:
-                    for inferedValue in inferedValue:
-                        if inferedValue is not YES:
-                            nvalue = self.getAssignedTxt(inferedValue)
-                            if nvalue: break
+                nvalue = self.get_name_value_inference(nodeValue)
         except Exception, e:
-            self.logError("getNameValueError", nodeValue, e)
+            QueryChecker.logError("getNameValueError", nodeValue, e)
+        return nvalue
+
+    def get_name_value_inference(self, node_value):
+        nvalue = ""
+        try:
+            for inferedValue in [ival for ival in node_value.infered() if ival is not YES]:
+                nvalue = self.getAssignedTxt(inferedValue)
+                if nvalue: break
+        except InferenceError: # pragma: no cover
+            pass
         return nvalue
 
     def getFunctionReturnValue(self, funcNode):
         retVal = ""
-        returns = [x for x in funcNode.nodes_of_class(Return)]
-        for retNode in returns:
-            if isinstance(retNode.parent, If):
-                try:
-                    if self.doCompareValue(retNode.parent):
-                        retVal = self.getAssignedTxt(retNode.value)
-                        break
-                except Exception:
-                    pass
-            else:
-                retVal = self.getAssignedTxt(retNode.value)
-                break
+        for retNode in [x for x in funcNode.nodes_of_class(Return)]:
+            if isinstance(retNode.parent, If) and not self.doCompareValue(retNode.parent):
+                continue #if is an If and the result of the comparition is false, try next Return
+            retVal = self.getAssignedTxt(retNode.value)
+            break
         return retVal
 
     def getCallFuncValue(self, nodeValue):
@@ -247,162 +262,212 @@ class QueryChecker(BaseChecker):
         try:
             inferedFunc = nodefn.infered()[0]
             cfvalue = self.getFunctionReturnValue(inferedFunc)
-        except (InferenceError, TypeError) as e:
+        except (InferenceError, TypeError):
             pass #cannot be infered | cannot be itered. _Yes object?
         if not cfvalue:
             if isinstance(nodefn, Name):
-                funcname = nodefn.name
-                if funcname == "date":
-                    cfvalue = "2000-01-01"
-                elif funcname == "time":
-                    cfvalue = "00:00:00"
-                elif funcname == "len":
-                    cfvalue = len(self.getAssignedTxt(nodeValue.args[0]))
-                elif funcname in ("map", "filter"):
-                    mapto = nodeValue.args[0]
-                    target = self.getAssignedTxt(nodeValue.args[1])
-                    if target in ("", "0"): target = "['0','0']"
-                    evaluation = "%s(%s, %s)" % (funcname, mapto.as_string(), target)
-                    try:
-                        cfvalue = str(eval(evaluation, nodeValue.root().globals, nodeValue.scope().locals))
-                    except Exception, e:
-                        self.logError("getCallFuncValueMapEvalError", nodeValue, e)
-                else: #method may be locally defined
-                    cfvalue = self.getCallUserDefinedName(nodeValue)
+                cfvalue = self.get_callfunc_name_value(nodeValue)
             elif isinstance(nodefn, Getattr):
-                attrname = nodefn.attrname
-                if attrname == "name":
-                    if isinstance(nodefn.expr, Name):
-                        parent = nodefn.scope().parent
-                        if isinstance(parent, Class):
-                            cfvalue = parent.name
-                elif attrname == "keys":
-                    cfvalue = "['0','0']"
-                elif attrname == "join":
-                    expr = self.getAssignedTxt(nodefn.expr)
-                    args = self.getAssignedTxt(nodeValue.args[0])
-                    if args:
-                        if not args.startswith(("[", "'")): args = "'%s'" % args
-                        cfvalue = "%s" % expr.join(["%s" % x for x in ast.literal_eval(args)])
-                        if not cfvalue: cfvalue = "%s" % expr.join(['666'])
-                elif attrname in ("append", "extend"):
-                    cfvalue = self.getAssignedTxt(nodeValue.args[0])
-                elif attrname == "split":
-                    expr = self.getAssignedTxt(nodefn.expr)
-                    args = self.getAssignedTxt(nodeValue.args[0])
-                    cfvalue = "[%s]" % args.join(["'%s'" % str(x) for x in expr.split(args)])
-                elif attrname == "replace":
-                    arg1 = self.getAssignedTxt(nodeValue.args[0])
-                    arg2 = self.getAssignedTxt(nodeValue.args[1])
-                    cfvalue = self.getNameValue(nodefn.expr).replace(arg1, arg2)
-                else:
-                    # if reachs here, then the inference did not work
-                    cfvalue = self.getCallGetattr(nodeValue)
+                cfvalue = self.get_callfunc_getattr_value(nodeValue)
         return cfvalue
+
+    def get_callfunc_name_value(self, node_value):
+        cfvalue = ""
+        funcname = node_value.func.name
+        if funcname == "date":
+            cfvalue = "2000-01-01"
+        elif funcname == "time":
+            cfvalue = "00:00:00"
+        elif funcname == "len":
+            cfvalue = len(self.getAssignedTxt(node_value.args[0]))
+        elif funcname in ("map", "filter"):
+            mapto = node_value.args[0]
+            target = self.getAssignedTxt(node_value.args[1])
+            if target in ("", "0"): target = "['0','0']"
+            evaluation = "%s(%s, %s)" % (funcname, mapto.as_string(), target)
+            try:
+                cfvalue = str(eval(evaluation, node_value.root().globals, node_value.scope().locals))
+            except Exception, e:
+                QueryChecker.logError("get_callfunc_name_value MapEvalError", node_value, e)
+        else: #method may be locally defined
+            cfvalue = self.getCallUserDefinedName(node_value)
+        return cfvalue
+
+    def get_callfunc_getattr_value(self, node_value):
+        cfvalue = ""
+        attrname = node_value.func.attrname
+        if attrname == "name" and isinstance(node_value.func.expr, Name) and isinstance(node_value.scope().parent, Class):
+            cfvalue = node_value.scope().parent.name
+        elif attrname == "keys":
+            cfvalue = "['0','0']"
+        elif attrname == "join":
+            cfvalue = self.get_callfunc_getattr_value_from_join(node_value)
+        elif attrname in ("append", "extend"):
+            cfvalue = self.getAssignedTxt(node_value.args[0])
+        elif attrname == "split":
+            cfvalue = self.get_callfunc_getattr_value_from_split(node_value)
+        elif attrname == "replace":
+            cfvalue = self.get_callfunc_getattr_value_from_replace(node_value)
+        else:
+            cfvalue = self.getCallGetattr(node_value)
+        return cfvalue
+
+    def get_callfunc_getattr_value_from_join(self, node):
+        cfvalue = ""
+        expr = self.getAssignedTxt(node.func.expr)
+        args = self.getAssignedTxt(node.args[0])
+        if args:
+            if not args.startswith(("[", "'")):
+                args = "'%s'" % args
+            cfvalue = "%s" % expr.join(["%s" % x for x in ast.literal_eval(args)])
+            if not cfvalue:
+                cfvalue = "%s" % expr.join(['666'])
+        return cfvalue
+
+    def get_callfunc_getattr_value_from_split(self, node):
+        expr = self.getAssignedTxt(node.func.expr)
+        args = self.getAssignedTxt(node.args[0])
+        return "[%s]" % args.join(["'%s'" % str(x) for x in expr.split(args)])
+
+    def get_callfunc_getattr_value_from_replace(self, node):
+        arg1 = self.getAssignedTxt(node.args[0])
+        arg2 = self.getAssignedTxt(node.args[1])
+        return self.getNameValue(node.func.expr).replace(arg1, arg2)
 
     def getCallGetattr(self, node):
         cgattr = ""
         nodefn = node.func
         attrname = nodefn.attrname
-        if isinstance(nodefn.expr, Getattr):
-            if isinstance(nodefn.expr.expr, Name) and nodefn.expr.expr.name == "self":
-                instAttrName = nodefn.expr.attrname
-                prevSi = node.previous_sibling()
-                while prevSi is not None:
-                    if isinstance(prevSi, Assign):
-                        target = prevSi.targets[0]
-                        if isinstance(target, AssAttr):
-                            if target.expr.name == "self" and target.attrname == instAttrName:
-                                if isinstance(prevSi.value, CallFunc):
-                                    inst = prevSi.value.infered()[0]
-                                    if isinstance(inst, Instance):
-                                        if attrname in inst.locals:
-                                            cgattr = self.getFunctionReturnValue(inst.locals[attrname][0])
-                                            break
-                    prevSi = prevSi.previous_sibling()
+        prevSi = node.previous_sibling()
+        while prevSi is not None:
+            if QueryChecker.sibling_is_valid(node, prevSi):
+                cgattr = self.getFunctionReturnValue(prevSi.value.infered()[0].locals[attrname][0])
+                break
+            prevSi = prevSi.previous_sibling()
         return cgattr
+
+    @staticmethod
+    def sibling_is_valid(node, sibling):
+        return QueryChecker.is_valid_getattr_name(node) and QueryChecker.is_valid_assign(node, sibling) and QueryChecker.is_valid_instance(node, sibling)
+
+    @staticmethod
+    def is_valid_getattr_name(node):
+        return isinstance(node.func.expr, Getattr) and isinstance(node.func.expr.expr, Name) and node.func.expr.expr.name == "self"
+
+    @staticmethod
+    def is_valid_assign(node, sibling):
+        res = False
+        if isinstance(sibling, Assign) and isinstance(sibling.targets[0], AssAttr):
+            target = sibling.targets[0]
+            res = target.expr.name == "self" and target.attrname == node.func.expr.attrname
+        return res
+
+    @staticmethod
+    def is_valid_instance(node, sibling):
+        res = False
+        if isinstance(sibling.value, CallFunc):
+            infered = sibling.value.infered()[0]
+            res = isinstance(infered, Instance) and node.func.attrname in infered.locals
+        return res
 
     def getCallUserDefinedName(self, node):
         cudnvalue = ""
         nodefn = node.func
         funcname = nodefn.name
         nodeScope = node.scope()
-        if funcname in nodeScope.locals:
-            methodParent = nodeScope.locals[funcname][0].parent
-            if isinstance(methodParent, Assign):
-                if isinstance(methodParent.value, CallFunc) and isinstance(methodParent.value.func, Name):
-                    if methodParent.value.func.name == "getattr":
-                        args = methodParent.value.args
-                        if isinstance(args[0], Name) and args[0].name == "self":
-                            methodname = self.getAssignedTxt(args[1]).strip() #the for must be analysed here
-                            if methodname in nodeScope.parent.locals:
-                                realmethod = nodeScope.parent.locals[methodname][0]
-                                cudnvalue = self.getFunctionReturnValue(realmethod)
-                            else:
-                                #backwards name locator
-                                try:
-                                    sname = [child for child in args[1].get_children() if isinstance(child, Name)][0]
-                                    forText1 = args[1].as_string().replace(sname.name, '"""forText"""')
-                                    assignText1 = ""
-                                    prevSi = node.previous_sibling()
-                                    if prevSi is None: prevSi = node.parent
-                                    while node.scope() == prevSi.scope(): #cannot go beyond this
-                                        if isinstance(prevSi, Assign):
-                                            if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
-                                                sname = [child for child in prevSi.value.get_children() if isinstance(child, Name)][0]
-                                                assignText1 = prevSi.value.as_string().replace(sname.name, '"""assignText1"""')
-                                        elif isinstance(prevSi, For):
-                                            if isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
-                                                value = self.getAssignedTxt(prevSi.iter)
-                                                for methodname in ast.literal_eval(value):
-                                                    from playero_transforms.classes import buildStringModule
-                                                    assignText2 = assignText1.replace("assignText1", methodname)
-                                                    newnode = buildStringModule(assignText2)
-                                                    assignText2 = self.getAssignedTxt(newnode.body[0].value)
-                                                    forText2 = forText1.replace("forText", assignText2)
-                                                    newnode = buildStringModule(forText2)
-                                                    methodname = self.getAssignedTxt(newnode.body[0].value).strip()
-                                                    if methodname in nodeScope.parent.locals:
-                                                        realmethod = nodeScope.parent.locals[methodname][0]
-                                                        cudnvalue = self.getFunctionReturnValue(realmethod)
-                                                        break
-                                        prevParent = prevSi.parent
-                                        prevSi = prevSi.previous_sibling()
-                                        if not prevSi: prevSi = prevParent
-                                except Exception, e:
-                                    self.logError("backwards locator error", node, e)
+        if funcname not in nodeScope.locals: return cudnvalue
+        methodParent = nodeScope.locals[funcname][0].parent
+        if QueryChecker.is_parent_getattr_named_self(methodParent):
+            args = methodParent.value.args[1]
+            methodname = self.getAssignedTxt(args).strip() #the for must be analysed here
+            if methodname in nodeScope.parent.locals:
+                realmethod = nodeScope.parent.locals[methodname][0]
+                cudnvalue = self.getFunctionReturnValue(realmethod)
+            else:
+                #backwards name locator
+                cudnvalue = self.get_call_user_defined_name_backward_locator(node, args)
+        return cudnvalue
+
+    @staticmethod
+    def is_parent_getattr_named_self(node):
+        res = False
+        if isinstance(node, Assign) and isinstance(node.value, CallFunc) and isinstance(node.value.func, Name) and node.value.func.name == "getattr":
+            args = node.value.args[0]
+            if isinstance(args, Name) and args.name == "self":
+                res = True
+        return res
+
+    def get_call_user_defined_name_backward_locator(self, node, args):
+        cudnvalue = ""
+        sname, forText1 = QueryChecker.backward_locator_name_finder(args)
+        assignText1 = ""
+        prevSi = node.previous_sibling() or node.parent
+        while node.scope() == prevSi.scope(): #cannot go beyond this
+            if isinstance(prevSi, Assign) and isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == sname.name:
+                sname, assignText1 = QueryChecker.backward_locator_assing_finder(prevSi)
+            elif isinstance(prevSi, For) and isinstance(prevSi.target, AssName) and prevSi.target.name == sname.name:
+                cudnvalue = self.backward_locator_for_finder(node, prevSi, forText1, assignText1)
+            prevSi = prevSi.previous_sibling() or prevSi.parent
+        return cudnvalue
+
+    @staticmethod
+    def backward_locator_name_finder(args):
+        sname = [child for child in args.get_children() if isinstance(child, Name)][0]
+        forText1 = args.as_string().replace(sname.name, '"""forText"""')
+        return sname, forText1
+
+    @staticmethod
+    def backward_locator_assing_finder(sibling):
+        sname = [child for child in sibling.value.get_children() if isinstance(child, Name)][0]
+        return sname, sibling.value.as_string().replace(sname.name, '"""assignText1"""')
+
+    def backward_locator_for_finder(self, node, sibling, for_text1, assign_text1):
+        cudnvalue = ""
+        from playero_transforms.classes import buildStringModule
+        value = self.getAssignedTxt(sibling.iter)
+        for methodname in ast.literal_eval(value):
+            assignText2 = assign_text1.replace("assignText1", methodname)
+            newnode = buildStringModule(assignText2)
+            assignText2 = self.getAssignedTxt(newnode.body[0].value)
+            forText2 = for_text1.replace("forText", assignText2)
+            newnode = buildStringModule(forText2)
+            methodname = self.getAssignedTxt(newnode.body[0].value).strip()
+            if methodname in node.scope().parent.locals:
+                realmethod = node.scope().parent.locals[methodname][0]
+                cudnvalue = self.getFunctionReturnValue(realmethod)
+                break
         return cudnvalue
 
     def getBinOpValue(self, nodeValue):
-        try:
-            qvalue = self.getAssignedTxt(nodeValue.left)
-            if nodeValue.op == "%":
-                newleft = '"""%s """' % escapeAnyToString(qvalue)
-                regex = re.compile(r"%(\(.+\))?s") #matches '%s' and '%(text)s'
-                strFlagQty = len(regex.findall(newleft))
-                if not strFlagQty: return newleft
-                newright = '("%s")' % ('","' * (strFlagQty - 1))
-                if isinstance(nodeValue.right, Tuple):
-                    newright = self.getTupleValues(nodeValue.right)
-                elif isinstance(nodeValue.right, CallFunc):
-                    callfuncval = self.getCallFuncValue(nodeValue.right)
-                    if callfuncval: newright = "(\"%s\")" % callfuncval
-                elif isinstance(nodeValue.right, Name):
-                    newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
-                elif isinstance(nodeValue.right, Getattr):
-                    getattrval = self.getAssignedTxt(nodeValue.right)
-                    if getattrval: newright = '("%s")' % getattrval
-                elif isinstance(nodeValue.right, Dict):
-                    newright = self.getDictValue(nodeValue.right)
-                else:
-                    newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
-                toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
+        qvalue = self.getAssignedTxt(nodeValue.left)
+        if nodeValue.op == "%":
+            newleft = '"""%s """' % escapeAnyToString(qvalue)
+            regex = re.compile(r"%(\(.+\))?s") #matches '%s' and '%(text)s'
+            strFlagQty = len(regex.findall(newleft))
+            if not strFlagQty: return newleft
+            newright = '("%s")' % ('","' * (strFlagQty - 1))
+            if isinstance(nodeValue.right, Tuple):
+                newright = self.getTupleValues(nodeValue.right)
+            elif isinstance(nodeValue.right, CallFunc):
+                callfuncval = self.getCallFuncValue(nodeValue.right)
+                if callfuncval: newright = "(\"%s\")" % callfuncval
+            elif isinstance(nodeValue.right, Name):
+                newright = "(\"%s\")" % self.getNameValue(nodeValue.right)
+            elif isinstance(nodeValue.right, Getattr):
+                getattrval = self.getAssignedTxt(nodeValue.right)
+                if getattrval: newright = '("%s")' % getattrval
+            elif isinstance(nodeValue.right, Dict):
+                newright = self.getDictValue(nodeValue.right)
+            else:
+                newright = '("%s")' % self.getAssignedTxt(nodeValue.right)
+            toeval = str("%s %% %s" % (newleft, newright)).replace("\n", "NEWLINE")
+            try:
                 qvalue = eval(toeval, nodeValue.root().globals, nodeValue.scope().locals)
                 qvalue = qvalue.replace("NEWLINE", "\n")
-            else:
-                qvalue += self.getAssignedTxt(nodeValue.right)
-        except Exception, e:
-            self.logError("getBinOpValueError", nodeValue, e)
+            except Exception, e:
+                QueryChecker.logError("getBinOpValueError", nodeValue, e)
+        else:
+            qvalue += self.getAssignedTxt(nodeValue.right)
         return qvalue
 
     def getTupleValues(self, nodeValue):
@@ -411,104 +476,99 @@ class QueryChecker(BaseChecker):
             for elts in nodeValue.itered():
                 tvalues.append(self.getAssignedTxt(elts))
         except Exception, e:
-            self.logError("getTupleValuesError", nodeValue, e)
+            QueryChecker.logError("getTupleValuesError", nodeValue, e)
         return '("""%s""")' % '""","""'.join(tvalues)
 
     def getHeirValue(self, node):
         """locate attribute in inheritance by visiting all assignments"""
         heirVal = ""
         prevSi = node.previous_sibling()
-        if isinstance(prevSi, Assign):
-            if isinstance(prevSi.targets[0], AssName) and prevSi.targets[0].name == node.expr.name:
-                if isinstance(prevSi.value, CallFunc) and isinstance(prevSi.value.func, Getattr):
-                    if prevSi.value.func.expr.name == "self":
-                        if prevSi.value.func.attrname not in node.scope().parent.locals: #the function called is not present
-                            heirClass = node.scope().parent.bases[0].infered()[0]
-                            heirCall = heirClass.locals[prevSi.value.func.attrname][0]
-                            #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
-                            prevKeys = self.queryTxt.keys()
-                            for ass in heirCall.body:
-                                if isinstance(ass, Assign):
-                                    self.visit_assign(ass)
-                                elif isinstance(ass, AugAssign):
-                                    self.visit_augassign(ass)
-                            newKey = [k for k in self.queryTxt if k not in prevKeys]
-                            if newKey:
-                                heirVal = self.queryTxt[newKey[0]]
+        if QueryChecker.is_heir_getattr_valid_assign(prevSi, node.expr.name) and QueryChecker.is_heir_getattr_valid_callfunc(prevSi) and QueryChecker.is_attr_in_locals(node, prevSi):
+            heirVal = self.build_inheritance(node, prevSi)
+        return heirVal
+
+    @staticmethod
+    def is_heir_getattr_valid_assign(node, node_expr_name):
+        res = False
+        if isinstance(node, Assign) and isinstance(node.targets[0], AssName) and node.targets[0].name == node_expr_name:
+            res = True
+        return res
+
+    @staticmethod
+    def is_heir_getattr_valid_callfunc(node):
+        res = False
+        if isinstance(node.value, CallFunc) and isinstance(node.value.func, Getattr) and node.value.func.expr.name == "self":
+            res = True
+        return res
+
+    @staticmethod
+    def is_attr_in_locals(node, sibling):
+        return sibling.value.func.attrname not in node.scope().parent.locals #the function called is not present
+
+    def build_inheritance(self, node, sibling):
+        heirVal = ""
+        heirClass = node.scope().parent.bases[0].infered()[0]
+        heirCall = heirClass.locals[sibling.value.func.attrname][0]
+        #Now I'm building self.queryTxt by visiting all Assigns and AugAssigns
+        prevKeys = self.queryTxt.keys()
+        for ass in heirCall.body:
+            if isinstance(ass, Assign):
+                self.visit_assign(ass)
+            elif isinstance(ass, AugAssign):
+                self.visit_augassign(ass)
+        newKey = [k for k in self.queryTxt if k not in prevKeys]
+        if newKey:
+            heirVal = self.queryTxt[newKey[0]]
         return heirVal
 
     def getGetattrValue(self, nodeValue):
         res = ""
         try:
             inferedValue = nodeValue.expr.infered()[0]
-            if isinstance(inferedValue, Instance) :
-                if isinstance(inferedValue.infered()[0], Class):
-                    if inferedValue.pytype() == "Query.Query":
-                        if nodeValue.expr.name in self.queryTxt:
-                            res = self.queryTxt[nodeValue.expr.name]
-                        else:
-                            res = self.getHeirValue(nodeValue)
-                    if not res:
-                        res = self.getClassAttr(inferedValue.infered()[0], nodeValue.attrname)
+            if isinstance(inferedValue, Instance) and isinstance(inferedValue.infered()[0], Class):
+                if inferedValue.pytype() == "Query.Query":
+                    res = self.queryTxt.get(nodeValue.expr.name, self.getHeirValue(nodeValue))
+                if not res:
+                    res = self.getClassAttr(inferedValue.infered()[0], nodeValue.attrname)
             elif isinstance(nodeValue.expr, Subscript):
                 res = self.getSubscriptValue(nodeValue.expr)
         except InferenceError:
             pass #missing parameters?
         except Exception, e:
-            self.logError("getGetattrValueError", nodeValue, e)
+            QueryChecker.logError("getGetattrValueError", nodeValue, e)
         return [nodeValue.attrname, res][bool(res)]
 
     def getClassAttr(self, nodeValue, attrSeek=None):
         cvalue = ""
         try:
             for ofuncs in nodeValue.get_children():
-                if isinstance(ofuncs, Assign):
-                    if isinstance(ofuncs.targets[0], AssName):
-                        if ofuncs.targets[0].name == attrSeek:
-                            cvalue = self.getAssignedTxt(ofuncs.value)
+                if isinstance(ofuncs, Assign) and isinstance(ofuncs.targets[0], AssName) and ofuncs.targets[0].name == attrSeek:
+                    cvalue = self.getAssignedTxt(ofuncs.value)
                 elif isinstance(ofuncs, Function):
-                    for attr in nodeValue[ofuncs.name].body:
-                        if isinstance(attr, Assign):
-                            if isinstance(attr.targets[0], AssAttr):
-                                if attr.targets[0].attrname == attrSeek or attrSeek is None:
-                                    cvalue = self.getAssignedTxt(attr.value)
-                        if cvalue: break
+                    cvalue = self.get_class_attr_function(nodeValue, ofuncs, attrSeek)
                 if cvalue: break
-            if not cvalue:
-                if "bring" in nodeValue.locals:
-                    cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
+            if not cvalue and "bring" in nodeValue.locals:
+                cvalue = self.getClassAttr(nodeValue.locals["bring"][0], attrSeek)
         except Exception, e:
-            self.logError("getClassAttrError", nodeValue, e)
+            QueryChecker.logError("getClassAttrError", nodeValue, e)
+        return cvalue
+
+    def get_class_attr_function(self, node, ofuncs, attr_seek):
+        cvalue = ""
+        for attr in [atr for atr in node[ofuncs.name].body if isinstance(atr, Assign)]:
+            if isinstance(attr.targets[0], AssAttr) and (attr.targets[0].attrname == attr_seek or attr_seek is None):
+                cvalue = self.getAssignedTxt(attr.value)
+                if cvalue: break
         return cvalue
 
     def getSubscriptValue(self, nodeValue):
         svalue = ""
-        if isinstance(nodeValue.parent, Getattr) and nodeValue.parent.attrname == "sql":
-            if isinstance(nodeValue.value, Name):
-                instanceName = nodeValue.value.name
-                if instanceName in self.queryTxt:
-                    svalue = self.queryTxt[instanceName]
+        if isinstance(nodeValue.parent, Getattr) and nodeValue.parent.attrname == "sql" and isinstance(nodeValue.value, Name):
+            svalue = self.queryTxt.get(nodeValue.value.name, "")
         else:
-            nvalue = ""
-            if isinstance(nodeValue.value, Name):
-                if nodeValue.value.name in nodeValue.parent.scope().keys():
-                    nvalue = self.getNameValue(nodeValue.value)
-            elif isinstance(nodeValue.value, List):
-                nvalue = self.getListValue(nodeValue.value)
-            elif isinstance(nodeValue.value, Const):
-                nvalue = self.getAssignedTxt(nodeValue.value)
-            if not nvalue.startswith(("[", "'", "{")): nvalue = "'%s'" % nvalue
-            idx = "0"
-            if isinstance(nodeValue.slice, Slice):
-                low = self.getAssignedTxt(nodeValue.slice.lower)
-                up = self.getAssignedTxt(nodeValue.slice.upper)
-                if not low or low == "None": low = 0
-                if not up or up == "None": up = ""
-                idx = "%s:%s" % (low, up)
-            elif isinstance(nodeValue.slice, Index):
-                idx = self.getAssignedTxt(nodeValue.slice.value)
-                if not idx: idx = "0"
-            if len(nvalue)>2:
+            nvalue = self.get_subscript_left_value(nodeValue)
+            idx = self.get_subscript_index_value(nodeValue)
+            if len(nvalue) > 2:
                 evaluation = '%s[%s]' % (nvalue, idx)
                 if nvalue.startswith("{"):
                     evaluation = '%s.get("%s", None)' % (nvalue, idx)
@@ -517,8 +577,35 @@ class QueryChecker(BaseChecker):
                 except IndexError:
                     svalue = eval('%s[0]' % nvalue)
                 except Exception, e:
-                    self.logError("getSubscriptValueError", nodeValue, e)
+                    QueryChecker.logError("getSubscriptValueError", nodeValue, e)
         return svalue
+
+    def get_subscript_left_value(self, node):
+        nvalue = ""
+        if isinstance(node.value, Name):
+            if node.value.name in node.parent.scope().keys():
+                nvalue = self.getNameValue(node.value)
+        elif isinstance(node.value, List):
+            nvalue = self.getListValue(node.value)
+        elif isinstance(node.value, Const):
+            nvalue = self.getAssignedTxt(node.value)
+        if not nvalue.startswith(("[", "'", "{")):
+            nvalue = "'%s'" % nvalue
+        return nvalue
+
+    def get_subscript_index_value(self, node):
+        idx = "0"
+        if isinstance(node.slice, Slice):
+            low = self.getAssignedTxt(node.slice.lower)
+            up = self.getAssignedTxt(node.slice.upper)
+            if not low or low == "None":
+                low = 0
+            if not up or up == "None":
+                up = ""
+            idx = "%s:%s" % (low, up)
+        elif isinstance(node.slice, Index):
+            idx = self.getAssignedTxt(node.slice.value) or "0"
+        return idx
 
     def getListValue(self, nodeValue):
         return "['%s']" % "','".join([self.getAssignedTxt(x) for x in nodeValue.elts])
@@ -537,7 +624,7 @@ class QueryChecker(BaseChecker):
                 try:
                     targets = doEval(evaluation)
                 except Exception, e:
-                    self.logError("getListCompValueError", nodeValue, e)
+                    QueryChecker.logError("getListCompValueError", nodeValue, e)
             elif isinstance(fgen.iter, Name):
                 targets = self.getNameValue(fgen.iter)
             else:
@@ -548,12 +635,12 @@ class QueryChecker(BaseChecker):
                 try:
                     elements = [doEval("'%s'.%s()" % (x, nodeValue.elt.func.attrname)) for x in targets]
                 except Exception, e:
-                    self.logError("getListCompValueEval1Error", nodeValue, e)
+                    QueryChecker.logError("getListCompValueEval1Error", nodeValue, e)
         elif isinstance(nodeValue.elt, BinOp):
             try:
                 elements = [doEval("'%s' %s '%s'" % (self.getAssignedTxt(nodeValue.elt.left), nodeValue.elt.op, x)) for x in ast.literal_eval(targets)]
             except Exception, e:
-                self.logError("getListCompValueEval2Error", nodeValue, e)
+                QueryChecker.logError("getListCompValueEval2Error", nodeValue, e)
         else:
             elements = [self.getAssignedTxt(nodeValue.elt)]
         lvalue = str(elements) or str(targets)
@@ -633,27 +720,30 @@ class QueryChecker(BaseChecker):
                 """elif isinstance(nodeValue, UnaryOp):
                     qvalue = self.getUnaryOpValue(nodeValue)"""
             else:
-                inferedValue = nodeValue.infered()
-                if isinstance(inferedValue, Iterable) and nodeValue != inferedValue[0]:
-                    if not inferedValue[0] is YES:
-                        qvalue = self.getAssignedTxt(inferedValue[0])
-                else:
-                    self.add_message("W6602", line=nodeValue.fromlineno, node=nodeValue.scope(), args=nodeValue)
-                    raise InferenceError
-        except InferenceError, e:
-            self.logError("getAssignedTxtInferenceError", nodeValue, e)
+                qvalue = self.get_assigned_text_by_inference(nodeValue)
         except Exception, e:
-            self.logError("getAssignedTxtError", nodeValue, e)
+            QueryChecker.logError("getAssignedTxtError", nodeValue, e)
+        return qvalue
+
+    def get_assigned_text_by_inference(self, node):
+        qvalue = ""
+        try:
+            inferedValue = node.infered()
+            if isinstance(inferedValue, Iterable) and inferedValue[0] not in (node, YES):
+                qvalue = self.getAssignedTxt(inferedValue[0])
+            else:
+                self.add_message("W6602", line=node.fromlineno, node=node.scope(), args=node)
+                raise InferenceError
+        except InferenceError, e:
+            QueryChecker.logError("getAssignedTxtInferenceError", node, e)
         return qvalue
 
     def setUpQueryTxt(self, nodeTarget, value, isnew=False):
         try:
             instanceName = None
             inferedValue = nodeTarget.expr.infered()[0]
-            if inferedValue is YES:
-                if isinstance(nodeTarget, AssAttr) and isinstance(nodeTarget.expr, Subscript) and nodeTarget.attrname == "sql":
-                    if isinstance(nodeTarget.expr.value, Name):
-                        instanceName = nodeTarget.expr.value.name
+            if inferedValue is YES and QueryChecker.is_sql_attr_and_name_subscript(nodeTarget):
+                instanceName = nodeTarget.expr.value.name
             if inferedValue.pytype() == "Query.Query" or instanceName:
                 nodeGrandParent = nodeTarget.parent.parent #First parent is Assign or AugAssign
                 instanceName = instanceName or nodeTarget.expr.name
@@ -662,7 +752,11 @@ class QueryChecker(BaseChecker):
                 else:
                     self.preprocessQueryIfs(nodeTarget, instanceName, value, isnew)
         except InferenceError, e: # pragma: no cover
-            self.logError("setUpQueryTxtInferenceError", nodeTarget, e)
+            QueryChecker.logError("setUpQueryTxtInferenceError", nodeTarget, e)
+
+    @staticmethod
+    def is_sql_attr_and_name_subscript(node):
+        return isinstance(node, AssAttr) and isinstance(node.expr, Subscript) and isinstance(node.expr.value, Name) and node.attrname == "sql"
 
     def appendQuery(self, instanceName, value, isnew):
         if isnew or instanceName not in self.queryTxt:
@@ -683,88 +777,94 @@ class QueryChecker(BaseChecker):
             if nodeGrandParent.lineno not in self.ifProcessed:
                 self.appendQuery(instanceName, value, isnew)
 
-    def isSqlAssAttr(self, node):
+    @staticmethod
+    def is_sql_assattr(node):
         return isinstance(node, AssAttr) and node.attrname == "sql"
 
-    def getNodeFileName(self, node):
-        parsedFileName = None
-        if hasattr(node, "root") and hasattr(node.root(), "file"):
-            filepath = node.root().file
-            if filepath:
-                parsedFileName = filenameFromPath(filepath)
-            if not parsedFileName or parsedFileName == "<?>":
-                parsedFileName = "notFound"
+    @staticmethod
+    def is_open_or_execute_getattr(node):
+        return isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute")
+
+    @staticmethod
+    def get_node_filename(node):
+        parsedFileName = "notFound"
+        if hasattr(node, "root") and hasattr(node.root(), "file") and node.root().file:
+            parsedFileName = filenameFromPath(node.root().file)
         return parsedFileName
 
     def searchNode(self, node, searchName="", _done=None):
         """ creates the main Func dictionary for the CallFunc's Getattr of 'searchName' in 'node' """
 
-        if _done is None: _done = set()
-        if node in _done: return
-        if not hasattr(node, '_astroid_fields'): return
+        _done = _done or set()
+        if not hasattr(node, '_astroid_fields') or node in _done: return
         _done.add(node)
-
-        def match():
-            if isinstance(node, CallFunc) and isinstance(node.func, Getattr):
-                if node.func.attrname == searchName:
-                    self.setFuncParams(node)
-                    return True
-            return False
 
         for field in node._astroid_fields:
             value = getattr(node, field)
             if isinstance(value, (list, tuple)):
-                for child in value:
-                    if isinstance(child, (list, tuple)):
-                        self.searchNode(child[0], searchName, _done)
-                        self.searchNode(child[1], searchName, _done)
-                    else:
-                        if match(): break
-                        self.searchNode(child, searchName, _done)
-            else:
-                if match(): break
-                self.searchNode(value, searchName, _done)
+                self.search_node_in_childs(node, value, searchName, _done)
+            elif self.match_and_set_funcs(node, searchName): break
+            self.searchNode(value, searchName, _done)
 
-    def logError(self, msg, node, e=""):
+    def search_node_in_childs(self, node, value, searchName, _done):
+        for child in value:
+            if isinstance(child, (list, tuple)):
+                self.searchNode(child[0], searchName, _done)
+                self.searchNode(child[1], searchName, _done)
+            elif self.match_and_set_funcs(node, searchName): break
+            self.searchNode(child, searchName, _done)
+
+    def match_and_set_funcs(self, node, search_name):
+        if isinstance(node, CallFunc) and isinstance(node.func, Getattr) and node.func.attrname == search_name:
+            self.setFuncParams(node)
+            return True
+        return False
+
+    @staticmethod
+    def logError(msg, node, e=""):
         nodeString = ""
         if hasattr(node, "as_string"): nodeString = node.as_string()
-        logHere(msg, e, node.lineno, nodeString, filename="%s.log" % self.getNodeFileName(node))
+        logHere(msg, e, node.lineno, nodeString, filename="%s.log" % QueryChecker.get_node_filename(node))
 
     ####### pylint's redefinitions #######
 
     def visit_assign(self, node):
         if not queryEnabled(): return
-        if self.isSqlAssAttr(node.targets[0]):
+        if QueryChecker.is_sql_assattr(node.targets[0]):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.targets[0], qvalue, isnew=True)
 
     def visit_augassign(self, node):
         if not queryEnabled(): return
-        if self.isSqlAssAttr(node.target):
+        if QueryChecker.is_sql_assattr(node.target):
             qvalue = self.getAssignedTxt(node.value)
             self.setUpQueryTxt(node.target, qvalue)
 
     @check_messages('query-syntax-error', 'query-inference')
     def visit_callfunc(self, node):
-        if not queryEnabled(): return
-        if isinstance(node.func, Getattr) and node.func.attrname in ("open", "execute"):
-            try:
-                inferedNode = node.infered()
-            except InferenceError, e: # pragma: no cover
-                pass
+        if not (queryEnabled() and QueryChecker.is_open_or_execute_getattr(node)):
+            return
+        try:
+            inferedNode = node.infered()
+        except InferenceError: # pragma: no cover
+            return
+        for name in QueryChecker.get_query_expr_names(node, inferedNode):
+            if name in self.queryTxt:
+                res = validateSQL(self.queryTxt[name], filename="%sQUERY.log" % filenameFromPath(node.root().file))
+                if res:
+                    self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
             else:
-                for x in inferedNode:
-                    xrootvalues = x.root().values()
-                    if xrootvalues is YES: continue
-                    try:
-                        main = xrootvalues[0].frame()
-                        if main.name == "Query":
-                            name = node.func.expr.name
-                            if name in self.queryTxt:
-                                res = validateSQL(self.queryTxt[name], filename="%sQUERY.log" % filenameFromPath(node.root().file))
-                                if res:
-                                    self.add_message("E6601", line=node.lineno, node=node, args="%s: %s" % (name, res))
-                            else:
-                                self.add_message("W6602", line=node.lineno, node=node, args=name)
-                    except TypeError, e:
-                        logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))
+                self.add_message("W6602", line=node.lineno, node=node, args=name)
+
+    @staticmethod
+    def get_query_expr_names(node, infered_node):
+        for x in infered_node:
+            xrootvalues = x.root().values()
+            if xrootvalues is YES:
+                continue
+            try:
+                main = xrootvalues[0].frame()
+                if main.name == "Query":
+                    yield node.func.expr.name
+            except TypeError, e:
+                logHere("TypeError visit_callfunc", e, filename="%s.log" % filenameFromPath(node.root().file))

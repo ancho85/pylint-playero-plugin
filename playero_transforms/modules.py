@@ -13,18 +13,17 @@ def modules_transform(module):
 
 def getFunctionArguments(module, funcTxt):
     res = []
-    for assnodes in module.locals:
-        ass = module.locals[assnodes][0]
-        if not (
-                isinstance(ass, node_classes.AssName)
-                and isinstance(ass.statement(), node_classes.Assign)
-                and not isinstance(ass.parent, node_classes.Tuple)
-                ): continue
-        else:
-            res = [get_super_arguments(superCall) for superCall in ass.assigned_stmts()
-                    if isinstance(superCall, node_classes.CallFunc)  and superCall.as_string().startswith(funcTxt)]
-    if not res: res = [[]]
+    for ass in [module.locals[assnodes][0] for assnodes in module.locals]:
+        if is_valid_super(ass):
+            for superCall in [superCall for superCall in ass.assigned_stmts() if is_valid_superfunc(superCall, funcTxt)]:
+                res = get_super_arguments(superCall)
     return res
+
+def is_valid_super(ass):
+    return isinstance(ass, node_classes.AssName) and isinstance(ass.statement(), node_classes.Assign) and not isinstance(ass.parent, node_classes.Tuple)
+
+def is_valid_superfunc(superCall, funcTxt):
+    return isinstance(superCall, node_classes.CallFunc) and superCall.as_string().startswith(funcTxt)
 
 def get_super_arguments(supers):
     res = []
@@ -36,7 +35,7 @@ def get_super_arguments(supers):
     return res
 
 def buildSuperClassModule(module):
-    sclist = getFunctionArguments(module, "SuperClass")[0]
+    sclist = getFunctionArguments(module, "SuperClass")
     if not len(sclist) % 3 == 0: return
     while len(sclist):
         if not sclist[0].endswith("Row"):

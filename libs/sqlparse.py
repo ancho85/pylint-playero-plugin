@@ -19,13 +19,13 @@ def validateSQL(txt, filename=None):
     return res
 
 def parseSQL(txt):
-    table_pattern = re.compile("([^\\\])\[([^\]]*?)\]")
+    table_pattern = re.compile(r"([^\\])\[([^\]]*?)\]")
     field_pattern = re.compile(r"\{([^\}]*?)\}")
     value_pattern = re.compile(r"[svdt]\|([^\|]*?)\|")
     integer_value_pattern = re.compile(r"i\|([^\|]*?)\|")
     boolean_value_pattern = re.compile(r"b\|([^\|]*?)\|")
     where_and_pattern = re.compile(r"(WHERE\?AND)", re.I)
-    #schemas_pattern = re.compile(r"\[([^\]]*?)\]")
+
     show_pattern = re.compile(r"SHOW.*STATUS", re.I) #Commands like SHOW INNODB STATUS or SHOW TABLE STATUS
     from_pattern = re.compile(ur"""(?<=FROM\s)                   #Start of positive lookbehind assertion FROM
                                   ([\`]*\w.*?)                    #Any word preceded (or not) by ` zero to infinite times (1st capturing group)
@@ -126,23 +126,18 @@ def parseErrorResponses(errorTxt):
             m2 = re.search('Table (.*).*', m.group(0))
             if m2:
                 res = m2.group(1)
-        elif found == 1049: #Database doesn't exists
-            res = m.group(0)
-        elif found == 1045: #Wrong password
+        elif found in (1045, 1049): #Wrong password / Database doesn't exists
             res = m.group(0)
         elif found == 1066: #Not unique table/alias
-            m2 = re.search('ERROR 1066 \(42000\) at line [0-9]+: (.*)', m.group(0))
+            m2 = re.search(r'ERROR 1066 \(42000\) at line [0-9]+: (.*)', m.group(0))
+            m3 = re.search(r'ERROR 1066 (.*)', m.group(0))
             if m2:
                 res = m2.group(1)
-            else:
-                m2 = re.search('ERROR 1066 (.*)', m.group(0))
-                if m2:
-                    res = m2.group(1)
-        #else: #Other errors
-        #    res = m.group(0)
+            elif m3:
+                res = m3.group(1)
     return res.rstrip("\n").rstrip("\r")
 
 
 if __name__ == "__main__":
     sql = "SELECT {Code} FROM [User]"
-    print validateSQL(sql)
+    print(validateSQL(sql))
