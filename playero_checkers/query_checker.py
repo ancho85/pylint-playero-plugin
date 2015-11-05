@@ -308,6 +308,8 @@ class QueryChecker(BaseChecker):
             cfvalue = self.get_callfunc_getattr_value_from_split(node_value)
         elif attrname == "replace":
             cfvalue = self.get_callfunc_getattr_value_from_replace(node_value)
+        elif attrname == "date":
+            cfvalue = "2000-01-01"
         else:
             cfvalue = self.getCallGetattr(node_value)
         return cfvalue

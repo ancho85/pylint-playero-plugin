@@ -4,6 +4,7 @@ from OpenOrange import *
 from Document import Document
 from Label import Label
 from SQLTools import codeOrder, monthCode
+from datetime import datetime
 
 class AlotmentDoc(Document):
 
@@ -15,6 +16,7 @@ class AlotmentDoc(Document):
             RootLabel = "100"
             SerNr = "SerNr"
             Labels = "100,200"
+            TransDate = datetime.now().date()
             def name(self):
                 return "Alotment"
         return newObj()
@@ -23,6 +25,7 @@ class AlotmentDoc(Document):
         specs = self.getRecorda()
         sql = "WHERE?AND [al].{%s} IN ('%s')\n" % ("SerNr", "','".join([val1, val3, val2]))
         sql += "WHERE?AND [al].{SerNr} = i|%i|\n" % specs.Status
+        sql += "WHERE?AND [al].TransDate < d|%s|\n" % specs.TransDate
         sql += "WHERE?AND SerNr = "
         if specs.Status == 1:
             sql += "%s" % val4
