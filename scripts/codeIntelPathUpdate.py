@@ -49,6 +49,7 @@ if __name__ == "__main__":
             newPaths = [os.path.join(pluginpath, "corepy", "embedded")]
             newPaths.append(os.path.join(playeropath, "python", "python24", "Lib"))
             newPaths.append(os.path.join(playeropath, "python", "python24", "Lib", "site-packages", "windows"))
+            newPaths.append(os.path.join(playeropath, "python", "python24", "shared-libs", "windows"))
             newPaths.append(os.path.join(playeropath, "core"))
 
 
