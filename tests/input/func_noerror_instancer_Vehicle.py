@@ -25,6 +25,13 @@ class Vehicle(ParentVehicle):
         pys = PySettings.bring()
         print pys.LogTransactionsImportantChanges
 
+        row = NewRecord("VehicleDocs")
+        self.VehicleDocs.count()
+        self.VehicleDocs.remove(0)
+        self.VehicleDocs.insert(0, row)
+        self.VehicleDocs.append(row)
+        self.VehicleDocs.clear()
+
 ParentVehicleRow = SuperClass("VehicleRow", "Record", __file__)
 class VehicleRow(ParentVehicleRow):
 

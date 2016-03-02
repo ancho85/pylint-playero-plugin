@@ -103,11 +103,11 @@ def getIteratorString(modname, detailfield):
     txt = '''
 class %s(object):
     def __iter__(self): return self
-    def count(self): pass
-    def remove(self, int): pass
-    def insert(self, int, row): pass
-    def append(self, row): pass
-    def clear(self): pass
+    def count(): pass
+    def remove(int): pass
+    def insert(int, row): pass
+    def append(row): pass
+    def clear(): pass
     def __init__(self, *args):
         self.__fail__ = None
 %s
