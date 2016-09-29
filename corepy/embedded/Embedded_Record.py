@@ -171,10 +171,11 @@ class Embedded_Record(object):
 
     def afterCopy(self):
         pass
+
     def refresh(self):
         pass
 
-    def calculateIndexes():
+    def calculateIndexes(self):
         return []
 
     def getAttachAsString(self, attachid):
@@ -279,6 +280,33 @@ class Embedded_Record(object):
 
     def getRemovedRecord(self, internalId=0):
         return self
+
+    def afterDeleteRow(self, detailfieldname, rownr):
+        pass
+
+    def afterPrint(self, documentclassname):
+        pass
+
+    def beforeDeleteRow(self, detailfieldname, rownr):
+        pass
+
+    def clear(self):
+        pass
+
+    def getInternalInfo(self):
+        return str(self)
+
+    def hasDetail(self, *args):
+        return bool(self in args)
+
+    def mimeImageAttachIds(self):
+        return [self]
+
+    def oldDetails(self, detailname):
+        return Embedded_Record(recorddef=detailname) or self
+
+    def rawStore(self, *args, **kwargs):
+        return bool(self)
 
     class Listener(object):
         def fieldModified(self, fn, value):
