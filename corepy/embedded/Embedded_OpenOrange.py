@@ -28,7 +28,7 @@ modulesindex["Window"] = ["core.Window"]
 #print modulesindex["ActivityWindow"]
 
 def SuperClass(classname, superclassname, filename):
-    if classname == "Record":
+    if classname in ("Record", "Master"):
         from Record import Record
         return Record
     #print "asking for superclass for", classname, superclassname,
@@ -37,7 +37,7 @@ def SuperClass(classname, superclassname, filename):
         return getattr(m, classname)
     else:
         filename = os.path.normpath(filename)
-        sd, modname = os.path.split(os.path.dirname(filename.replace("\\","/").replace("./","")))
+        sd, modname = os.path.split(os.path.dirname(filename.replace("\\", "/").replace("./", "")))
         found = False
         #print "MI: ", modulesindex[classname]
         if classname in modulesindex:
@@ -52,6 +52,3 @@ def SuperClass(classname, superclassname, filename):
                     found = True
         #print "OUT"
         return SuperClass(superclassname, "Record", None)
-    return None
-    #clsstruct = modulesindex[classname]
-    #from

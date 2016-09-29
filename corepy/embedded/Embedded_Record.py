@@ -256,7 +256,7 @@ class Embedded_Record(object):
     def balance(self):
         return True
 
-    def exportRecord(self):
+    def exportRecord(self, file):
         return True
 
     def fieldIsEditable(self, fieldname, rowfieldname=None, rownr=None):

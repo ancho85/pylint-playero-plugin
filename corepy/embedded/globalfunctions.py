@@ -614,3 +614,15 @@ def findReport(reportId):
         def addPendingAcceptContact(self, ac): pass
         def getTitle(self): return str(self)
     return ContactChatReportFinder()
+
+
+def set_last_message(msg, *args):
+    """ temporarly store the message to a stack list"""
+def get_last_message():
+    """ get last message from stack"""
+    return ""
+def set_last_log(msg):
+    """ temporarly store the log to a stack list"""
+def get_last_log():
+    """ get last log from stack"""
+    return ""

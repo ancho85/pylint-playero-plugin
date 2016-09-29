@@ -97,5 +97,8 @@ class Embedded_Report(object):
     def call_run(self):
         pass
 
+    def currentWindow(self):
+        return self
+
 class ReportView(Embedded_Report):
     pass

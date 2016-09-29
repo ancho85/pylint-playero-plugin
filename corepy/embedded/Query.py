@@ -43,3 +43,6 @@ class Query(object):
 
     def parseSQL(self):
         pass
+
+    def matchedRows(self):
+        return self.count()

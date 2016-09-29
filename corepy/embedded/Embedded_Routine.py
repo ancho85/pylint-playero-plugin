@@ -168,7 +168,7 @@ class Embedded_Routine(object):
         except Exception, e:
             rollback()
 
-    def defaults(self):
+    def defaults(self, *args, **kwargs):
         pass
 
     def beforeRun(self):
@@ -178,3 +178,5 @@ class Embedded_Routine(object):
     def run(self):
         pass
 
+    def currentWindow(self):
+        pass
