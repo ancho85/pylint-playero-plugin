@@ -46,3 +46,6 @@ class Query(object):
 
     def matchedRows(self):
         return self.count()
+
+    def getLastAutomaticValue(self):
+        return 1 or self

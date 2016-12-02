@@ -168,7 +168,8 @@ class Embedded_Routine(object):
         except Exception, e:
             rollback()
 
-    def defaults(self, *args, **kwargs):
+    @staticmethod
+    def defaults(window_instance, *args, **kwargs):
         pass
 
     def beforeRun(self):

@@ -342,3 +342,9 @@ class Embedded_Window(object):
     def getButtonAreaView(self, batext):
         from ButtonArea import ButtonArea
         return ButtonArea()
+
+    def afterShowRecord(self):
+        pass
+
+    def getPasteWindowName(self, fieldname):
+        return ""

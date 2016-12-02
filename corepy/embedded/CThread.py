@@ -21,3 +21,4 @@ class CThread(Embedded_Thread):
 
     def setName(self, name): pass
     def start(self): pass
+    def running(self): return bool(self)
